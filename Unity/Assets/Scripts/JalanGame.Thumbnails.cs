@@ -28,6 +28,64 @@ namespace JalanKita
             AddLabel(frame, caption, "selection-preview-caption").pickingMode = PickingMode.Ignore;
         }
 
+        void AddTutorialThumbnail(VisualElement parent)
+        {
+            EnsureThumbnailStyles();
+            string caption = GameText.Get("level.tutorial.start");
+            // A real Button retains tab focus and keyboard submit, with one click target.
+            var button = new Button(StartPitchDemo)
+            {
+                name = "tutorialThumbnail",
+                tooltip = caption,
+                focusable = true
+            };
+            button.AddToClassList("selection-preview");
+            button.AddToClassList("thumbnail-play-button");
+            parent.Add(button);
+            var image = new Image
+            {
+                image = Resources.Load<Texture2D>("UI/Thumbnails/mission_tutorial"),
+                scaleMode = ScaleMode.ScaleAndCrop,
+                pickingMode = PickingMode.Ignore
+            };
+            image.AddToClassList("selection-preview-image");
+            image.AddToClassList("thumbnail-play-image");
+            button.Add(image);
+            var overlay = Element(button, "thumbnail-play-overlay");
+            overlay.pickingMode = PickingMode.Ignore;
+            overlay.Add(new ThumbnailPlayGlyph());
+            AddLabel(overlay, caption, "thumbnail-play-caption").pickingMode = PickingMode.Ignore;
+        }
+
+        // Draw the icon instead of relying on Unicode glyph availability in the live preview font.
+        sealed class ThumbnailPlayGlyph : VisualElement
+        {
+            public ThumbnailPlayGlyph()
+            {
+                pickingMode = PickingMode.Ignore;
+                AddToClassList("thumbnail-play-glyph");
+                generateVisualContent += Draw;
+            }
+            void Draw(MeshGenerationContext context)
+            {
+                float w = contentRect.width, h = contentRect.height;
+                if (w < 1 || h < 1) return;
+                var pen = context.painter2D;
+                pen.strokeColor = resolvedStyle.color;
+                pen.fillColor = resolvedStyle.color;
+                pen.lineWidth = 1.8f;
+                pen.BeginPath();
+                pen.Arc(new Vector2(w * .5f, h * .5f), Mathf.Min(w, h) * .43f, 0f, 360f);
+                pen.Stroke();
+                pen.BeginPath();
+                pen.MoveTo(new Vector2(w * .42f, h * .32f));
+                pen.LineTo(new Vector2(w * .68f, h * .5f));
+                pen.LineTo(new Vector2(w * .42f, h * .68f));
+                pen.ClosePath();
+                pen.Fill();
+            }
+        }
+
         void AddCityMapChoices()
         {
             EnsureThumbnailStyles();

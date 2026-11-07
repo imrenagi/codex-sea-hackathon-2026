@@ -35,12 +35,11 @@ namespace JalanKita
         void AddJourneyLevelChoices(VisualElement parent)
         {
             var tutorial = Element(parent, "mission-card selection-mission-card");
-            AddSelectionThumbnail(tutorial, "mission_tutorial", GameText.Get("missions.thumbnail_caption"));
+            AddTutorialThumbnail(tutorial);
             var tutorialBody = Element(tutorial, "selection-mission-body");
             AddLabel(tutorialBody, GameText.Get("level.tutorial.title"), "subhead mission-title");
             AddLabel(tutorialBody, GameText.Get("level.tutorial.description"), "copy");
             AddLabel(tutorialBody, GameText.Get("level.tutorial.detail"), "objective-detail");
-            AddButton(tutorialBody, GameText.Get("level.tutorial.start"), StartPitchDemo, "primary");
 
             string[] thumbnails = { "preparation", "signals", "priority", "lanes", "focus",
                 "straight", "left_turn", "right_turn", "railway", "ambulance" };
@@ -69,12 +68,11 @@ namespace JalanKita
             if (kind == MissionKind.SkillTest)
             {
                 var tutorial = Element(parent, "mission-card selection-mission-card");
-                AddSelectionThumbnail(tutorial, "mission_tutorial", GameText.Get("missions.thumbnail_caption"));
+                AddTutorialThumbnail(tutorial);
                 var body = Element(tutorial, "selection-mission-body");
                 AddLabel(body, GameText.Get("level.tutorial.title"), "subhead mission-title");
                 AddLabel(body, GameText.Get("level.tutorial.description"), "copy");
                 AddLabel(body, GameText.Get("level.tutorial.detail"), "objective-detail");
-                AddButton(body, GameText.Get("level.tutorial.start"), StartPitchDemo, "primary");
             }
             foreach (var activity in kind == MissionKind.Scenario ? Mission.Scenarios : Mission.Tests)
             {
