@@ -23,8 +23,18 @@ namespace JalanKita.EditorTools
             if(!EditorApplication.isPlaying)return;
             var game=UnityEngine.Object.FindFirstObjectByType<JalanGame>();if(!game||Field(game,"journey")==null)return;
             EditorApplication.update-=AwaitGame;SessionState.SetBool(Running,false);
-            try{game.enabled=false;VerifyUI(game);EditorApplication.Exit(0);}
+            try{game.enabled=false;VerifyUI(game);VerifyTeardown(game);EditorApplication.Exit(0);}
             catch(Exception e){Debug.LogException(e);EditorApplication.Exit(1);}
+        }
+        static void VerifyTeardown(JalanGame game)
+        {
+            var scenes=(LandmarkDrive[])Field(game,"landmarkScenes");
+            var textures=scenes.Where(scene=>scene!=null).SelectMany(scene=>scene.Mirrors.Textures).ToArray();
+            Require(textures.Length==6&&textures.All(texture=>texture.IsCreated()),"Both cached scenes own three live mirror textures before teardown");
+            Call(game,"OnDestroy");
+            Require(textures.All(texture=>!texture||!texture.IsCreated()),"Scene teardown releases all six landmark mirror textures");
+            Require(scenes.All(scene=>scene.Mirrors.Cameras.All(camera=>camera.targetTexture==null)),"Scene teardown unbinds mirror cameras");
+            Debug.Log("JAKARTA_TEARDOWN_PASS six cached mirror targets released and camera bindings removed.");
         }
         static object Field(JalanGame game,string name)=>typeof(JalanGame).GetField(name,Private).GetValue(game);
         static void Call(JalanGame game,string name,params object[] args)=>typeof(JalanGame).GetMethod(name,Private).Invoke(game,args);
@@ -73,7 +83,13 @@ namespace JalanKita.EditorTools
                     Require(mirrors.Select((m,i)=>m.image==drive.Mirrors.Textures[i]).All(x=>x),"Landmark mirrors bound");
                     for(int i=0;i<80;i++)drive.Step(.02f,true,false,0);
                     drive.Present(.02f);float time=drive.Elapsed;var position=drive.Position;int renders=drive.Environment.Water.ReflectionFrames;
-                    Call(game,"ShowLandmarkPause");Call(game,"FixedUpdate");Call(game,"LateUpdate");
+                    var trafficPositions=drive.Traffic.Select(a=>a.Position).ToArray();
+                    if(place==JakartaPlace.BundaranHI)Call(game,"OnApplicationFocus",false);else Call(game,"OnApplicationPause",true);
+                    Require(Field(game,"page").ToString()=="LandmarkPause","Focus/application pause opens landmark pause");
+                    Call(game,"OnApplicationFocus",true);Call(game,"OnApplicationPause",false);
+                    Require(Field(game,"page").ToString()=="LandmarkPause","Returning focus waits for explicit resume");
+                    Call(game,"FixedUpdate");Call(game,"LateUpdate");
+                    Require(drive.Traffic.Select((actor,i)=>actor.Position==trafficPositions[i]).All(x=>x),"Focus loss freezes traffic positions");
                     Require(drive.Elapsed==time&&drive.Position==position&&drive.Environment.Water.SimulationTime==time,"Pause freezes traffic, player and water");
                     Require(drive.Environment.Water.ReflectionFrames==renders,"Stationary paused water does not recapture");
                     Require(drive.Mirrors.Cameras.All(c=>!c.enabled),"Paused mirrors stop rendering");

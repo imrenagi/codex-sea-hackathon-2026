@@ -306,7 +306,8 @@ namespace JalanKita
             if (focus) return;
             heldLook = 0;
             if (root == null || journey == null) return;
-            if (page == Page.Jaksa) ShowJaksaPause();
+            if (page == Page.Landmark) ShowLandmarkPause();
+            else if (page == Page.Jaksa) ShowJaksaPause();
             else if (page == Page.Drive)
             {
                 if (learner != null) EndDemonstration();
@@ -536,7 +537,10 @@ namespace JalanKita
         }
 
         void OnDestroy()
-        { cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
+        {
+            cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose();
+            foreach(var scene in landmarkScenes)scene?.Mirrors.Dispose();
+        }
 
         void SelectMode(VehicleMode value)
         {

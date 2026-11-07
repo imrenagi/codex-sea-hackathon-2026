@@ -69,15 +69,20 @@ PASS JakartaIntegrationChecks.Run: all3destinations, car/motor categories and ch
 model retention, mirrors bound to scene, audio/light/output-camera lifecycle, pause,
 cached-area reuse, immutable saved journey and resume. Repeated after keyboard fix:
 focused HUD cannot consume W/S or Space in either new area/category.
+Final lifecycle regression PASS: focus loss in HI and application pause in Monas
+open LandmarkPause, freeze vehicle/traffic/water/mirrors/fountain audio, and returning
+focus requires explicit resume. OnDestroy releases/unbinds all six cached mirror
+RenderTextures, verified by JakartaIntegrationChecks standalone teardown gate.
 PASS full ResultFlowChecks on merged core d601a12: ten-stage route, checkpoints,
 retry, practice, isolated pitch, six maps, signal transitions, keyboard regression,
 and Jakarta assertions. Central deterministic seed1 fixture retained, assertions intact.
 PASS full IntegrationChecks.RunSimulation on the same merged runtime: 30migration
 fixtures,7models,8activities,24boulevard seeds,64mission completions, exploration,
 lamps/collision/rosters, steering, sound and six maps.
-PASS standalone build at d1ae90b with final water shaders/input guard. Its manifest
-identifies that older pre-PR-combination artifact; do not mistake it for latest source.
-Latest-source build is queued behind the P0 core package due shared disk constraints.
+PASS standalone build at c3b000b with all95dab10 core features, final water shaders
+and input guards. The two subsequent focus-loss/teardown changes compile and pass
+the standalone lifecycle gate; final native build follows the shared menu-focus fix.
+Artifact manifest identifies exact app source separately from current source handoff.
 No native app was launched by this task. No push/main write occurred.
 
 ## Evidence / merge guidance
