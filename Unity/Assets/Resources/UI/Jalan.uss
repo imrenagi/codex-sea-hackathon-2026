@@ -11,7 +11,7 @@
     --rs-danger: #e6a59a;
     --rs-success: #a5c3ac;
     flex-grow: 1;
-    -unity-font-definition: url("project://database/Assets/Settings/JalanFont.asset");
+    -unity-font-definition: url("project://database/Assets/Fonts/Manrope/Manrope-Regular.ttf");
     color: var(--rs-text);
     -unity-font-style: normal;
     font-size: 16px;
@@ -566,3 +566,29 @@
 .compact .credits-team { margin-top: 18px; padding-top: 16px; }
 .compact .credits-person { font-size: 19px; margin-bottom: 8px; }
 .compact .credits-actions { margin-top: 16px; }
+
+/* Static Manrope faces use Unity's normal TrueType importer and TextCore bridge. */
+.screen .hero, .screen .heading, .screen .subhead, .screen .kicker,
+.screen .control-title, .screen .chooser-vehicle-title, .screen .speed {
+    -unity-font-definition: url("project://database/Assets/Fonts/Manrope/Manrope-SemiBold.ttf");
+    -unity-font-style: normal;
+}
+
+/* Generated key face; the UI retains crisp real text for W/A/S/D and arrows. */
+.keyboard-keycap {
+    width: 48px; min-width: 48px; height: 48px; flex-shrink: 0;
+    font-size: 25px; -unity-text-align: middle-center;
+}
+.keyboard-keycap, .tutorial-start-key {
+    background-image: url("project://database/Assets/Resources/UI/Keycaps/KeyboardKeycap.png");
+    background-size: 130% 130%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 6px;
+    color: #20272b;
+    -unity-font-definition: url("project://database/Assets/Fonts/Manrope/Manrope-SemiBold.ttf");
+    -unity-font-style: normal;
+    padding-bottom: 4px;
+}
