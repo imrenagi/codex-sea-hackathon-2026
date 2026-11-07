@@ -28,3 +28,31 @@
 .chooser-levels .selection-preview-caption { display: none; }
 .chooser-levels .selection-mission-body .mission-title { font-size: 18px; }
 .chooser-levels .selection-mission-body .copy { font-size: 14px; }
+
+
+/* Tutorial thumbnail is a real button: the whole image is an accessible target.
+   Outlined play glyph is vector-drawn in code, independent of font coverage. */
+.selection-preview.thumbnail-play-button {
+    padding: 0; margin-top: 0; margin-bottom: 0; margin-left: 0;
+    min-width: 0; min-height: 64px; border-width: 2px;
+    border-color: rgba(238,233,223,.18); border-radius: 6px;
+    background-color: #192126; overflow: hidden;
+}
+.thumbnail-play-button .thumbnail-play-image { margin: 0; padding: 0; }
+.thumbnail-play-overlay {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    align-items: center; justify-content: center;
+    background-color: rgba(12,18,22,.38);
+}
+.thumbnail-play-glyph { width: 44px; height: 44px; flex-shrink: 0; color: #ffffff; }
+.thumbnail-play-caption {
+    font-size: 11px; color: #ffffff; -unity-font-style: bold;
+    -unity-text-align: middle-center; white-space: normal;
+    margin-top: 2px; padding: 0 4px;
+}
+.thumbnail-play-button:hover { border-color: #c4aa7c; }
+.thumbnail-play-button:hover .thumbnail-play-overlay { background-color: rgba(12,18,22,.2); }
+.thumbnail-play-button:focus { border-color: #ffffff; }
+.thumbnail-play-button:focus .thumbnail-play-overlay { background-color: rgba(12,18,22,.28); }
+.thumbnail-play-button:active .thumbnail-play-overlay { background-color: rgba(12,18,22,.52); }
+.thumbnail-play-button:disabled { opacity: .5; }
