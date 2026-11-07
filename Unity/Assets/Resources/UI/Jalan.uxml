@@ -71,6 +71,7 @@
         </ui:VisualElement>
         <ui:VisualElement name="overlay" class="scrim landing">
             <ui:VisualElement name="dialog" class="panel dialog landing-card" />
+            <ui:VisualElement name="vehicleShowroom" class="panel vehicle-showroom hidden" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

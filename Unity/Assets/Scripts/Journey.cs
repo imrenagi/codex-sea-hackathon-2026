@@ -369,6 +369,9 @@ namespace JalanKita
 
             if (Stage >= 5) { StepBoulevard(dt, throttle, brake, steer); return; }
 
+            var oldPosition = Position;
+            float oldHeading = Heading;
+            var oldActors = (CrossTraffic, LaneTraffic, SpurTraffic, PickupTraffic);
             float oldFront = Front;
             float oldX = Position.x;
             float targetSpeed = Mode == VehicleMode.Car ? 16.1f : 16.7f;
@@ -475,6 +478,7 @@ namespace JalanKita
                 if (z >= RouteStage.PhoneEnd && PhoneRinging) ResolvePhone(false);
             }
 
+            CheckEncounterContacts(oldPosition, oldHeading, oldActors);
             if(Pedestrian.HasValue && PedestrianClearance.Touches(Pedestrian.Value,Position,Heading,Mode))
                 Fail(Rule.Pedestrian);
             if (!Failure.HasValue && z >= StageEnd) Advance();
@@ -499,6 +503,10 @@ namespace JalanKita
 
         void UpdateActors(float dt)
         {
+            var previousCross = CrossTraffic;
+            var previousLane = LaneTraffic;
+            var previousSpur = SpurTraffic;
+            var previousPickup = PickupTraffic;
             float z = Position.y;
             if (Stage == 1)
             {
@@ -545,6 +553,10 @@ namespace JalanKita
                     ? new Vector2(walkX * PedestrianDirection, CrossingZebra) : null;
             }
             else if (IsSchool) Pedestrian = null;
+            CrossTraffic = FollowEncounter(previousCross, CrossTraffic, Traffic.Cross, Vector2.right * CrossDirection, 6.2f, dt);
+            LaneTraffic = FollowEncounter(previousLane, LaneTraffic, Traffic.Lane, Vector2.up, 5.1f, dt);
+            SpurTraffic = FollowEncounter(previousSpur, SpurTraffic, Traffic.Spur, Vector2.down, 5, dt);
+            PickupTraffic = FollowEncounter(previousPickup, PickupTraffic, Traffic.Pickup, Vector2.up, Save.variant % 2 == 0 ? 5.1f : 4.6f, dt);
         }
 
         static Vector2? CrossingCar(float timer, float center, int direction)

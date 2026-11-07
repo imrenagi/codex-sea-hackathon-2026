@@ -316,6 +316,7 @@ namespace JalanKita
             if (journey == null) return;
             RefreshProgressiveCue();
             float presentationDt = page == Page.Controls || inputReleaseRequired ? 0 : Time.unscaledDeltaTime;
+            RefreshVehiclePreview(Time.unscaledDeltaTime);
             float look = Mathf.Clamp(heldLook + (Input.GetKey(KeyCode.X) ? 1 : 0) - (Input.GetKey(KeyCode.Z) ? 1 : 0), -1, 1);
             UpdateSound(Time.unscaledDeltaTime);
             if (page == Page.CityPreview) return;
@@ -526,6 +527,7 @@ namespace JalanKita
             location.text = "MEGA KUNINGAN  /  JAKARTA SELATAN";
             title.text = jaksa.AtEnd ? "Selesai menjelajahi Sopo Del" : "Sea Labs Indonesia · Sopo Del";
             instruction.text = jaksa.AtEnd ? "Tekan R untuk mengulang, atau Esc untuk kembali ke menu."
+                : jaksa.VehicleCollision ? "Benturan kendaraan. Berhenti dan beri ruang sebelum melanjutkan."
                 : jaksa.CurbContact ? "Tepi trotoar. Arahkan kendaraan kembali ke jalan."
                 : jaksa.TrafficContact ? "Jaga jarak. Tunggu ruang aman di depan kendaraan."
                 : "Ikuti jalan dan jaga jarak aman.";
@@ -656,7 +658,7 @@ namespace JalanKita
         }
 
         void OnDestroy()
-        { cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
+        { vehiclePreview?.Dispose(); cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
 
         void SelectMode(VehicleMode value)
         {
@@ -1198,6 +1200,7 @@ namespace JalanKita
             dialog.RemoveFromClassList("rule-card");
             dialog.RemoveFromClassList("result-layout");
             dialog.Clear();
+            ShowVehiclePreview(page == Page.Brief || page == Page.Preflight);
             if (value != Page.Drive && value != Page.Jaksa)
                 dialog.schedule.Execute(() => FocusPage(value)).StartingIn(value == Page.Lesson || value == Page.Checkpoint ? 320 : 60);
         }
