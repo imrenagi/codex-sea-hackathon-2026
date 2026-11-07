@@ -97,17 +97,19 @@ namespace JalanKita
         }
         public bool BlocksPlayer(Vector2 from,Vector2 to,float heading,VehicleMode mode,float? previousHeading=null)
         {
-            // Sweep both translation and corner motion during rotation, including steering at rest.
             float startHeading=previousHeading??heading;
-            float turn=Mathf.DeltaAngle(startHeading,heading);
-            float radius=new Vector2(TrafficFootprint.PlayerHalfWidth(mode),TrafficFootprint.PlayerHalfLength(mode)).magnitude;
-            int samples=Mathf.Max(1,Mathf.CeilToInt((Vector2.Distance(from,to)+Mathf.Abs(turn)*Mathf.Deg2Rad*radius)/.15f));
-            for(int i=1;i<=samples;i++)
-                foreach(var a in Actors)
-                    if(TrafficFootprint.Overlaps(Vector2.Lerp(from,to,(float)i/samples),startHeading+turn*i/samples,TrafficFootprint.PlayerHalfWidth(mode),TrafficFootprint.PlayerHalfLength(mode),
-                        a.Position,a.Heading,a.Choice.Vehicle.HalfWidth,a.Choice.Vehicle.HalfLength,.12f))return true;
+            bool Hits(Vector2 point,float yaw,TrafficDefinition definition) =>
+                TrafficFootprint.Sweeps(from,to,startHeading,heading,TrafficFootprint.PlayerHalfWidth(mode),TrafficFootprint.PlayerHalfLength(mode),
+                    point,point,yaw,yaw,definition.HalfWidth,definition.HalfLength,.12f);
+            foreach(var a in Actors) if(Hits(a.Position,a.Heading,a.Choice.Vehicle)) return true;
+            for(int i=0;i<parked.Length;i++)
+            {
+                var p=parking[i];
+                if(Hits(new Vector2(street.RoadX(p.z)+p.x,p.z),p.x<0?185:175,parked[i].Choice.Vehicle)) return true;
+            }
             return false;
         }
+
         public void Present(float dt,Vector2 player)
         {
             foreach(var a in Actors)

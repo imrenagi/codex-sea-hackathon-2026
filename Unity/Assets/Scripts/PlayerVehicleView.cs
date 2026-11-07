@@ -88,6 +88,13 @@ namespace JalanKita
             if (headlamp) headlamp.enabled = visible && headlight;
         }
 
+        public void Dispose()
+        {
+            foreach (var material in ownedMaterials) Models.Kill(material);
+            ownedMaterials.Clear();
+            Models.Kill(Root);
+        }
+
         void Build(VehicleDefinition definition)
         {
             if (content) { content.SetActive(false); Models.Kill(content); }
