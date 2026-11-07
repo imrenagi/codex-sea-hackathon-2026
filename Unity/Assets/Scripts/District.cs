@@ -429,6 +429,12 @@ namespace JalanKita
                 {
                     bool opening = side < 0 && z > PhoneStart && z < PhoneEnd
                         || side > 0 && z > SpurStart - 3 && z < SpurEnd + 3;
+                    if (Mathf.Abs(z - Zebra) < 22)
+                    {
+                        // Keep foliage, poles, and their cables out of the crossing sightline.
+                        lastPole = null;
+                        continue;
+                    }
                     if (NearJunction(z, 9) || opening) continue;
                     Model(z % 3 == 0 ? "Tree_Palm" : "Tree_Shade_1", new Vector3(side * 6.1f, .13f, z), z * 13);
                     Vector3 pole = new(side * 7.1f, .13f, z + 5);
