@@ -12,6 +12,8 @@ namespace JalanKita
         Journey controlsOriginal;
         string controlsPracticeContext;
         bool controlsMoved, controlsBraked;
+        public bool ControlsOnboardingActive => page == Page.Controls || journey?.LearningControls == true
+            || ((page == Page.Jaksa || page == Page.JaksaPause) && !exploreStopped.Contains("explore:" + mode));
         readonly HashSet<string> cueActionsSeen = new();
         Page controlsOrigin, controlsDrivingPage;
         bool inputReleaseRequired;
