@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UIElements;
 namespace JalanKita
 {
     public sealed class CityMapPreview : IDisposable
     {
         readonly GameObject root;
         readonly Camera camera;
+        readonly VisualElement controls;
         readonly List<Mesh> meshes = new();
         readonly List<Material> materials = new();
         readonly bool fog;
@@ -20,6 +22,7 @@ namespace JalanKita
         float distance = 1400;
         public CityMapPreview(Transform parent, CityMapData map)
         {
+            controls = parent.GetComponent<UIDocument>()?.rootVisualElement.Q("dialog");
             fog = RenderSettings.fog; RenderSettings.fog = false;
             previousSun = RenderSettings.sun;
             previousAmbientMode = RenderSettings.ambientMode;
@@ -160,8 +163,16 @@ namespace JalanKita
             focus.x=Mathf.Clamp(focus.x,-864,864); focus.z=Mathf.Clamp(focus.z,-735,735);
             if (Input.GetKey(KeyCode.Equals)||Input.GetKey(KeyCode.KeypadPlus)) Zoom(-dt);
             if (Input.GetKey(KeyCode.Minus)||Input.GetKey(KeyCode.KeypadMinus)) Zoom(dt);
+            float wheel = Input.mouseScrollDelta.y;
+            if (Mathf.Abs(wheel) > .001f && !PointerOverControls()) Zoom(-Mathf.Clamp(wheel, -5, 5) * .12f);
             if (Input.GetKeyDown(KeyCode.R)) Reset();
             MoveCamera();
+        }
+        bool PointerOverControls()
+        {
+            if (controls?.panel == null) return false;
+            var pointer = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
+            return controls.worldBound.Contains(RuntimePanelUtils.ScreenToPanel(controls.panel, pointer));
         }
         float OverviewDistance()
         {
