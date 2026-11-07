@@ -369,7 +369,7 @@ namespace JalanKita
                 if (confirmNew) AddLabel(content, "Ini mengganti progres yang tersimpan untuk kendaraan ini.", "copy");
             }
             AddButton(actions, "Pratinjau peta – belum bisa dimainkan", ShowCityMaps, "quiet");
-            AddLabel(content, "Lihat 6 area Jakarta dengan geser/zoom kamera. Untuk berkendara, pilih jelajah Sopo Del.", "copy");
+            AddLabel(content, "Lihat 6 area Jakarta dengan geser/zoom kamera. Untuk berkendara, pilih Jelajahi Jakarta: Sopo Del, Bundaran HI, atau Monas.", "copy");
             AddControlsHelp(content);
             AddSoundControls(content);
             if (Application.platform != RuntimePlatform.WebGLPlayer)
