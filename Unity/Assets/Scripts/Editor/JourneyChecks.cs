@@ -27,7 +27,7 @@ namespace JalanKita.EditorTools
             save.mistakes[(int)Rule.Pedestrian] = variant;
             save.mistakes[(int)Rule.Junction] = variant;
             save.mistakes[(int)Rule.Railway] = variant;
-            var drive = new Journey(mode, save, persistent: false);
+            var drive = new Journey(mode, save, persistent: false, trafficSeed: 1);
             drive.DriverGear = drive.PassengerGear = drive.Headlight = true;
             Require(drive.Depart(), "Preflight");
             for (int i = 0; i < 30000 && !drive.Finished; i++)
@@ -50,7 +50,7 @@ namespace JalanKita.EditorTools
             string backup = PlayerPrefs.GetString(key);
             try
             {
-                var drive = new Journey(mode, new JourneySave());
+                var drive = new Journey(mode, new JourneySave(), trafficSeed: 1);
                 Require(!drive.Depart() && drive.Failure == (mode == VehicleMode.Car ? Rule.SeatBelt : Rule.Helmet),
                     "Missing gear should stop departure");
                 drive.Retry();
@@ -72,12 +72,12 @@ namespace JalanKita.EditorTools
                     DrivingCoach.Step(drive, .02f);
                 DriveUntilFailure(drive, Rule.Signal);
 
-                drive = new Journey(mode, new JourneySave { next = 2 }, persistent: false);
+                drive = new Journey(mode, new JourneySave { next = 2 }, persistent: false, trafficSeed: 1);
                 DriveUntilFailure(drive, Rule.Pedestrian);
                 drive.Retry();
                 Require(drive.Position.y == RouteStage.All[1].End && drive.Stage == 2, "Zebra retry preserves checkpoint 02");
 
-                drive = new Journey(mode, new JourneySave { next = 3 }, persistent: false);
+                drive = new Journey(mode, new JourneySave { next = 3 }, persistent: false, trafficSeed: 1);
                 DriveUntilFailure(drive, Rule.ReturnLeft);
                 drive.Retry();
                 // Wait for the randomized lane vehicle to clear before isolating the signal rule.
@@ -88,7 +88,7 @@ namespace JalanKita.EditorTools
                 for (int i = 0; i < 500 && !drive.Failure.HasValue; i++) drive.Step(.02f, true, false, .35f);
                 Require(drive.Failure == Rule.Indicator, $"Detect lane change without indicator: {mode}, {drive.Failure}, {drive.Position}");
 
-                drive = new Journey(mode, new JourneySave { next = 4 }, persistent: false);
+                drive = new Journey(mode, new JourneySave { next = 4 }, persistent: false, trafficSeed: 1);
                 DriveUntilFailure(drive, Rule.Speed);
                 drive.Retry();
                 for (int i = 0; i < 500 && !drive.PhoneRinging; i++)

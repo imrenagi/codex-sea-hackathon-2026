@@ -54,6 +54,7 @@ namespace JalanKita.EditorTools
                 VerifyArrowDirections();
                 IntegrationChecks.VerifyUI(game);
                 VerifyMirrorsAndLook(game);
+                SignalChecks.Verify(game);
                 Debug.Log("Result flow checks passed: both vehicles, all ten completion cards, mission selection, saved progress, arrow directions, continuous resume, final quiz and checkpoint retry.");
                 EditorApplication.Exit(0);
             }
@@ -67,7 +68,7 @@ namespace JalanKita.EditorTools
         static void Verify(JalanGame game, VehicleMode mode)
         {
             Set(game, "practiceStart", -1);
-            var run = new Journey(mode, new JourneySave(), persistent: false);
+            var run = new Journey(mode, new JourneySave(), persistent: false, trafficSeed: 1);
             Set(game, "mode", mode);
             Set(game, "journey", run);
             run.DriverGear = run.PassengerGear = run.Headlight = true;
@@ -92,7 +93,7 @@ namespace JalanKita.EditorTools
                 Require(!run.Failure.HasValue, "Route remains driveable");
             }
 
-            run = new Journey(mode, new JourneySave { next = 1 }, persistent: false);
+            run = new Journey(mode, new JourneySave { next = 1 }, persistent: false, trafficSeed: 1);
             Set(game, "journey", run);
             for (int frame = 0; frame < 1000 && !run.Failure.HasValue; frame++)
                 run.Step(.02f, true, false, 0);
@@ -209,7 +210,7 @@ namespace JalanKita.EditorTools
             Require(root.Q<Button>("lookLeft")!=null && root.Q<Button>("lookRight")!=null,"Look buttons available");
             foreach(VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
             {
-                var run=new Journey(mode,new JourneySave { next=5 },persistent:false);
+                var run=new Journey(mode,new JourneySave { next=5 },persistent:false,trafficSeed:1);
                 district.Snap();
                 district.Present(run,false,1,true,-1);
                 Require(Camera.main.transform.forward.x < -.8f,"Z looks left without steering the vehicle");
