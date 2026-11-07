@@ -243,6 +243,24 @@ namespace JalanKita
             float halfViewHeight = 4 * Mathf.Tan(camera.fieldOfView * .5f * Mathf.Deg2Rad);
             compass.localPosition = new Vector3(halfViewHeight * camera.aspect - .3f, halfViewHeight - .4f, 4);
         }
+        // Cached home showcase uses the real map meshes without rebuilding every five seconds.
+        public void SetShowcaseVisible(bool visible)
+        {
+            root.SetActive(visible);
+            if (!visible) return;
+            RenderSettings.fog = false;
+            RenderSettings.sun = root.GetComponentInChildren<Light>();
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(.52f,.57f,.61f);
+        }
+        public void PresentShowcase(float seconds)
+        {
+            compass.gameObject.SetActive(false);
+            float angle = (seconds * 3f + 180f) * Mathf.Deg2Rad;
+            var target = new Vector3(0, 12, 0);
+            camera.transform.position = target + new Vector3(Mathf.Sin(angle)*430f, 360f, Mathf.Cos(angle)*430f);
+            camera.transform.LookAt(target);
+        }
         public void Dispose()
         {
             if (root) { root.SetActive(false); UnityEngine.Object.Destroy(root); }
