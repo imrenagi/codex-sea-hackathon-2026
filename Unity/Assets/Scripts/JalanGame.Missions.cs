@@ -7,12 +7,22 @@ namespace JalanKita
     public sealed partial class JalanGame
     {
         MissionKind catalogueKind;
+        System.Action catalogueBack;
+        void BackFromCatalogue() => (catalogueBack ?? ShowPlayChooser)();
         void ShowCatalogue(MissionKind kind)
         {
+            // Brief -> Back preserves the catalogue's original parent.
+            if (page == Page.Progress && journey.Activity != null)
+                catalogueBack = ShowMissionProgress;
+            else if (page != Page.Brief && page != Page.Catalogue)
+            {
+                bool previousPractice = practiceChooser;
+                catalogueBack = () => ShowJourneyChooser(previousPractice);
+            }
             catalogueKind = kind;
             SetPage(Page.Catalogue);
             AddLabel(dialog, GameText.Get(kind == MissionKind.Scenario ? "text.everyday_missions" : "level.choose.title"), "heading");
-            BuildSelectionBrowser(MissionSelections(kind), ShowPlayChooser);
+            BuildSelectionBrowser(MissionSelections(kind), BackFromCatalogue);
         }
 
         // The primary chooser follows the real saved journey, not the separate skill-test catalogue.
@@ -24,7 +34,6 @@ namespace JalanKita
             var tutorialBody = Element(tutorial, "selection-mission-body");
             AddLabel(tutorialBody, GameText.Get("level.tutorial.title"), "subhead mission-title");
             AddLabel(tutorialBody, GameText.Get("level.tutorial.description"), "copy");
-            AddLabel(tutorialBody, GameText.Get("level.tutorial.detail"), "objective-detail");
 
             string[] thumbnails = { "preparation", "signals", "priority", "lanes", "focus",
                 "straight", "left_turn", "right_turn", "railway", "ambulance" };
@@ -67,7 +76,6 @@ namespace JalanKita
                 var body = Element(tutorial, "selection-mission-body");
                 AddLabel(body, GameText.Get("level.tutorial.title"), "subhead mission-title");
                 AddLabel(body, GameText.Get("level.tutorial.description"), "copy");
-                AddLabel(body, GameText.Get("level.tutorial.detail"), "objective-detail");
             }
             foreach (var activity in kind == MissionKind.Scenario ? Mission.Scenarios : Mission.Tests)
             {
@@ -144,24 +152,17 @@ namespace JalanKita
             var sheet = journey.Finished
                 ? Result(GameText.Get(scenario ? "text.mission_complete" : "text.test_complete"), "good", activity.Title) : null;
             VisualElement content = sheet != null ? ResultBody(sheet) : dialog;
-            if (!journey.Finished)
+            if (journey.Finished)
+                AddScoreSummary(content,journey.Save.mistakes,PracticeScore.Load(mode,"mission-"+activity.Id).bestStars);
+            else
             {
                 AddLabel(content, GameText.Get("text.progress_saved"), "kicker");
                 AddLabel(content, activity.Title, "heading");
+                AddLabel(content, GameText.Get("text.continue_or_choose_another_activity"), "copy");
+                var note = Element(content, "note");
+                AddLabel(note, GameText.Get("text.practice_focus"), "kicker");
+                AddLabel(note, activity.Focus, "copy");
             }
-            if(journey.Finished) AddScoreSummary(content,journey.Save.mistakes,PracticeScore.Load(mode,"mission-"+activity.Id).bestStars);
-            AddLabel(content, journey.Finished ? scenario ? GameText.Get("text.destination_reached_safely") : GameText.Get("text.latest_attempt_passed")
-                : GameText.Get("text.continue_or_choose_another_activity"), "copy");
-            AddLabel(content, GameText.Get("missions.attempts", journey.Save.attempts, journey.MistakeCount), "copy");
-            if (journey.Finished)
-                AddLabel(content, GameText.Get("missions.best_result", journey.Save.bestMistakes, journey.Save.completions), "objective-detail");
-            var note = Element(content, "note");
-            AddLabel(note, journey.Finished ? GameText.Get("text.skills_practiced") : GameText.Get("text.practice_focus"), "kicker");
-            AddLabel(note, activity.Focus, "copy");
-            var errors = Enumerable.Range(0, Lesson.All.Length).Where(i => journey.Save.mistakes[i] > 0)
-                .OrderByDescending(i => journey.Save.mistakes[i]).Take(2).ToArray();
-            foreach (int i in errors) AddLabel(note, journey.Save.mistakes[i] + "×  " + Lesson.All[i].Title, "objective-detail");
-            if (journey.Finished && errors.Length == 0) AddLabel(note, GameText.Get("text.completed_this_session_without_mistakes"), "objective-detail");
             AddControlsHelp(content);
             var actions = Element(sheet ?? content, sheet != null ? "sheet-actions" : "row actions");
             if (!journey.Finished) AddButton(actions, GameText.Get("text.continue"), () =>

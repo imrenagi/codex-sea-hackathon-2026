@@ -19,14 +19,66 @@ namespace JalanKita
         }
         void AddScoreSummary(VisualElement parent, int[] counts, int best)
         {
-            int stars=PracticeRating.Stars(true,counts);
-            AddLabel(parent, PracticeRating.Symbols(stars), "heading");
-            AddLabel(parent,GameText.Get("rating.result",stars,PracticeRating.Total(counts),PracticeRating.Serious(counts)),"copy");
-            AddLabel(parent,GameText.Get("rating.best",best),"objective-detail");
-            AddLabel(parent,GameText.Get("rating.criteria"),"copy");
-            AddLabel(parent,GameText.Get("rating.disclaimer"),"copy");
-            for(int i=0;i<counts.Length;i++) if(counts[i]>0)
-                AddLabel(parent,counts[i]+"× "+Lesson.All[i].Title,"objective-detail");
+            int stars = PracticeRating.Stars(true, counts);
+            var row = new VisualElement { name = "completionStars" };
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.justifyContent = Justify.Center;
+            row.style.alignItems = Align.Center;
+            row.style.width = Length.Percent(100);
+            row.style.marginTop = 18;
+            row.style.marginBottom = 24;
+            row.tooltip = stars + "/3";
+            for (int i = 0; i < 3; i++) row.Add(new CompletionStar(i < stars, i == 1));
+            parent.Add(row);
+        }
+
+        // Vector artwork stays crisp and does not depend on a font's star glyph.
+        sealed class CompletionStar : VisualElement
+        {
+            readonly bool earned;
+            public CompletionStar(bool earned, bool centre)
+            {
+                this.earned = earned;
+                pickingMode = PickingMode.Ignore;
+                style.width = Length.Percent(30);
+                style.maxWidth = centre ? 132 : 116;
+                style.height = centre ? 142 : 126;
+                style.flexShrink = 1;
+                generateVisualContent += Draw;
+            }
+            void Draw(MeshGenerationContext context)
+            {
+                float w = contentRect.width, h = contentRect.height;
+                if (w < 1 || h < 1) return;
+                var pen = context.painter2D;
+                float radius = Mathf.Min(w, h) * .43f;
+                var centre = new Vector2(w * .5f, h * .5f);
+                var points = new Vector2[10];
+                for (int i = 0; i < points.Length; i++)
+                {
+                    float a = (-90 + i * 36) * Mathf.Deg2Rad;
+                    float r = radius * (i % 2 == 0 ? 1 : .46f);
+                    points[i] = centre + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+                }
+                pen.fillColor = new Color(0, 0, 0, .25f);
+                pen.BeginPath();
+                for (int i = 0; i < 10; i++)
+                { var p = points[i] + new Vector2(0, 4); if (i == 0) pen.MoveTo(p); else pen.LineTo(p); }
+                pen.ClosePath(); pen.Fill();
+                for (int i = 0; i < 10; i++)
+                {
+                    pen.fillColor = earned
+                        ? (i % 2 == 0 ? new Color(1f, .79f, .22f) : new Color(.90f, .56f, .08f))
+                        : new Color(.22f, .25f, .28f);
+                    pen.BeginPath(); pen.MoveTo(centre); pen.LineTo(points[i]);
+                    pen.LineTo(points[(i + 1) % 10]); pen.ClosePath(); pen.Fill();
+                }
+                pen.strokeColor = earned ? new Color(1f, .91f, .51f) : new Color(.40f, .45f, .48f);
+                pen.lineWidth = earned ? 2f : 1.5f;
+                pen.BeginPath();
+                for (int i = 0; i < 10; i++) { if (i == 0) pen.MoveTo(points[i]); else pen.LineTo(points[i]); }
+                pen.ClosePath(); pen.Stroke();
+            }
         }
         void ShowPracticeScore(int stage)
         {

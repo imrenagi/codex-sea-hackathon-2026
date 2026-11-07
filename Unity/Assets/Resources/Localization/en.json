@@ -495,7 +495,7 @@
     },
     {
       "key": "text.buildings_and_roads_from_osm_some_heights_and_widths",
-      "value": "Buildings and roads from OSM. Some heights and widths are approximate; this is not a surveyed model. North is ahead."
+      "value": "Building heights and road widths are approximate; this is not a surveyed model. North is ahead."
     },
     {
       "key": "text.call_ignored_stay_focused",
@@ -1455,7 +1455,7 @@
     },
     {
       "key": "text.osm_source",
-      "value": "OSM source"
+      "value": "Map source"
     },
     {
       "key": "text.pan_and_zoom_around_6_jakarta_areas_choose_sopo",
@@ -2687,7 +2687,7 @@
     },
     {
       "key": "maps.thumbnail_attribution",
-      "value": "Map thumbnails: © OpenStreetMap contributors · ODbL. Illustrative building heights. Previews are not practice routes."
+      "value": "Illustrative building heights. Previews are not practice routes."
     },
     {
       "key": "maps.open_preview",

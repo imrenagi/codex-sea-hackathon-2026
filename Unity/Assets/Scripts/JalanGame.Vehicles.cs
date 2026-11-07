@@ -8,6 +8,8 @@ namespace JalanKita
     {
         VehiclePreview vehiclePreview;
         Label previewDescription;
+        Image activeVehicleImage;
+        VisualElement activeVehicleChoices;
 
         void ShowVehiclePreview(bool visible)
         {
@@ -15,29 +17,18 @@ namespace JalanKita
             Show(panel, visible);
             overlay.EnableInClassList("showroom", visible);
             vehiclePreview?.SetVisible(visible);
-            if (!visible) return;
+            activeVehicleImage = null;
+            activeVehicleChoices = null;
+            previewDescription = null;
+            if (!visible) { panel.Clear(); return; }
             vehiclePreview ??= new VehiclePreview(transform);
             vehiclePreview.SetVisible(true);
             panel.Clear();
             AddLabel(panel, GameText.Get("vehicles.preview.title"), "kicker");
-            var image = new Image { name = "vehiclePreview", image = vehiclePreview.Texture, scaleMode = ScaleMode.ScaleToFit, focusable = true };
-            image.AddToClassList("vehicle-preview");
-            image.AddManipulator(new VehicleRotationDrag(vehiclePreview));
-            image.RegisterCallback<KeyDownEvent>(e =>
-            {
-                if (e.keyCode != KeyCode.LeftArrow && e.keyCode != KeyCode.RightArrow) return;
-                vehiclePreview.Rotate(e.keyCode == KeyCode.LeftArrow ? -15 : 15); e.StopPropagation();
-            });
-            image.RegisterCallback<NavigationMoveEvent>(e =>
-            {
-                // Arrow keys rotate this focused image; their parallel navigation
-                // event must not move focus to a different menu control.
-                if (e.direction == NavigationMoveEvent.Direction.Left || e.direction == NavigationMoveEvent.Direction.Right)
-                    ConsumeDrivingKey(e);
-            });
-            panel.Add(image);
+            AddInteractiveVehicleImage(panel);
             // Model selection stays beside its preview; drag or arrow keys control rotation.
             var choices = Element(panel, "vehicle-choices");
+            activeVehicleChoices = choices;
             foreach (var choice in VehicleCatalogue.All.Where(v => v.Mode == mode))
             {
                 var button = AddButton(choices, choice.Label, () =>
@@ -69,14 +60,39 @@ namespace JalanKita
             RefreshVehiclePreview(0);
         }
 
+        Image AddInteractiveVehicleImage(VisualElement parent)
+        {
+            vehiclePreview ??= new VehiclePreview(transform);
+            vehiclePreview.SetVisible(true);
+            var image = new Image { name = "vehiclePreview", image = vehiclePreview.Texture, scaleMode = ScaleMode.ScaleToFit, focusable = true };
+            image.AddToClassList("vehicle-preview");
+            image.AddManipulator(new VehicleRotationDrag(vehiclePreview));
+            image.RegisterCallback<KeyDownEvent>(e =>
+            {
+                if (e.keyCode != KeyCode.LeftArrow && e.keyCode != KeyCode.RightArrow) return;
+                vehiclePreview.Rotate(e.keyCode == KeyCode.LeftArrow ? -15 : 15); e.StopPropagation();
+            });
+            image.RegisterCallback<NavigationMoveEvent>(e =>
+            {
+                // Arrow keys rotate this focused image; their parallel navigation
+                // event must not move focus to a different menu control.
+                if (e.direction == NavigationMoveEvent.Direction.Left || e.direction == NavigationMoveEvent.Direction.Right)
+                    ConsumeDrivingKey(e);
+            });
+            parent.Add(image);
+            activeVehicleImage = image;
+            return image;
+        }
+
         void RefreshVehiclePreview(float dt)
         {
             if (vehiclePreview == null || !vehiclePreview.Visible) return;
             vehiclePreview.Present(mode, dt);
             var selected = VehicleCatalogue.Selected(mode);
-            previewDescription.text = selected.Description;
-            root.Q<Image>("vehiclePreview").tooltip = selected.Label + " · " + selected.Description;
-            foreach (var choice in root.Q("vehicleShowroom").Query<Button>(className: "vehicle-choice").ToList())
+            if (previewDescription != null) previewDescription.text = selected.Description;
+            if (activeVehicleImage != null) activeVehicleImage.tooltip = selected.Label + " · " + selected.Description;
+            if (activeVehicleChoices == null) return;
+            foreach (var choice in activeVehicleChoices.Query<Button>(className: "vehicle-choice").ToList())
             {
                 bool active = ReferenceEquals(choice.userData, selected);
                 choice.EnableInClassList("selected", active);

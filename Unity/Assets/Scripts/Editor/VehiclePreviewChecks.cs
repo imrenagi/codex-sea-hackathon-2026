@@ -29,17 +29,19 @@ namespace JalanKita.EditorTools
             var root=game.GetComponent<UIDocument>().rootVisualElement;
             foreach(var definition in VehicleCatalogue.All)
             {
-                Call(game,"ShowPlayChooser");
-                Call(game,"SelectMode",definition.Mode);
-                Click(root.Query<Button>().ToList().Find(b=>b.text=="Lihat kendaraan 3D"));
+                Call(game,"ShowJourneyChooser",false);
+                Require(root.Q<Image>("vehiclePreview")==null,"Map selection precedes the vehicle showroom");
+                Click(root.Q<Button>("selectionContinue"));
+                Click(root.Q<Button>("selectionVehicle-"+definition.Mode));
                 Click(root.Q<Button>("vehicle-"+definition.Id));
                 var preview=(VehiclePreview)Field(game,"vehiclePreview");
                 Require(preview.Definition==definition && VehicleCatalogue.Selected(definition.Mode)==definition,"Selecting model updates render and gameplay selection");
                 float angle=preview.Angle;
                 preview.AutoRotate=true; preview.Present(definition.Mode,.1f);
                 Require(Mathf.Abs(Mathf.DeltaAngle(angle,preview.Angle))>1,"Automatic rotation advances");
-                root.Q<Slider>("vehicleAngle").value=270;
-                Require(!preview.AutoRotate && Mathf.Abs(preview.Angle-270)<.01f,"Manual slider controls full turn and pauses auto");
+                Require(root.Q<Slider>("vehicleAngle")==null,"Angle slider remains removed");
+                preview.SetAngle(270);
+                Require(!preview.AutoRotate && Mathf.Abs(preview.Angle-270)<.01f,"Manual rotation pauses auto");
                 preview.Rotate(180); Require(Mathf.Abs(preview.Angle-90)<.01f,"Manual rotation wraps 360 degrees");
                 var image=root.Q<Image>("vehiclePreview");
                 using(var key=KeyDownEvent.GetPooled(new Event {type=EventType.KeyDown,keyCode=KeyCode.RightArrow}))
@@ -60,7 +62,7 @@ namespace JalanKita.EditorTools
                 { move.target=image; image.SendEvent(move); }
                 using(var up=PointerUpEvent.GetPooled(new Event {type=EventType.MouseUp,button=0,mousePosition=new Vector2(200,100)}))
                 { up.target=image; image.SendEvent(up); }
-                Require(Mathf.Abs(Mathf.DeltaAngle(beforeDrag,preview.Angle)-60)<.1f,"Pointer drag rotates the vehicle and releases capture");
+                Require(Mathf.Abs(Mathf.DeltaAngle(beforeDrag,preview.Angle)+60)<.1f,"Pointer drag rotates the vehicle and releases capture");
                 float stoppedAngle=preview.Angle;
                 preview.Present(definition.Mode,.1f);
                 Require(!preview.AutoRotate && Mathf.Abs(Mathf.DeltaAngle(stoppedAngle,preview.Angle))<.01f,"Drag remains stopped on subsequent frames");
@@ -105,7 +107,7 @@ namespace JalanKita.EditorTools
                 var def=VehicleCatalogue.All[Mathf.Min(shot,VehicleCatalogue.All.Length-1)];
                 if(!captured && EditorApplication.timeSinceStartup-began<.2)
                 {
-                    Call(game,"ShowPlayChooser");
+                    Call(game,"ShowJourneyChooser",false);
                     Call(game,"SelectMode",def.Mode); VehicleCatalogue.Select(def);
                     var chooserRoot=game.GetComponent<UIDocument>().rootVisualElement;
                     Click(chooserRoot.Query<Button>().ToList().Find(b=>b.text=="Lihat kendaraan 3D"));
