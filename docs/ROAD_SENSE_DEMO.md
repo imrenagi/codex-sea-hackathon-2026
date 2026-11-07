@@ -2,7 +2,7 @@
 
 **Tim We Will Handle · Total 6 menit**
 
-Narator menjaga waktu. Operator menjalankan game. Rehearsal sebelum tampil; siapkan rekaman dan screenshot dari build yang sama.
+Narator menjaga waktu. Operator menjalankan game. Latih alur sebelum tampil. Ketersediaan rekaman belum dikonfirmasi. Lihat [handoff macOS](ROAD_SENSE_HANDOFF.md) untuk revisi paket dan batas verifikasi.
 
 | Waktu | Narasi dan aksi |
 |---|---|
@@ -20,6 +20,6 @@ Narator menjaga waktu. Operator menjalankan game. Rehearsal sebelum tampil; siap
 
 **Kontrol:** W gas; Space/S rem; A/D kemudi; F1 panduan; Tab/Esc jeda; D contoh pada feedback; R retry. **Ulangi demo** pada hasil membuat sesi baru.
 
-**Fallback:** fokuskan game sekali jika input macet. Pada 03:40, beralih ke rekaman yang sudah disiapkan jika runtime tersendat. Sebut jelas bahwa itu rekaman. Jika tidak tersedia, gunakan screenshot asli dan jelaskan bagian yang belum berhasil ditampilkan. Tetap selesai 06:00.
+**Fallback:** fokuskan game sekali jika input macet. Pada 03:40, jika runtime tersendat dan rekaman build yang sama memang tersedia, tampilkan rekaman dan sebutkan asalnya. Jika tidak tersedia, jelaskan bagian yang belum berhasil ditampilkan. Tetap selesai 06:00.
 
-Label dicocokkan ke UI `7401aa1` dan integrasi `5bb178b`. Runtime belum dibuktikan di sini. Jangan mengklaim statistik pengguna, peningkatan kemampuan, atau penyelesaian yang belum terlihat.
+Label dan alur mengacu pada source build `bb638069b168b64770b3c0396d4f213bba2b8236`. Latihan awal berjalan langsung: W untuk bergerak, lalu S sampai berhenti. Tidak ada modal kontrol otomatis; F1 membuka panduan manual yang menjeda game. Compile/build dan pembukaan aplikasi sudah dilakukan. Gameplay, input, perilaku grace dan audio terbaru masih perlu dicoba pengguna. Jangan mengklaim statistik pengguna, peningkatan kemampuan, atau penyelesaian yang belum terlihat.

@@ -17,11 +17,11 @@ The local village activities and Sopo Del retain their deterministic bicycle con
 
 ## Pitch demo
 
-For the presenting laptop, fetch and check out `codex/demo-ready`. This alias follows the reviewed RoadSense integration; PR #1 is already merged and new changes use a successor PR.
+For the presenting laptop, fetch and check out `codex/demo-ready`. This alias follows the RoadSense integration; PR #1 is already merged and new changes use PR #18. See the [macOS handoff](docs/ROAD_SENSE_HANDOFF.md) for the installed app revision and remaining user checks.
 
 From the **Play / Options / Exit** home, choose **Play**, choose the **Mobil** or **Motor** card, then **Mode lainnya** > **Coba demo · Hak utama**. Follow WASD practice, then hold **S** to brake to a stop. This practice has no penalties or saved progression; it then restores the real journey. Later braking and indicator hints follow the situation. This opens Pasar Bunga; the demo leaves saved progress unchanged. **F1** opens the paused controls guide, and **Options** contains audio settings. WebGL omits Exit.
 
-1. Use **F2** on the main menu to enter the demo, or choose it from **Play > Mode lainnya**. Follow the initial WASD cue. Hold **W** toward the occupied zebra crossing to show a violation. Release the key when the feedback opens.
+1. Use **F2** on the main menu to enter the demo, or choose it from **Play > Mode lainnya**. Complete the initial movement practice, then hold **S** until stopped. After the real session is restored, hold **W** toward the occupied zebra crossing to show a violation. Release the key when the feedback opens.
 2. Show the explanation, correct action, and visible legal citation. **Lihat contoh** plays the existing driving coach. **Tab** returns to the feedback.
 3. Press **R** to retry. Use **Space** to stop before the crossing. Wait for the pedestrian. At the next intersection, stop before the yield line and give way to cross traffic. **Lihat contoh** is the live backup for this full sequence.
 4. Finish at the green checkpoint. The demo ends with its actual mistake count. **Ulangi demo** starts a fresh session.
