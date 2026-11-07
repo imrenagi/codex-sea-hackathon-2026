@@ -14,7 +14,7 @@ namespace JalanKita
         Journey controlsOriginal;
         string controlsPracticeContext;
         bool controlsMoved, controlsBraked;
-        public bool ControlsOnboardingActive => page == Page.Controls || journey?.LearningControls == true
+        public bool ControlsOnboardingActive => page == Page.TutorialBrake || (pitchDemo && !demoCrossingTaught) || page == Page.Controls || journey?.LearningControls == true
             || ((page == Page.Jaksa || page == Page.JaksaPause) && !exploreStopped.Contains("explore:" + mode));
         readonly HashSet<string> cueActionsSeen = new();
         Page controlsOrigin, controlsDrivingPage;
@@ -28,35 +28,43 @@ namespace JalanKita
             KeyCode.Tab, KeyCode.Escape, KeyCode.P
         };
 
-        void PlayFromHome()
-        {
-            if (PlayerPrefs.GetInt(ControlsCompleteKey, 0) == 1) ShowPlayChooser();
-            else StartEntryTutorial();
-        }
+        bool demoCrossingTaught, demoBrakeLatched, demoCrossingReady, demoActionReleased;
+
+        void PlayFromHome() => StartEntryTutorial();
 
         void StartEntryTutorial()
         {
             PrepareMenuScene();
             mode = VehicleMode.Car;
-            entryTutorial = true;
-            controlsPracticeStarted.Remove("training:" + mode);
-            journey = new Journey(mode, new JourneySave { next = 1 }, persistent: false);
-            district.Snap();
-            EnterHumanDrive(Page.Drive);
+            StartPitchDemo();
+        }
+
+        bool PauseForDemoCrossing()
+        {
+            if (!pitchDemo || demoCrossingTaught || learner != null || journey.Stage != 2
+                || !journey.Pedestrian.HasValue || journey.Position.y < journey.CrossingZebra - 19) return false;
+            demoCrossingTaught = true;
+            demoActionReleased = false;
+            journey.LearningControls = true;
+            SetPage(Page.TutorialBrake);
+            AddLabel(dialog, "Ada orang menyeberang", "kicker");
+            AddLabel(dialog, "Tekan [S] untuk mengerem", "tutorial-instruction");
+            return true;
+        }
+
+        void ResumeDemoCrossing()
+        {
+            demoBrakeLatched = true;
+            demoCrossingReady = demoActionReleased = false;
+            inputReleaseRequired = false;
+            SetPage(Page.Drive);
+            toast.text = "Mengerem. Tunggu sampai orang selesai menyeberang.";
+            toastUntil = Time.unscaledTime + 6;
         }
 
         void EnterHumanDrive(Page drivingPage)
         {
             string context = (drivingPage == Page.Jaksa ? "explore:" : "training:") + mode;
-            if (drivingPage == Page.Drive && !journey.LearningControls
-                && (entryTutorial || PlayerPrefs.GetInt(ControlsCompleteKey, 0) != 1) && controlsPracticeStarted.Add(context))
-            {
-                controlsOriginal = journey;
-                controlsPracticeContext = context;
-                controlsMoved = controlsBraked = false;
-                journey = NewControlsPractice();
-                district.Snap();
-            }
             SetPage(drivingPage);
             inputReleaseRequired = true;
         }
@@ -190,6 +198,19 @@ namespace JalanKita
         {
             var cue = root.Q("progressiveCue");
             Show(cue, false);
+            bool guidedDemo = page == Page.Drive && pitchDemo && journey.LearningControls && learner == null;
+            hud.EnableInClassList("demo-guided", guidedDemo);
+            Show(root.Q("demoTutorialCue"), guidedDemo);
+            if (guidedDemo)
+            {
+                root.Q<Label>("demoTutorialInstruction").text = inputReleaseRequired
+                    ? "Lepaskan tombol untuk melanjutkan"
+                    : demoBrakeLatched
+                        ? demoCrossingReady ? "Tekan [W] untuk melanjutkan"
+                            : "Tunggu sampai pejalan kaki selesai menyeberang"
+                        : "Tekan [W] untuk mulai berkendara";
+                return;
+            }
             if ((page != Page.Drive && page != Page.Jaksa) || learner != null
                 || inputReleaseRequired || !Application.isFocused) return;
             if (!root.Q("hudHint").ClassListContains("hidden")) return;
@@ -267,7 +288,7 @@ namespace JalanKita
             AddButton(parent, "Kontrol berkendara [F1]", () => ShowControls(page,
                 page == Page.Jaksa || page == Page.JaksaPause ? Page.Jaksa : Page.Drive, false), "quiet help-action");
             if (page == Page.Options)
-                AddButton(parent, "Ulangi latihan gerak & rem", StartEntryTutorial, "quiet help-action");
+                AddButton(parent, "Ulangi tutorial demo", StartEntryTutorial, "quiet help-action");
         }
     }
 }

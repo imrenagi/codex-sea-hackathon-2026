@@ -10,7 +10,7 @@ namespace JalanKita
     [RequireComponent(typeof(UIDocument))]
     public sealed partial class JalanGame : MonoBehaviour
     {
-        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, Controls, PlayChooser, Options }
+        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, Controls, PlayChooser, Options, TutorialBrake }
 
         District district;
         GameObject trainingRoot;
@@ -190,6 +190,17 @@ namespace JalanKita
 
         void Update()
         {
+            if (page == Page.TutorialBrake)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape)) ResumeDemoCrossing();
+                else if (Input.GetKeyDown(KeyCode.R)) StartPitchDemo();
+                else if (Application.isFocused)
+                {
+                    if (!Input.GetKey(KeyCode.S)) demoActionReleased = true;
+                    else if (demoActionReleased && Input.GetKeyDown(KeyCode.S)) ResumeDemoCrossing();
+                }
+                return;
+            }
             if ((page == Page.Before || page == Page.After) && Input.GetKeyDown(KeyCode.Escape)) { BackFromQuiz(); return; }
             if ((page == Page.Menu || page == Page.PlayChooser) && Input.GetKeyDown(KeyCode.F2)) { StartPitchDemo(); return; }
             if (Input.GetKeyDown(KeyCode.M)) ToggleSound();
@@ -246,6 +257,23 @@ namespace JalanKita
             }
             if (page == Page.Drive)
             {
+                if (demoBrakeLatched)
+                {
+                    if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab)) ShowProgress();
+                    else if (Input.GetKeyDown(KeyCode.R)) Retry();
+                    else if (demoCrossingReady && Application.isFocused)
+                    {
+                        if (!Input.GetKey(KeyCode.W)) demoActionReleased = true;
+                        else if (demoActionReleased && Input.GetKeyDown(KeyCode.W))
+                        {
+                            demoBrakeLatched = demoCrossingReady = demoActionReleased = false;
+                            journey.LearningControls = false;
+                            toast.text = "Bagus! Lanjut berkendara. Aturan normal sekarang aktif.";
+                            toastUntil = Time.unscaledTime + 5;
+                        }
+                    }
+                    return;
+                }
                 if (Input.GetKeyDown(KeyCode.P) && journey.Activity == null && !pitchDemo) { OpenMissionPicker(); return; }
                 if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Escape)) { ShowProgress(); return; }
                 if (Input.GetKeyDown(KeyCode.R)) Retry();
@@ -299,11 +327,20 @@ namespace JalanKita
                 if (journey.Stage != priorStage || journey.Failure.HasValue) EndDemonstration();
                 return;
             }
+            if (PauseForDemoCrossing()) return;
+            if (demoBrakeLatched)
+            {
+                // Keep pedestrians moving while the teaching step holds the vehicle stopped.
+                // LearningControls also blocks scoring/progression while this step owns input.
+                journey.Step(Time.fixedDeltaTime, false, true, 0);
+                demoCrossingReady = journey.Speed == 0 && !journey.Pedestrian.HasValue;
+                return;
+            }
             float steer = (Pressed(KeyCode.D, KeyCode.RightArrow) ? 1 : 0)
                 - (Pressed(KeyCode.A, KeyCode.LeftArrow) ? 1 : 0);
             float previousSpeed = journey.Speed;
-            journey.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
-                Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), steer);
+            journey.Step(Time.fixedDeltaTime, !demoBrakeLatched && Pressed(KeyCode.W, KeyCode.UpArrow),
+                demoBrakeLatched || Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), steer);
             CompleteControlsPractice(previousSpeed);
             if (page != Page.Drive) return;
             if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
@@ -315,7 +352,7 @@ namespace JalanKita
         {
             if (journey == null) return;
             RefreshProgressiveCue();
-            float presentationDt = page == Page.Controls || inputReleaseRequired ? 0 : Time.unscaledDeltaTime;
+            float presentationDt = page == Page.Controls || page == Page.TutorialBrake || inputReleaseRequired ? 0 : Time.unscaledDeltaTime;
             RefreshVehiclePreview(Time.unscaledDeltaTime);
             float look = Mathf.Clamp(heldLook + (Input.GetKey(KeyCode.X) ? 1 : 0) - (Input.GetKey(KeyCode.Z) ? 1 : 0), -1, 1);
             UpdateSound(Time.unscaledDeltaTime);
@@ -363,6 +400,7 @@ namespace JalanKita
         {
             if (focus) return;
             heldLook = 0;
+            demoActionReleased = false;
             if (root == null || journey == null) return;
             if (page == Page.Jaksa) ShowJaksaPause();
             else if (page == Page.Drive)
@@ -381,6 +419,7 @@ namespace JalanKita
         {
             CloseCityPreview();
             pitchDemo = false;
+            demoBrakeLatched = demoCrossingReady = demoActionReleased = false;
             practiceStart = -1;
             learner = null;
             controlsOriginal = null;
@@ -615,13 +654,15 @@ namespace JalanKita
 
         void StartPitchDemo()
         {
+            demoCrossingTaught = demoBrakeLatched = demoCrossingReady = demoActionReleased = false;
+            controlsOriginal = null;
             demoStartedAt = Time.realtimeSinceStartupAsDouble;
             demoFinishedAt = -1;
             CloseCityPreview();
             pitchDemo = true;
             practiceStart = -1;
             learner = null;
-            journey = new Journey(mode, new JourneySave { next = 2 }, persistent: false);
+            journey = new Journey(mode, new JourneySave { next = 2 }, persistent: false) { LearningControls = true };
             hood = false;
             district.Snap();
             progress.tooltip = "Jeda demo  [Tab]";
@@ -882,7 +923,7 @@ namespace JalanKita
         void Retry()
         {
             sound.RetryCue();
-            if (PitchComplete) { StartPitchDemo(); return; }
+            if (pitchDemo) { StartPitchDemo(); return; }
             journey.Retry();
             district.Snap();
             if (journey.Stage == 0) ShowPreflight();
@@ -1188,6 +1229,7 @@ namespace JalanKita
             var textures = (page == Page.Jaksa || page == Page.Controls && controlsDrivingPage == Page.Jaksa) && jaksa != null ? jaksa.Mirrors.Textures : district.Mirrors.Textures;
             for (int i = 0; i < mirrorImages.Count; i++) mirrorImages[i].image = textures[i];
             Show(hud, page == Page.Drive || page == Page.Jaksa);
+            Show(progress, !pitchDemo);
             Show(overlay, page != Page.Drive && page != Page.Jaksa);
             overlay.EnableInClassList("landing", page == Page.Menu);
             dialog.EnableInClassList("landing-card", page == Page.Menu);
@@ -1196,6 +1238,7 @@ namespace JalanKita
             dialog.EnableInClassList("controls-card", page == Page.Controls);
             dialog.EnableInClassList("play-card", page == Page.PlayChooser);
             dialog.EnableInClassList("options-card", page == Page.Options);
+            dialog.EnableInClassList("tutorial-card", page == Page.TutorialBrake);
             RefreshHudControls();
             dialog.RemoveFromClassList("rule-card");
             dialog.RemoveFromClassList("result-layout");

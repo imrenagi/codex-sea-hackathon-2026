@@ -395,6 +395,25 @@
 .progressive-cue .keycap { width: 126px; min-width: 126px; max-width: 126px; min-height: 40px; font-size: 18px; margin-right: 12px; }
 .cue-copy { font-size: 17px; color: #f3f1ec; white-space: normal; flex-shrink: 1; }
 
+/* Guided demo: one centered instruction, clear of contextual HUD copy. */
+.tutorial-cue-layer {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    align-items: center; justify-content: center;
+}
+.tutorial-card {
+    width: 600px; max-width: 90%; padding: 22px 28px;
+    background-color: rgba(16,19,24,.96); border-color: #e3c899;
+}
+.tutorial-card .kicker { -unity-text-align: middle-center; margin-bottom: 12px; }
+.tutorial-instruction {
+    font-size: 28px; -unity-font-style: bold; -unity-text-align: middle-center;
+    white-space: normal; color: #ffffff;
+}
+.demo-guided .objective, .demo-guided .toast, .demo-guided .hud-hint,
+.demo-guided .progressive-cue, .demo-guided .controls { display: none; }
+.compact .tutorial-instruction { font-size: 23px; }
+.compact .tutorial-card { padding: 18px 22px; }
+
 /* Vehicle chooser: one journey action, optional activities disclosed below. */
 .chooser-vehicles { align-items: stretch; margin-top: 18px; margin-bottom: 4px; }
 .button.chooser-vehicle {

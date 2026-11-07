@@ -68,6 +68,11 @@
                 <ui:Label text="Berhenti di teluk kiri dekat penumpang sebelum menjemput." class="label copy" />
                 <ui:Button name="pickupPassenger" text="Jemput  [F]" class="button primary" />
             </ui:VisualElement>
+            <ui:VisualElement name="demoTutorialCue" class="tutorial-cue-layer hidden" picking-mode="Ignore">
+                <ui:VisualElement class="panel tutorial-card" picking-mode="Ignore">
+                    <ui:Label name="demoTutorialInstruction" class="label tutorial-instruction" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="overlay" class="scrim landing">
             <ui:VisualElement name="dialog" class="panel dialog landing-card" />
