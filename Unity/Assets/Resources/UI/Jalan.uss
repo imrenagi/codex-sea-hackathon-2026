@@ -827,3 +827,15 @@
 .screen .vehicle-showroom > .actions > .label {
     width: 100%; white-space: normal; flex-shrink: 0;
 }
+
+/* Journal/result actions need room for both glyph and full label. */
+.screen .actions > .button.action-icon-button {
+    flex-basis: 180px; flex-grow: 1; flex-shrink: 0; min-width: 160px;
+    min-height: 44px; height: auto; white-space: normal;
+}
+/* Let longer tutorial instructions increase panel height instead of clipping. */
+#hud .top-row { flex-shrink: 0; }
+#hud .objective { height: auto; min-height: 0; flex-shrink: 0; }
+#hud .objective > .label {
+    height: auto; min-height: 0; flex-shrink: 0; white-space: normal;
+}
