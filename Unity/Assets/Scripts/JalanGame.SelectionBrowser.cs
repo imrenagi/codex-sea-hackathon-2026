@@ -56,7 +56,7 @@ namespace JalanKita
                 SetPage(origin);
                 AddLabel(dialog, GameText.Get(origin == Page.CityMaps ? "text.choose_map"
                     : origin == Page.Catalogue ? (kind == MissionKind.Scenario ? "text.everyday_missions" : "level.choose.title")
-                    : wasPractice ? "home.practice" : "text.choose_your_journey"), "heading");
+                    : wasPractice ? "home.practice" : "home.mission"), "heading");
                 BuildSelectionBrowser(selections(), back);
             };
             dialog.AddToClassList("selection-browser-card");
@@ -70,7 +70,12 @@ namespace JalanKita
             void Select(ISelectionItem item)
             {
                 selectedActivityId = item.Id;
-                foreach (var pair in cards) pair.Value.EnableInClassList("selected", pair.Key == item);
+                foreach (var pair in cards)
+                {
+                    pair.Value.EnableInClassList("selected", pair.Key == item);
+                    var badge = pair.Value.Q<VisualElement>("selectionCheck");
+                    if (badge != null) badge.style.display = pair.Key == item ? DisplayStyle.Flex : DisplayStyle.None;
+                }
                 detail.Clear(); actions.Clear(); detail.scrollOffset = Vector2.zero;
                 AddBrowserImage(detail, item.Asset, "selection-detail-image", item.Stars);
                 AddLabel(detail, item.Meta, "selection-detail-meta kicker");
@@ -85,14 +90,18 @@ namespace JalanKita
                     {
                         var lesson = Lesson.All[(int)rule];
                         var row = Element(rules, "selection-detail-rule");
-                        AddLabel(row, lesson.Action, "copy");
-                        AddLabel(row, lesson.Citation, "rule-source");
+                        row.Add(new RuleGuideIcon(rule));
+                        var copy = Element(row, "rule-guide-copy");
+                        var summary = AddLabel(copy, GameText.Get("guide.rule." + rule), "copy");
+                        summary.enableRichText = true;
+                        summary.tooltip = lesson.Action;
+                        AddLabel(copy, lesson.Citation, "rule-source");
                     }
                 }
-                var next = AddButton(actions, GameText.Get("text.continue"),
+                var next = AddActionButton(actions, ActionKind.Next, GameText.Get("text.continue"),
                     () => ShowSelectionVehicle(item.Id, selections, returnToSelection), "primary selection-start");
                 next.name = "selectionContinue";
-                AddButton(actions, GameText.Get("text.back"), back, "quiet");
+                AddActionButton(actions, ActionKind.Back, GameText.Get("text.back"), back, "quiet");
             }
             foreach (var item in items)
             {
@@ -103,6 +112,7 @@ namespace JalanKita
                 var body = Element(card, "selection-card-body");
                 AddLabel(body, item.Title, "selection-card-title");
                 AddLabel(body, item.Meta, "selection-card-meta");
+                AddSelectionBadge(card, false);
                 foreach (var child in card.Query<VisualElement>().ToList())
                     if (child != card) child.pickingMode = PickingMode.Ignore;
                 card.pickingMode = PickingMode.Position;
@@ -136,6 +146,7 @@ namespace JalanKita
                     ShowSelectionVehicle(id, selections, back);
                 }, type == mode ? "chooser-vehicle selected" : "chooser-vehicle quiet");
                 button.name = "selectionVehicle-" + type;
+                AddSelectionBadge(button, type == mode);
                 button.Insert(0, new DrivingGlyph(type == VehicleMode.Car ? DrivingGlyph.Kind.Steering : DrivingGlyph.Kind.Motorcycle));
             }
             ShowVehiclePreview(true);
@@ -143,10 +154,10 @@ namespace JalanKita
             var actions = Element(root.Q("vehicleShowroom"), "row actions");
             actions.style.justifyContent = Justify.FlexEnd;
             actions.style.flexShrink = 0;
-            AddButton(actions, GameText.Get("text.back"), back, "quiet").name = "selectionVehicleBack";
+            AddActionButton(actions, ActionKind.Back, GameText.Get("text.back"), back, "quiet").name = "selectionVehicleBack";
             bool confirmed = false;
             Button start = null;
-            start = AddButton(actions, item.ActionLabel, () =>
+            start = AddActionButton(actions, ActionKind.Play, item.ActionLabel, () =>
             {
                 if (item.Confirm && !confirmed)
                 {

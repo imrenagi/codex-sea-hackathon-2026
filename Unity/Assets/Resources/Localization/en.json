@@ -106,6 +106,10 @@
       "value": "Play"
     },
     {
+      "key": "home.mission",
+      "value": "Mission"
+    },
+    {
       "key": "home.subtitle",
       "value": "A road safety simulation set in Indonesia"
     },
@@ -1831,7 +1835,7 @@
     },
     {
       "key": "text.retry_with_a_variation",
-      "value": "Retry with a variation"
+      "value": "Retry"
     },
     {
       "key": "text.return_to_the_left_lane_when_safe_before_the",
@@ -2980,6 +2984,138 @@
     {
       "key": "safety.overspeed",
       "value": "SLOW DOWN · {0} km/h limit"
+    },
+    {
+      "key": "guide.fasten",
+      "value": "Click to pull the belt across and fasten the buckle."
+    },
+    {
+      "key": "guide.helmet",
+      "value": "Click to put on the helmet and fasten its chin strap."
+    },
+    {
+      "key": "guide.lamp",
+      "value": "Click to switch the headlight on for visibility."
+    },
+    {
+      "key": "guide.ready",
+      "value": "Ready. Click again to undo."
+    },
+    {
+      "key": "guide.done",
+      "value": "Ready"
+    },
+    {
+      "key": "guide.click",
+      "value": "Click to equip"
+    },
+    {
+      "key": "guide.undo",
+      "value": "Click to undo this safety check."
+    },
+    {
+      "key": "guide.rule.SeatBelt",
+      "value": "Fasten <b><color=#EDC86D>both seat belts</color></b> before driving."
+    },
+    {
+      "key": "guide.rule.Helmet",
+      "value": "Wear <b><color=#EDC86D>SNI helmets</color></b> and fasten <b><color=#EDC86D>both chin straps</color></b>."
+    },
+    {
+      "key": "guide.rule.Headlight",
+      "value": "Keep the <b><color=#EDC86D>headlight on</color></b>, even in daylight."
+    },
+    {
+      "key": "guide.rule.Stop",
+      "value": "<b><color=#EDC86D>Stop completely</color></b> before the <b><color=#EDC86D>stop line</color></b>."
+    },
+    {
+      "key": "guide.rule.Signal",
+      "value": "<b><color=#EDC86D>Stop before the line</color></b>. Wait for <b><color=#EDC86D>green</color></b>."
+    },
+    {
+      "key": "guide.rule.Junction",
+      "value": "<b><color=#EDC86D>Yield</color></b> to traffic on the <b><color=#EDC86D>main road</color></b>."
+    },
+    {
+      "key": "guide.rule.Pedestrian",
+      "value": "<b><color=#EDC86D>Wait</color></b> behind the crossing until <b><color=#EDC86D>pedestrians</color></b> clear your lane."
+    },
+    {
+      "key": "guide.rule.KeepLeft",
+      "value": "Stay <b><color=#EDC86D>left</color></b> of the centre line."
+    },
+    {
+      "key": "guide.rule.NoEntry",
+      "value": "Obey <b><color=#EDC86D>no-entry signs</color></b> and follow the <b><color=#EDC86D>one-way arrows</color></b>."
+    },
+    {
+      "key": "guide.rule.Indicator",
+      "value": "<b><color=#EDC86D>Check traffic</color></b> and <b><color=#EDC86D>signal</color></b> before changing lanes."
+    },
+    {
+      "key": "guide.rule.Gap",
+      "value": "<b><color=#EDC86D>Wait for a safe gap</color></b> before changing lanes."
+    },
+    {
+      "key": "guide.rule.ReturnLeft",
+      "value": "<b><color=#EDC86D>Signal right</color></b> to change lanes, then <b><color=#EDC86D>signal left</color></b> to return."
+    },
+    {
+      "key": "guide.rule.Speed",
+      "value": "Slow down before the sign. Stay at or below <b><color=#EDC86D>30 km/h</color></b>."
+    },
+    {
+      "key": "guide.rule.Phone",
+      "value": "<b><color=#EDC86D>Ignore calls</color></b> while driving. Stop safely before using your phone."
+    },
+    {
+      "key": "guide.rule.OffRoad",
+      "value": "<b><color=#EDC86D>Stay on the route</color></b>. Slow down before turns."
+    },
+    {
+      "key": "guide.rule.Collision",
+      "value": "<b><color=#EDC86D>Keep your distance</color></b> and <b><color=#EDC86D>brake early</color></b>."
+    },
+    {
+      "key": "guide.rule.NoStopping",
+      "value": "<b><color=#EDC86D>Do not stop</color></b> here. Continue to the <b><color=#EDC86D>pickup bay</color></b>."
+    },
+    {
+      "key": "guide.rule.PickupPlace",
+      "value": "<b><color=#EDC86D>Signal left</color></b> and <b><color=#EDC86D>stop in the pickup bay</color></b>."
+    },
+    {
+      "key": "guide.rule.PickupIncomplete",
+      "value": "Stop in the bay, <b><color=#EDC86D>pick up the passenger</color></b>, then <b><color=#EDC86D>merge safely</color></b>."
+    },
+    {
+      "key": "guide.rule.TurnSignal",
+      "value": "<b><color=#EDC86D>Check traffic</color></b> and <b><color=#EDC86D>signal</color></b> before turning."
+    },
+    {
+      "key": "guide.rule.MovementLane",
+      "value": "Choose the <b><color=#EDC86D>correct lane</color></b> early. Do not cross <b><color=#EDC86D>solid lines</color></b>."
+    },
+    {
+      "key": "guide.rule.RightArrow",
+      "value": "<b><color=#EDC86D>Wait</color></b> in the right lane for a <b><color=#EDC86D>green right-turn arrow</color></b>."
+    },
+    {
+      "key": "guide.rule.StopBox",
+      "value": "On red, <b><color=#EDC86D>cars stop before the motorcycle box</color></b>."
+    },
+    {
+      "key": "guide.rule.Railway",
+      "value": "<b><color=#EDC86D>Stop</color></b> for warnings or closing barriers. Wait until <b><color=#EDC86D>fully open</color></b>."
+    },
+    {
+      "key": "guide.rule.Emergency",
+      "value": "<b><color=#EDC86D>Give way to the ambulance</color></b>. Signal left and move aside safely."
+    },
+    {
+      "key": "guide.rule.BoulevardSpeed",
+      "value": "Stay at or below <b><color=#EDC86D>50 km/h</color></b>. Give way calmly."
     }
   ]
 }

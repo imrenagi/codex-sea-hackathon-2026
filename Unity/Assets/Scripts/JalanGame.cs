@@ -459,9 +459,9 @@ namespace JalanKita
                 AddLabel(dialog, GameText.Get("brand.name"), "hero home-wordmark");
             AddLabel(dialog, GameText.Get("home.subtitle"), "home-tagline");
             var actions = Element(dialog, "home-actions");
-            AddButton(actions, GameText.Get("home.play"), PlayFromHome, "primary home-action");
-            AddButton(actions, GameText.Get("home.practice"), ShowPracticeChooser, "quiet home-action");
-            AddButton(actions, GameText.Get("home.options"), ShowOptions, "quiet home-action");
+            AddActionButton(actions, ActionKind.Play, GameText.Get("home.play"), ShowPracticeChooser, "primary home-action");
+            AddButton(actions, GameText.Get("home.mission"), ShowPlayChooser, "quiet home-action");
+            AddActionButton(actions, ActionKind.Options, GameText.Get("home.options"), ShowOptions, "quiet home-action");
             AddButton(actions, GameText.Get("credits.title"), ShowCreditsPage, "quiet home-action");
             if (Application.platform != RuntimePlatform.WebGLPlayer)
                 AddButton(actions, GameText.Get("home.exit"), Application.Quit, "quiet home-action");
@@ -500,7 +500,7 @@ namespace JalanKita
             practiceChooser = practice;
             PrepareMenuScene();
             SetPage(Page.PlayChooser);
-            AddLabel(dialog, GameText.Get(practice ? "home.practice" : "text.choose_your_journey"), "heading");
+            AddLabel(dialog, GameText.Get(practice ? "home.practice" : "home.mission"), "heading");
             BuildSelectionBrowser(practice ? PracticeSelections() : PlaySelections(), BackFromJourneyChooser);
         }
 
@@ -524,7 +524,7 @@ namespace JalanKita
             AddLabel(content, GameText.Get("text.sound_controls"), "menu-section-title");
             AddSoundControlsBody(content);
             AddControlsHelp(content);
-            AddButton(content, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
+            AddActionButton(content, ActionKind.Home, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
         }
 
 
@@ -598,9 +598,9 @@ namespace JalanKita
             AddLabel(dialog, jaksa.Safety.Failure.HasValue ? Lesson.All[(int)jaksa.Safety.Failure.Value].Explanation : GameText.Get("text.explore_about_250_meters_of_jl_mega_kuningan_barat"), "copy");
             AddControlsHelp(dialog);
             var actions=Element(dialog,"row actions");
-            if(!jaksa.Safety.Failure.HasValue)AddButton(actions,GameText.Get("text.continue"),()=>EnterHumanDrive(Page.Jaksa),"primary");
-            AddButton(actions,GameText.Get("text.restart_road_section"),()=>{jaksa.Reset(mode);EnterHumanDrive(Page.Jaksa);},"quiet");
-            AddButton(actions,GameText.Get("text.main_menu"),ShowMenu,"quiet");
+            if (!jaksa.Safety.Failure.HasValue) AddActionButton(actions, ActionKind.Next, GameText.Get("text.continue"),()=>EnterHumanDrive(Page.Jaksa),"primary");
+            AddActionButton(actions, ActionKind.Retry, GameText.Get("text.restart_road_section"),()=>{jaksa.Reset(mode);EnterHumanDrive(Page.Jaksa);},"quiet");
+            AddActionButton(actions, ActionKind.Home, GameText.Get("text.main_menu"),ShowMenu,"quiet");
         }
 
 
@@ -640,7 +640,7 @@ namespace JalanKita
                 AddButton(actions, "−", () => cityPreview.Zoom(.2f), "quiet");
                 AddButton(actions, GameText.Get("text.reset"), () => cityPreview.Reset(), "quiet");
                 AddButton(actions, GameText.Get("text.choose_map_esc"), ShowCityMaps, "primary");
-                AddButton(actions, GameText.Get("text.osm_source"), () => Application.OpenURL("https://www.openstreetmap.org/copyright"), "quiet");
+                AddActionButton(actions, ActionKind.External, GameText.Get("text.osm_source"), () => Application.OpenURL("https://www.openstreetmap.org/copyright"), "quiet");
             }
             catch (Exception error)
             {
@@ -693,10 +693,10 @@ namespace JalanKita
             var content = ResultBody(sheet);
             ShowTutorialScore(content);
             var actions = Element(sheet, "sheet-actions");
-            AddButton(actions, GameText.Get(practiceChooser ? "home.practice" : "navigation.explore_modes"),
+            AddActionButton(actions, ActionKind.Practice, GameText.Get(practiceChooser ? "home.practice" : "navigation.explore_modes"),
                 () => { if (practiceChooser) ShowPracticeChooser(); else ShowPlayChooser(true); }, "big primary");
-            AddButton(actions, GameText.Get("demo.replay"), RestartDemoTutorial, "big quiet");
-            AddButton(actions, GameText.Get("navigation.return_menu"), BackToMenu, "big quiet");
+            AddActionButton(actions, ActionKind.Retry, GameText.Get("demo.replay"), RestartDemoTutorial, "big quiet");
+            AddActionButton(actions, ActionKind.Home, GameText.Get("navigation.return_menu"), BackToMenu, "big quiet");
         }
 
         void OnDestroy()
@@ -765,13 +765,13 @@ namespace JalanKita
             AddLabel(dialog, motor ? GameText.Get("text.prepare_two_sni_helmets_and_turn_on_the_headlight")
                 : GameText.Get("text.check_the_driver_and_front_passenger_seat_belts"), "copy");
             var checklist = Element(dialog, "section");
-            Equipment(checklist, motor ? GameText.Get("text.rider_s_sni_helmet") : GameText.Get("text.driver_s_seat_belt"), journey.DriverGear, () => journey.DriverGear = !journey.DriverGear);
-            Equipment(checklist, motor ? GameText.Get("text.passenger_s_sni_helmet") : GameText.Get("text.front_passenger_s_seat_belt"), journey.PassengerGear, () => journey.PassengerGear = !journey.PassengerGear);
-            if (motor) Equipment(checklist, GameText.Get("text.headlight"), journey.Headlight, journey.ToggleHeadlight);
+            Equipment(checklist, motor ? Rule.Helmet : Rule.SeatBelt, motor ? GameText.Get("text.rider_s_sni_helmet") : GameText.Get("text.driver_s_seat_belt"), journey.DriverGear, () => journey.DriverGear = !journey.DriverGear);
+            Equipment(checklist, motor ? Rule.Helmet : Rule.SeatBelt, motor ? GameText.Get("text.passenger_s_sni_helmet") : GameText.Get("text.front_passenger_s_seat_belt"), journey.PassengerGear, () => journey.PassengerGear = !journey.PassengerGear);
+            if (motor) Equipment(checklist, Rule.Headlight, GameText.Get("text.headlight"), journey.Headlight, journey.ToggleHeadlight);
             var actions = Element(dialog, "row actions");
             actions.style.justifyContent = Justify.FlexEnd;
-            AddButton(actions, GameText.Get("text.menu"), BackToMenu, "quiet");
-            AddButton(actions, GameText.Get("text.start_driving"), () =>
+            AddActionButton(actions, ActionKind.Home, GameText.Get("text.menu"), BackToMenu, "quiet");
+            AddActionButton(actions, ActionKind.Play, GameText.Get("text.start_driving"), () =>
             {
                 if (journey.Depart())
                 {
@@ -782,10 +782,18 @@ namespace JalanKita
             }, "primary");
         }
 
-        void Equipment(VisualElement group, string label, bool ready, Action change)
+        void Equipment(VisualElement group, Rule rule, string label, bool ready, Action change)
         {
-            AddButton(group, (ready ? "[OK]  " : "[  ]  ") + label, () => { change(); ShowPreflight(); },
-                ready ? "option selected" : "option");
+            var card = AddButton(group, "", () => { change(); ShowPreflight(); },
+                ready ? "option selected equipment-guide" : "option equipment-guide");
+            card.Add(new RuleGuideIcon(rule));
+            var copy = Element(card, "rule-guide-copy");
+            AddLabel(copy, label, "subhead");
+            string action = rule == Rule.SeatBelt ? "guide.fasten" : rule == Rule.Helmet ? "guide.helmet" : "guide.lamp";
+            AddLabel(copy, GameText.Get(ready ? "guide.ready" : action), "copy");
+            AddLabel(card, GameText.Get(ready ? "guide.done" : "guide.click"), "equipment-guide-state");
+            card.tooltip = GameText.Get(ready ? "guide.undo" : action);
+            foreach (var child in card.Query<VisualElement>().ToList()) child.pickingMode = PickingMode.Ignore;
         }
 
         void ShowLesson(Rule rule)
@@ -818,21 +826,21 @@ namespace JalanKita
                 AddLabel(content, GameText.Get("text.penalty"), "result-label");
                 AddLabel(content, law.Sanction, "sheet-text penalty");
                 AddLabel(content, GameText.Get("text.the_amount_above_is_a_maximum_not_a_fixed"), "sheet-text legal-note");
-                AddButton(content, GameText.Get("text.2026_criminal_penalty_adjustment"), () => Application.OpenURL(LawDetails.Amendment), "quiet");
-                AddButton(content, GameText.Get("text.open_official_source"), () => Application.OpenURL(lesson.Url), "quiet");
-                if (rule == Rule.Stop) AddButton(content, GameText.Get("text.traffic_sign_regulations"), () => Application.OpenURL(Lesson.Signs), "quiet");
-                if (rule == Rule.Signal) AddButton(content, GameText.Get("text.traffic_signal_regulations"), () => Application.OpenURL(Lesson.Signals), "quiet");
-                if (rule == Rule.Speed) AddButton(content, GameText.Get("text.speed_regulations"), () => Application.OpenURL(Lesson.Limits), "quiet");
+                AddActionButton(content, ActionKind.External, GameText.Get("text.2026_criminal_penalty_adjustment"), () => Application.OpenURL(LawDetails.Amendment), "quiet");
+                AddActionButton(content, ActionKind.External, GameText.Get("text.open_official_source"), () => Application.OpenURL(lesson.Url), "quiet");
+                if (rule == Rule.Stop) AddActionButton(content, ActionKind.External, GameText.Get("text.traffic_sign_regulations"), () => Application.OpenURL(Lesson.Signs), "quiet");
+                if (rule == Rule.Signal) AddActionButton(content, ActionKind.External, GameText.Get("text.traffic_signal_regulations"), () => Application.OpenURL(Lesson.Signals), "quiet");
+                if (rule == Rule.Speed) AddActionButton(content, ActionKind.External, GameText.Get("text.speed_regulations"), () => Application.OpenURL(Lesson.Limits), "quiet");
             });
             if (yellowTraining) Fold(body, GameText.Get("text.what_amber_means"), content =>
             {
                 AddLabel(content, GameText.Get("text.pm_49_2014_pasal_6_ayat_4_huruf_a"), "sheet-text");
-                AddButton(content, GameText.Get("text.open_official_source"), () => Application.OpenURL(Lesson.Signals), "quiet");
+                AddActionButton(content, ActionKind.External, GameText.Get("text.open_official_source"), () => Application.OpenURL(Lesson.Signals), "quiet");
             });
             var actions = Element(sheet, "sheet-actions");
             AddLabel(body, GameText.Get(journey.Activity != null ? "rating.recovery_mission" : practiceStart >= 0 || pitchDemo ? "rating.recovery" : "rating.recovery_journey"), "copy");
-            AddButton(actions, GameText.Get("rating.continue"), ContinueAfterViolation, "big primary");
-            var retry = AddButton(actions, GameText.Get(journey.Activity != null ? "rating.restart_mission" : "example.retry"), Retry, "big quiet");
+            AddActionButton(actions, ActionKind.Play, GameText.Get("rating.continue"), ContinueAfterViolation, "big primary");
+            var retry = AddActionButton(actions, ActionKind.Retry, GameText.Get(journey.Activity != null ? "rating.restart_mission" : "example.retry"), Retry, "big quiet");
             if (journey.Stage > 0)
             {
                 bool available = ExampleProvider.TryGetExample(journey, out _);
@@ -840,7 +848,7 @@ namespace JalanKita
                 example.SetEnabled(available);
                 if (!available) AddLabel(body, GameText.Get("example.unavailable"), "copy");
             }
-            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet menu-action");
+            AddActionButton(actions, ActionKind.Home, GameText.Get("text.main_menu"), BackToMenu, "quiet menu-action");
         }
 
         VisualElement Result(string stamp, string tone, string caption)
@@ -995,9 +1003,9 @@ namespace JalanKita
             if (frequent.Length > 0) AddLabel(content, GameText.Get("journal.next_practice", Lesson.All[frequent[0]].Action), "copy");
 
             var actions = Element(sheet ?? content, sheet != null ? "sheet-actions" : "row actions");
-            if (!journey.Finished) AddButton(actions, GameText.Get("text.resume_driving"), ReturnToJourney, "primary");
-            if (pitchDemo) AddButton(actions, GameText.Get("text.replay_demo_r"), RestartDemoTutorial, "quiet");
-            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, journey.Finished ? "big primary" : "quiet");
+            if (!journey.Finished) AddActionButton(actions, ActionKind.Play, GameText.Get("text.resume_driving"), ReturnToJourney, "primary");
+            if (pitchDemo) AddActionButton(actions, ActionKind.Retry, GameText.Get("text.replay_demo_r"), RestartDemoTutorial, "quiet");
+            AddActionButton(actions, ActionKind.Home, GameText.Get("text.main_menu"), BackToMenu, journey.Finished ? "big primary" : "quiet");
             if (!pitchDemo)
                 Fold(content, GameText.Get("text.practice_from_a_checkpoint"), picker =>
                 {
@@ -1018,6 +1026,7 @@ namespace JalanKita
             sound.SetMuted(!sound.Muted);
             var toggle = root.Q<Button>("soundToggle");
             if (toggle != null) toggle.text = sound.Muted ? GameText.Get("text.sound_off_m_4e1c35") : GameText.Get("text.sound_on_m");
+            SetActionIcon(toggle, sound.Muted ? ActionKind.Muted : ActionKind.Sound);
             toast.text = sound.Muted ? GameText.Get("text.sound_muted_press_m_to_unmute") : GameText.Get("text.sound_on");
             toastUntil = Time.unscaledTime + 3;
         }
@@ -1026,13 +1035,14 @@ namespace JalanKita
 
         void AddSoundControlsBody(VisualElement parent)
         {
-            var button = AddButton(parent, sound.Muted ? GameText.Get("text.sound_off_m_4e1c35") : GameText.Get("text.sound_on_m"), null, "quiet tiny");
+            var button = AddActionButton(parent, sound.Muted ? ActionKind.Muted : ActionKind.Sound, sound.Muted ? GameText.Get("text.sound_off_m_4e1c35") : GameText.Get("text.sound_on_m"), null, "quiet tiny");
             button.name = "soundToggle";
             button.clicked += ToggleSound;
-            var ambience = AddButton(parent, sound.AmbienceEnabled ? GameText.Get("text.ambience_on") : GameText.Get("text.ambience_off"), null, "quiet tiny");
+            var ambience = AddActionButton(parent, sound.AmbienceEnabled ? ActionKind.Sound : ActionKind.Muted, sound.AmbienceEnabled ? GameText.Get("text.ambience_on") : GameText.Get("text.ambience_off"), null, "quiet tiny");
             ambience.clicked += () =>
             {
                 sound.SetAmbience(!sound.AmbienceEnabled);
+                SetActionIcon(ambience, sound.AmbienceEnabled ? ActionKind.Sound : ActionKind.Muted);
                 ambience.text = sound.AmbienceEnabled ? GameText.Get("text.ambience_on") : GameText.Get("text.ambience_off");
             };
             AddLabel(parent, GameText.Get("text.turn_off_ambience_for_presentations_sirens_and_warnings_remain"), "copy");
@@ -1091,11 +1101,11 @@ namespace JalanKita
                 AddLabel(body, All[journey.Stage].Instruction, "sheet-text");
             }
             var actions = Element(sheet, "sheet-actions");
-            var next = AddButton(actions, journey.Finished ? practiceStart >= 0 ? GameText.Get("text.practice_results") : GameText.Get("text.final_quiz_5f0543") : GameText.Get("mission.continue_next", journey.Stage + 1),
+            var next = AddActionButton(actions, ActionKind.Next, journey.Finished ? practiceStart >= 0 ? GameText.Get("text.practice_results") : GameText.Get("text.final_quiz_5f0543") : GameText.Get("mission.continue_next", journey.Stage + 1),
                 ContinueCheckpoint, "big primary");
             next.name = "continue-mission";
-            if (!journey.Finished) AddButton(actions, GameText.Get("text.retry_from_checkpoint"), Retry, "big quiet");
-            AddButton(actions, GameText.Get("text.menu"), BackToMenu, "big quiet");
+            if (!journey.Finished) AddActionButton(actions, ActionKind.Retry, GameText.Get("text.retry_from_checkpoint"), Retry, "big quiet");
+            AddActionButton(actions, ActionKind.Home, GameText.Get("text.menu"), BackToMenu, "big quiet");
         }
 
         void ContinueCheckpoint()
@@ -1401,7 +1411,7 @@ namespace JalanKita
                     AddButton(Element(dialog, "row actions"), quizIndex == 2 ? GameText.Get("text.view_results") : GameText.Get("text.next"), () => NextQuestion(true), "primary");
                 }, "option");
             }
-            AddButton(dialog, GameText.Get("text.back_esc"), BackFromQuiz, "quiet");
+            AddActionButton(dialog, ActionKind.Back, GameText.Get("text.back_esc"), BackFromQuiz, "quiet");
         }
 
         void NextQuestion(bool after)

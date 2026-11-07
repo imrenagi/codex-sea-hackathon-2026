@@ -22,7 +22,7 @@ namespace JalanKita
 
             AddLabel(content, GameText.Get("text.map_data_openstreetmap_contributors_odbl_surface_materials_poly_haven"), "rule-source");
             var actions = Element(content, "credits-actions");
-            AddButton(actions, GameText.Get("navigation.return_menu"), ShowMenu, "quiet");
+            AddActionButton(actions, ActionKind.Home, GameText.Get("navigation.return_menu"), ShowMenu, "quiet");
         }
     }
 }

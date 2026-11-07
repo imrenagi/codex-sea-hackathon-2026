@@ -68,6 +68,12 @@
                 <ui:Label text="" class="label copy i18n-text--text.stop_in_the_left_bay_beside_the_passenger_before" />
                 <ui:Button name="pickupPassenger" text="" class="button primary i18n-text--text.pick_up_f" />
             </ui:VisualElement>
+            <ui:VisualElement name="centeredBrakeCue" class="centered-brake-cue hidden" picking-mode="Ignore">
+                <ui:VisualElement class="brake-prompt-card" picking-mode="Ignore">
+                    <ui:VisualElement name="centeredBrakeKeys" class="brake-key-row" picking-mode="Ignore" />
+                    <ui:Label name="centeredBrakeCopy" class="label brake-prompt-copy" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
             <ui:VisualElement name="demoTutorialCue" class="tutorial-cue-layer hidden" picking-mode="Ignore">
                 <ui:VisualElement class="panel tutorial-card" picking-mode="Ignore">
                     <ui:Label name="demoTutorialInstruction" class="label tutorial-instruction" picking-mode="Ignore" />

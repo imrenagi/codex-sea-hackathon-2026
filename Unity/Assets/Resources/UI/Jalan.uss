@@ -771,3 +771,32 @@
 
 /* Soften moving home scenery without flattening the transparent wordmark. */
 .screen .landing { background-color: rgba(18,25,30,.54); }
+
+/* Shared illustrated rule and pre-drive guides. */
+.rule-guide-icon { width: 46px; height: 46px; min-width: 46px; min-height: 46px; flex-shrink: 0; margin-right: 14px; color: #edc86d; }
+.rule-guide-copy { flex-grow: 1; flex-shrink: 1; min-width: 0; }
+.selection-detail-rule { flex-direction: row; align-items: center; }
+.equipment-guide { flex-direction: row; align-items: center; min-height: 82px; padding: 10px 16px; white-space: normal; }
+.equipment-guide .rule-guide-icon { width: 54px; height: 54px; min-width: 54px; min-height: 54px; }
+.equipment-guide .subhead { margin-top: 0; margin-bottom: 3px; }
+.equipment-guide .copy { margin-top: 0; margin-bottom: 0; font-size: 13px; white-space: normal; }
+.equipment-guide-state { color: #edc86d; font-size: 12px; margin-left: 12px; flex-shrink: 0; }
+.equipment-guide.selected .rule-guide-icon, .equipment-guide.selected .equipment-guide-state { color: #9bdbb3; }
+
+/* Brake instructions share the opening W cue's lower-center position and key art. */
+.centered-brake-cue {
+    position: absolute; left: 0; right: 0; top: 60%; align-items: center;
+}
+.brake-prompt-card {
+    max-width: 90%; padding: 14px 22px; align-items: center;
+    background-color: rgba(0,0,0,.78); border-radius: 8px;
+    border-width: 1px; border-color: rgba(255,255,255,.18);
+}
+.brake-key-row { flex-direction: row; justify-content: center; margin-bottom: 8px; }
+.brake-keycap { margin: 0 5px; }
+.brake-keycap.wide-keycap { width: 96px; min-width: 96px; font-size: 19px; }
+.brake-prompt-copy {
+    font-size: 24px; color: #ffffff; white-space: normal;
+    -unity-font-style: bold; -unity-text-align: middle-center;
+}
+.compact .brake-prompt-copy { font-size: 22px; }

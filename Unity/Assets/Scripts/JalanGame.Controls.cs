@@ -248,6 +248,7 @@ namespace JalanKita
         {
             var cue = root.Q("progressiveCue");
             Show(cue, false);
+            Show(root.Q("centeredBrakeCue"), false);
             bool guidedDemo = page == Page.Drive && pitchDemo && journey.LearningControls && learner == null;
             hud.EnableInClassList("demo-guided", guidedDemo);
             hud.EnableInClassList("demo-feedback", page == Page.Drive && pitchDemo
@@ -258,6 +259,14 @@ namespace JalanKita
             Show(tutorialCue, guidedDemo && (!initialCue || !demoTutorial.InitialInstructionDismissed));
             if (guidedDemo)
             {
+                if (!inputReleaseRequired && demoTutorial.IsActive
+                    && demoTutorial.Phase == TutorialPhase.AwaitAction
+                    && demoTutorial.Active.Action == TutorialAction.Brake)
+                {
+                    Show(tutorialCue, false);
+                    PresentBrakeCue("S", demoTutorial.Instruction(journey));
+                    return;
+                }
                 root.Q<Label>("demoTutorialInstruction").text = inputReleaseRequired
                     ? GameText.Get("tutorial.action.release")
                     : demoTutorial.IsActive ? demoTutorial.Instruction(journey) : GameText.Get(demoTutorial.Scenario.InitialInstructionKey);
@@ -268,7 +277,7 @@ namespace JalanKita
             if (!root.Q("hudHint").ClassListContains("hidden")) return;
             if (page == Page.Drive && journey.LearningControls)
             {
-                PresentCue(controlsMoved ? "S" : "W A S D", controlsMoved ? GameText.Get("text.press_s_to_brake") : GameText.Get("text.try_accelerating_and_steering_no_penalties"));
+                PresentCue(controlsMoved ? "S" : "W A S D", controlsMoved ? GameText.Get("text.press_s_to_brake") : GameText.Get("text.try_accelerating_and_steering_no_penalties"), controlsMoved);
                 return;
             }
             string context = (page == Page.Jaksa ? "explore:" : "training:") + mode;
@@ -280,7 +289,7 @@ namespace JalanKita
             }
             if (page == Page.Jaksa)
             {
-                if (!hiActive && !exploreStopped.Contains(context)) PresentCue("S", GameText.Get("text.press_s_to_brake"));
+                if (!hiActive && !exploreStopped.Contains(context)) PresentCue("S", GameText.Get("text.press_s_to_brake"), true);
                 return;
             }
             if (journey.Finished || journey.Failure.HasValue) return;
@@ -324,15 +333,36 @@ namespace JalanKita
             {
                 string id = context + ":" + stage + ":" + journey.Save.checkpoint + ":" + action;
                 if (performed) cueActionsSeen.Add(id);
-                if (!cueActionsSeen.Contains(id)) PresentCue(keys, copy);
+                if (!cueActionsSeen.Contains(id)) PresentCue(keys, copy, action.StartsWith("brake:"));
             }
         }
 
-        void PresentCue(string keys, string copy)
+        void PresentCue(string keys, string copy, bool brake = false)
         {
+            if (brake) { PresentBrakeCue(keys, copy); return; }
             root.Q<Label>("cueKeys").text = keys;
             root.Q<Label>("cueCopy").text = copy;
             Show(root.Q("progressiveCue"), true);
+        }
+
+        // Reuse the initial W prompt's keycap texture without baking letters into images.
+        void PresentBrakeCue(string keys, string copy)
+        {
+            var cue = root.Q("centeredBrakeCue");
+            var keyRow = root.Q("centeredBrakeKeys");
+            if ((keyRow.userData as string) != keys)
+            {
+                keyRow.Clear();
+                foreach (string key in keys.Split('/'))
+                {
+                    var cap = AddLabel(keyRow, key.Trim(), "keyboard-keycap brake-keycap");
+                    cap.pickingMode = PickingMode.Ignore;
+                    cap.EnableInClassList("wide-keycap", key.Trim().Length > 1);
+                }
+                keyRow.userData = keys;
+            }
+            root.Q<Label>("centeredBrakeCopy").text = copy;
+            Show(cue, true);
         }
 
         void AddControlsHelp(VisualElement parent)
@@ -342,7 +372,7 @@ namespace JalanKita
             AddButton(parent, GameText.Get("controls.open"), () => ShowControls(page,
                 page == Page.Jaksa || page == Page.JaksaPause ? Page.Jaksa : Page.Drive, false), "quiet help-action");
             if (page == Page.Options)
-                AddButton(parent, GameText.Get("text.replay_demo_tutorial"), StartEntryTutorial, "quiet help-action");
+                AddActionButton(parent, ActionKind.Retry, GameText.Get("text.replay_demo_tutorial"), StartEntryTutorial, "quiet help-action");
         }
     }
 }
