@@ -452,12 +452,11 @@ namespace JalanKita
             var modes = Element(content, "row chooser-vehicles");
             AddChooserVehicle(modes, VehicleMode.Car, GameText.Get("text.car_a5cdf0"), DrivingGlyph.Kind.Steering);
             AddChooserVehicle(modes, VehicleMode.Motorcycle, GameText.Get("text.motorcycle_965701"), DrivingGlyph.Kind.Motorcycle);
-            AddLabel(content, GameText.Get("level.choose.summary"), "copy chooser-summary");
-            AddButton(content, GameText.Get("level.choose.title"),
-                () => ShowCatalogue(MissionKind.SkillTest), "primary chooser-start");
+            AddLabel(content, GameText.Get("level.choose.title"), "subhead chooser-summary");
+            var levels = Element(content, "chooser-levels");
+            AddActivityChoices(levels, MissionKind.SkillTest);
             Fold(content, GameText.Get("text.more_modes"), other =>
             {
-                AddButton(other, GameText.Get("text.skill_tests_5_tests"), () => ShowCatalogue(MissionKind.SkillTest), "quiet option");
                 AddButton(other, GameText.Get("text.everyday_missions_3_journeys"), () => ShowCatalogue(MissionKind.Scenario), "quiet option");
                 AddLabel(other, GameText.Get("text.results_are_saved_for_each_test_and_mission"), "menu-note");
                 AddLabel(other, stored == null ? GameText.Get("text.explore_full_journey") : GameText.Get("text.explore_saved_journey"), "menu-section-title");

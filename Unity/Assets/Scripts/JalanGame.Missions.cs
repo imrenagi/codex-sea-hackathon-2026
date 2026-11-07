@@ -22,9 +22,18 @@ namespace JalanKita
             list.contentViewport.style.overflow = Overflow.Hidden;
             list.AddToClassList("mission-list");
             dialog.Add(list);
+            AddActivityChoices(list.contentContainer, kind);
+            var actions = Element(dialog, "row actions catalogue-footer");
+            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
+            AddButton(actions, kind == MissionKind.Scenario ? GameText.Get("text.view_skill_tests") : GameText.Get("text.view_everyday_missions"),
+                () => ShowCatalogue(kind == MissionKind.Scenario ? MissionKind.SkillTest : MissionKind.Scenario), "quiet");
+        }
+
+        void AddActivityChoices(VisualElement parent, MissionKind kind)
+        {
             if (kind == MissionKind.SkillTest)
             {
-                var tutorial = Element(list.contentContainer, "mission-card selection-mission-card");
+                var tutorial = Element(parent, "mission-card selection-mission-card");
                 AddSelectionThumbnail(tutorial, "mission_tutorial", GameText.Get("missions.thumbnail_caption"));
                 var body = Element(tutorial, "selection-mission-body");
                 AddLabel(body, GameText.Get("level.tutorial.title"), "subhead mission-title");
@@ -35,7 +44,7 @@ namespace JalanKita
             foreach (var activity in kind == MissionKind.Scenario ? Mission.Scenarios : Mission.Tests)
             {
                 var saved = JourneySave.Load(mode, activity);
-                var card = Element(list.contentContainer, "mission-card selection-mission-card");
+                var card = Element(parent, "mission-card selection-mission-card");
                 AddSelectionThumbnail(card, "mission_" + activity.Id, GameText.Get("missions.thumbnail_caption"));
                 var body = Element(card, "selection-mission-body");
                 var row = Element(body, "row split");
@@ -48,10 +57,6 @@ namespace JalanKita
                 AddLabel(body, status, "objective-detail");
                 AddButton(body, saved != null && saved.next <= activity.LastStage ? GameText.Get("text.continue") : GameText.Get("text.select_2a7802"), () => ShowMissionBrief(activity), "primary");
             }
-            var actions = Element(dialog, "row actions catalogue-footer");
-            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
-            AddButton(actions, kind == MissionKind.Scenario ? GameText.Get("text.view_skill_tests") : GameText.Get("text.view_everyday_missions"),
-                () => ShowCatalogue(kind == MissionKind.Scenario ? MissionKind.SkillTest : MissionKind.Scenario), "quiet");
         }
 
         void ShowMissionBrief(Mission activity)

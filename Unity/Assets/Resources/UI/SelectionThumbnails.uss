@@ -19,3 +19,12 @@
 .compact .selection-preview-image { height: 77px; }
 .compact .city-selection-card .selection-preview { width: 100%; margin-right: 0; }
 .compact .city-selection-card .selection-preview-image { height: 120px; }
+
+/* The normal chooser exposes levels within its single outer scroll view. */
+.chooser-levels { flex-shrink: 0; }
+.chooser-levels > .selection-mission-card { flex-shrink: 0; margin-bottom: 12px; }
+.chooser-levels .selection-preview { width: 136px; margin-right: 12px; }
+.chooser-levels .selection-preview-image { height: 77px; }
+.chooser-levels .selection-preview-caption { display: none; }
+.chooser-levels .selection-mission-body .mission-title { font-size: 18px; }
+.chooser-levels .selection-mission-body .copy { font-size: 14px; }
