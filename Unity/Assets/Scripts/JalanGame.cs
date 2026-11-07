@@ -275,6 +275,7 @@ namespace JalanKita
                 AddButton(actions, "Keluar", Application.Quit, "quiet");
             AddControlsHelp(dialog);
             AddSoundControls(dialog);
+            MakeDialogScrollable();
         }
 
         void CloseCityPreview()
@@ -622,6 +623,20 @@ namespace JalanKita
             AddButton(actions, "Menu utama", BackToMenu, journey.Finished ? "primary" : "quiet");
             AddControlsHelp(dialog);
             AddSoundControls(dialog);
+            MakeDialogScrollable();
+        }
+
+        void MakeDialogScrollable()
+        {
+            var scroll = new ScrollView(ScrollViewMode.Vertical)
+            {
+                horizontalScrollerVisibility = ScrollerVisibility.Hidden,
+                verticalScrollerVisibility = ScrollerVisibility.Auto
+            };
+            scroll.AddToClassList("dialog-scroll");
+            scroll.contentContainer.AddToClassList("dialog-content");
+            foreach (var child in dialog.Children().ToArray()) scroll.Add(child);
+            dialog.Add(scroll);
         }
 
         static void AddControlsHelp(VisualElement parent)
@@ -830,6 +845,7 @@ namespace JalanKita
             Show(overlay, page != Page.Drive);
             overlay.EnableInClassList("landing", page == Page.Menu);
             dialog.EnableInClassList("landing-card", page == Page.Menu);
+            dialog.EnableInClassList("scroll-dialog", page == Page.Menu || page == Page.Progress);
             overlay.EnableInClassList("city-preview", page == Page.CityPreview);
             dialog.RemoveFromClassList("rule-card");
             dialog.RemoveFromClassList("result-layout");
