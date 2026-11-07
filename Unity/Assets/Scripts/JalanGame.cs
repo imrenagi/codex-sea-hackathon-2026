@@ -407,40 +407,60 @@ namespace JalanKita
             SetPage(Page.PlayChooser);
             var content = MenuBody();
             AddLabel(content, "Pilih perjalanan", "heading");
-            AddLabel(content, "Pilih kendaraan, lalu mulai dari satu situasi singkat.", "copy");
-            var modes = Element(content, "row vehicle-modes");
-            AddButton(modes, "Mobil", () => SelectMode(VehicleMode.Car), mode == VehicleMode.Car ? "mode selected" : "mode quiet");
-            AddButton(modes, "Motor", () => SelectMode(VehicleMode.Motorcycle), mode == VehicleMode.Motorcycle ? "mode selected" : "mode quiet");
-            AddButton(content, "Coba demo · Hak utama [F2]", StartPitchDemo, "primary demo-action");
-            AddLabel(content, "Dahulukan pejalan kaki, lalu beri jalan pada arus utama. Progres perjalanan tidak berubah.", "copy demo-summary");
-
-            AddLabel(content, "Lanjut berlatih", "menu-section-title");
-            var activities = Element(content, "row practice-paths");
-            AddButton(activities, "Uji keterampilan · 5 tes", () => ShowCatalogue(MissionKind.SkillTest), "quiet practice-action");
-            AddButton(activities, "Misi sehari-hari · 3 perjalanan", () => ShowCatalogue(MissionKind.Scenario), "quiet practice-action");
-            AddLabel(content, "Hasil tersimpan untuk tiap tes dan misi.", "menu-note");
-            Fold(content, "Kendaraan · " + VehicleCatalogue.Selected(mode).Label, AddVehiclePicker);
-            Fold(content, stored == null ? "Jelajah & perjalanan lengkap" : "Jelajah & perjalanan tersimpan", explore =>
+            AddLabel(content, "Pilih kendaraan untuk perjalananmu.", "copy");
+            var modes = Element(content, "row chooser-vehicles");
+            AddChooserVehicle(modes, VehicleMode.Car, "Mobil", "Sabuk pengaman · 4 roda", DrivingGlyph.Kind.Steering);
+            AddChooserVehicle(modes, VehicleMode.Motorcycle, "Motor", "Helm & lampu utama · 2 roda", DrivingGlyph.Kind.Lamp);
+            AddLabel(content, stored == null ? "Perjalanan lengkap · 10 tahap. Mulai dari awal."
+                : stored.next == All.Length && stored.after >= 0 ? "Perjalanan selesai. Buka hasil yang tersimpan."
+                : "Lanjutkan progres perjalanan untuk kendaraan ini.", "copy chooser-summary");
+            AddButton(content, "Mulai Perjalanan", () =>
             {
-                AddButton(explore, "Sopo Del · berkendara", StartJaksa, "option quiet");
-                AddButton(explore, "Pratinjau peta – belum bisa dimainkan", ShowCityMaps, "option quiet");
-                AddLabel(explore, "Lihat 6 area Jakarta dengan geser/zoom kamera. Untuk berkendara, pilih jelajah Sopo Del.", "menu-note");
-                if (stored == null)
-                    AddButton(explore, "Perjalanan lengkap · 10 tahap", StartNew, "option quiet");
-                else
+                if (stored == null) StartNew(); else Resume();
+            }, "primary chooser-start");
+            Fold(content, "Mode lainnya", other =>
+            {
+                AddButton(other, "Coba demo · Hak utama [F2]", StartPitchDemo, "quiet option");
+                AddLabel(other, "Demo singkat Pasar Bunga. Progres perjalanan tidak berubah.", "menu-note");
+                AddButton(other, "Uji keterampilan · 5 tes", () => ShowCatalogue(MissionKind.SkillTest), "quiet option");
+                AddButton(other, "Misi sehari-hari · 3 perjalanan", () => ShowCatalogue(MissionKind.Scenario), "quiet option");
+                AddLabel(other, "Hasil tersimpan untuk tiap tes dan misi.", "menu-note");
+                Fold(other, "Kendaraan · " + VehicleCatalogue.Selected(mode).Label, AddVehiclePicker);
+                Fold(other, stored == null ? "Jelajah & perjalanan lengkap" : "Jelajah & perjalanan tersimpan", explore =>
                 {
-                    string resume = stored.next == All.Length && stored.after >= 0 ? "Lihat hasil perjalanan"
-                        : stored.next > 0 ? "Lanjutkan perjalanan" : "Lanjutkan persiapan";
-                    AddButton(explore, resume, Resume, "option quiet");
-                    AddButton(explore, confirmNew ? "Ya, mulai ulang perjalanan" : "Mulai ulang perjalanan", () =>
+                    AddButton(explore, "Sopo Del · berkendara", StartJaksa, "option quiet");
+                    AddButton(explore, "Pratinjau peta – belum bisa dimainkan", ShowCityMaps, "option quiet");
+                    AddLabel(explore, "Lihat 6 area Jakarta dengan geser/zoom kamera. Untuk berkendara, pilih jelajah Sopo Del.", "menu-note");
+                    if (stored == null)
+                        AddButton(explore, "Perjalanan lengkap · 10 tahap", StartNew, "option quiet");
+                    else
                     {
-                        if (confirmNew) StartNew();
-                        else { confirmNew = true; ShowPlayChooser(); }
-                    }, "option quiet");
-                    if (confirmNew) AddLabel(explore, "Ini mengganti progres perjalanan untuk kendaraan ini.", "copy");
-                }
+                        string resume = stored.next == All.Length && stored.after >= 0 ? "Lihat hasil perjalanan"
+                            : stored.next > 0 ? "Lanjutkan perjalanan" : "Lanjutkan persiapan";
+                        AddButton(explore, resume, Resume, "option quiet");
+                        AddButton(explore, confirmNew ? "Ya, mulai ulang perjalanan" : "Mulai ulang perjalanan", () =>
+                        {
+                            if (confirmNew) StartNew();
+                            else { confirmNew = true; ShowPlayChooser(); }
+                        }, "option quiet");
+                        if (confirmNew) AddLabel(explore, "Ini mengganti progres perjalanan untuk kendaraan ini.", "copy");
+                    }
+                }, confirmNew);
             }, confirmNew);
             AddButton(content, "Menu utama [Esc]", ShowMenu, "quiet exit-action");
+        }
+
+        void AddChooserVehicle(VisualElement parent, VehicleMode choice, string title, string note, DrivingGlyph.Kind glyph)
+        {
+            bool selected = mode == choice;
+            var card = AddButton(parent, "", () => SelectMode(choice),
+                selected ? "chooser-vehicle selected" : "chooser-vehicle quiet");
+            card.tooltip = title + ": " + note + (selected ? " · Dipilih" : " · Pilih kendaraan");
+            card.Add(new DrivingGlyph(glyph));
+            AddLabel(card, selected ? "DIPILIH" : "PILIH", "chooser-selection");
+            AddLabel(card, title, "chooser-vehicle-title");
+            AddLabel(card, note, "chooser-vehicle-note");
+            foreach (var child in card.Children()) child.pickingMode = PickingMode.Ignore;
         }
 
         void ShowOptions()
