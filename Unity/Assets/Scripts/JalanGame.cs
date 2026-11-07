@@ -796,7 +796,9 @@ namespace JalanKita
             AddLabel(copy, GameText.Get(ready ? "guide.ready" : action), "copy");
             AddLabel(card, GameText.Get(ready ? "guide.done" : "guide.click"), "equipment-guide-state");
             card.tooltip = GameText.Get(ready ? "guide.undo" : action);
-            foreach (var child in card.Query<VisualElement>().ToList()) child.pickingMode = PickingMode.Ignore;
+            // Query includes the root Button: keep it pickable so equipment can be toggled.
+            foreach (var child in card.Query<VisualElement>().ToList())
+                if (child != card) child.pickingMode = PickingMode.Ignore;
         }
 
         void ShowLesson(Rule rule)

@@ -594,8 +594,8 @@
    Explicit geometry rather than root scaling keeps edge anchors and hit targets correct. */
 #hud { left: 12px; right: 12px; top: 12px; bottom: 12px; }
 #hud .mirror { border-width: 1px; border-radius: 5px; }
-#hud .mirror-left, #hud .mirror-right { width: 106px; height: 66px; top: 43%; }
-#hud .mirror-centre { width: 134px; height: 50px; }
+#hud .mirror-left, #hud .mirror-right { width: 116.6px; height: 72.6px; top: 43%; }
+#hud .mirror-centre { width: 147.4px; height: 55px; }
 #hud .mirror-caption { font-size: 9px; padding: 1px; }
 #hud .objective { width: 250px; padding: 7px 10px; border-radius: 4px; }
 #hud .objective-copy { font-size: 14px; margin-top: 0; }
