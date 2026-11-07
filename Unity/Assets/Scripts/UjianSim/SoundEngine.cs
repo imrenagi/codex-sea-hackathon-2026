@@ -38,6 +38,7 @@ namespace UjianSim.Game
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] static extern void UjianAudio_Init();
+        [DllImport("__Internal")] static extern void UjianAudio_Dispose();
         [DllImport("__Internal")] static extern void UjianAudio_Set(float master, float engineFreq, float engineCut, float engineGain,
             float sirenFreq, float sirenGain, float hornA, float hornB, float hornGain, float wind, float rain);
         [DllImport("__Internal")] static extern void UjianAudio_Tone(double freq, double delay, double dur, int wave, double volume, double slideTo);
@@ -59,6 +60,7 @@ namespace UjianSim.Game
         readonly List<Voice> voices = new List<Voice>();
         readonly System.Random random = new System.Random();
 
+        AudioClip silentClip;
         int rate = 48000;
         /// <summary>Audio-thread clock in seconds; tones are scheduled against it.</summary>
         double now;
@@ -89,6 +91,7 @@ namespace UjianSim.Game
             source.spatialBlend = 0f;
             source.playOnAwake = false;
             var engine = go.AddComponent<SoundEngine>();
+            engine.silentClip = source.clip;
             engine.rate = sr;
             engine.Muted = PlayerPrefs.GetInt(PrefKey, 0) == 1;
             engine.AmbienceEnabled = PlayerPrefs.GetInt(AmbienceKey, 1) != 0;
@@ -102,6 +105,18 @@ namespace UjianSim.Game
             if (Application.isPlaying) source.Play();
 #endif
             return engine;
+        }
+
+        void OnDestroy()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            UjianAudio_Dispose();
+#endif
+            if (silentClip)
+            {
+                if (Application.isPlaying) Destroy(silentClip);
+                else DestroyImmediate(silentClip);
+            }
         }
 
         public void SetMuted(bool muted)
