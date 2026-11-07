@@ -37,3 +37,14 @@ Gate log SHA-256 values:
   "roadsense-shared-safety-hi-flow2.log": "6a908b0b18380edbd368e533027501320ab164ddb694fe1e2a5570e73d1168d3"
 }
 ```
+
+Latest main UI commits through `4c2ae0816ea187a17ca122f604433f467210d66c` are preserved. The narrow all-ten-checkpoint continuation gate passed for both classes. HI selector/brief/drive/pause/return passed with the restored failure banner, no resume on failed attempt, actual retry clearing safety, and saved-progress/listener isolation. No Rule enum or existing save-key migration is introduced.
+
+Final UI gate SHA-256 values:
+
+```json
+{
+  "roadsense-shared-safety-continuation.log": "20a00edce3d72043c646cc701249c724469f34ce1b078c460b89e02b3db11f93",
+  "roadsense-shared-safety-result.log": "648bd4179582222942b6dc1899c3aecee98a554b3ed6e91cec1e7ec8cca9baff"
+}
+```

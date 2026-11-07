@@ -669,16 +669,16 @@ namespace JalanKita
             PlayerPrefs.SetInt(ControlsCompleteKey, 1);
             PlayerPrefs.Save();
             SetPage(Page.Checkpoint);
-            var content = ScrollDialog();
-            AddLabel(content, GameText.Get("tutorial.complete"), "heading");
+            var sheet = Result(GameText.Get("tutorial.complete"), "good", GameText.Get(demoTutorial.Scenario.TitleKey));
+            var content = ResultBody(sheet);
             AddLabel(content, GameText.Get(demoTutorial.Scenario.CompletionSummaryKey), "copy");
             AddLabel(content, GameText.Get("demo.session_summary", DemoDuration(), journey.MistakeCount), "copy");
             ShowTutorialScore(content);
-            var actions = Element(content, "row actions");
+            var actions = Element(sheet, "sheet-actions");
             AddButton(actions, GameText.Get(practiceChooser ? "home.practice" : "navigation.explore_modes"),
-                () => { if (practiceChooser) ShowPracticeChooser(); else ShowPlayChooser(true); }, "primary");
-            AddButton(actions, GameText.Get("demo.replay"), RestartDemoTutorial, "quiet");
-            AddButton(actions, GameText.Get("navigation.return_menu"), BackToMenu, "quiet");
+                () => { if (practiceChooser) ShowPracticeChooser(); else ShowPlayChooser(true); }, "big primary");
+            AddButton(actions, GameText.Get("demo.replay"), RestartDemoTutorial, "big quiet");
+            AddButton(actions, GameText.Get("navigation.return_menu"), BackToMenu, "big quiet");
         }
 
         void OnDestroy()
@@ -946,9 +946,14 @@ namespace JalanKita
             if (PitchComplete) { ShowPitchComplete(); return; }
             if (journey.Activity != null) { ShowMissionProgress(); return; }
             SetPage(Page.Progress);
-            var content = ScrollDialog();
-            AddLabel(content, journey.Finished ? GameText.Get("text.journey_complete") : GameText.Get("journal.title"), "kicker");
-            AddLabel(content, journey.Finished ? GameText.Get("text.arrived_safely") : GameText.Get("text.practice_progress"), "heading");
+            var sheet = journey.Finished
+                ? Result(GameText.Get("text.journey_complete"), "good", GameText.Get("text.arrived_safely")) : null;
+            var content = sheet != null ? ResultBody(sheet) : ScrollDialog();
+            if (!journey.Finished)
+            {
+                AddLabel(content, GameText.Get("journal.title"), "kicker");
+                AddLabel(content, GameText.Get("text.practice_progress"), "heading");
+            }
             AddLabel(content, pitchDemo ? GameText.Get("text.demo_right_of_way_practice_progress_unchanged") : practiceStart >= 0
                 ? GameText.Get("journal.practice_summary", practiceStart + 1,
                     mode == VehicleMode.Car ? GameText.Get("text.car_a5cdf0") : GameText.Get("text.motorcycle_965701"))
@@ -970,10 +975,10 @@ namespace JalanKita
                 AddLabel(box, journey.Save.mistakes[i] + "×   " + Lesson.All[i].Title, "copy");
             if (frequent.Length > 0) AddLabel(content, GameText.Get("journal.next_practice", Lesson.All[frequent[0]].Action), "copy");
 
-            var actions = Element(content, "row actions");
+            var actions = Element(sheet ?? content, sheet != null ? "sheet-actions" : "row actions");
             if (!journey.Finished) AddButton(actions, GameText.Get("text.resume_driving"), ReturnToJourney, "primary");
             if (pitchDemo) AddButton(actions, GameText.Get("text.replay_demo_r"), RestartDemoTutorial, "quiet");
-            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, journey.Finished ? "primary" : "quiet");
+            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, journey.Finished ? "big primary" : "quiet");
             if (!pitchDemo)
                 Fold(content, GameText.Get("text.practice_from_a_checkpoint"), picker =>
                 {
@@ -1061,9 +1066,15 @@ namespace JalanKita
             AddLabel(body, practiceStart >= 0 ? GameText.Get("text.practice_complete_your_journey_progress_stays_saved")
                 : GameText.Get("mission.checkpoint_saved", journey.Stage, All.Length,
                     journey.Finished ? GameText.Get("text.entire_route_complete") : GameText.Get("text.continue_along_the_same_road")), "checkpoint-saved");
+            if (!journey.Finished)
+            {
+                AddLabel(body, GameText.Get("mission.up_next", journey.Stage + 1, All[journey.Stage].Title), "result-label");
+                AddLabel(body, All[journey.Stage].Instruction, "sheet-text");
+            }
             var actions = Element(sheet, "sheet-actions");
-            var next = AddButton(actions, journey.Finished ? practiceStart >= 0 ? GameText.Get("text.practice_results") : GameText.Get("text.final_quiz_5f0543") : GameText.Get("text.continue_journey"),
+            var next = AddButton(actions, journey.Finished ? practiceStart >= 0 ? GameText.Get("text.practice_results") : GameText.Get("text.final_quiz_5f0543") : GameText.Get("mission.continue_next", journey.Stage + 1),
                 ContinueCheckpoint, "big primary");
+            next.name = "continue-mission";
             if (!journey.Finished) AddButton(actions, GameText.Get("text.retry_from_checkpoint"), Retry, "big quiet");
             AddButton(actions, GameText.Get("text.menu"), BackToMenu, "big quiet");
         }

@@ -201,7 +201,7 @@ namespace JalanKita.EditorTools
                 for (int i = 0; i < 10000 && run.Stage == 2 && !run.Failure.HasValue; i++) DrivingCoach.Step(run, .02f);
                 Require(run.Stage == 3 && !run.Failure.HasValue, "Pitch retry completes");
                 Call(game, "AnnounceCheckpoint");
-                Require(Page(game) == "Checkpoint" && root.Query<Label>(className: "heading").ToList()
+                Require(Page(game) == "Checkpoint" && root.Query<Label>(className: "stamp").ToList()
                     .Any(label => label.text == GameText.Get("tutorial.complete")), "Pitch completion stays bounded");
                 var completionActions = root.Q("dialog").Query<Button>().ToList();
                 Require(completionActions.Any(b => b.text == GameText.Get("navigation.explore_modes"))

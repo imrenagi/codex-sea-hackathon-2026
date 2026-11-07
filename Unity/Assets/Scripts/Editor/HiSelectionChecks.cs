@@ -45,7 +45,15 @@ namespace JalanKita.EditorTools
                     Submit(root.Q<Button>(className:"selection-start"));Require(Field(game,"page").ToString()=="Brief","Selection opens existing briefing");
                     Submit(root.Q("dialog").Query<Button>().ToList().Single(b=>b.text==GameText.Get("text.start")));
                     Require((bool)Field(game,"hiActive")&&Field(game,"page").ToString()=="Jaksa","Brief starts actual HI controller");
-                    Call(game,"StepHi",.02f,true,false,0f,false);Call(game,"ShowJaksaPause");
+                    Call(game,"StepHi",.02f,true,false,0f,false);
+                    var drive=(LandmarkDrive)Field(game,"hi");
+                    drive.Safety.Step(.02f,new DriveSafetySample{VehicleContact=true});
+                    Call(game,"ShowJaksaPause");
+                    Require(root.Q<Label>(className:"stamp")?.text==GameText.Get("hi.try_again"),"Common safety failure uses restored failure banner");
+                    Require(!root.Q("dialog").Query<Button>().ToList().Any(b=>b.text==GameText.Get("text.continue")),"Failed attempt cannot resume without retry");
+                    Submit(root.Q("dialog").Query<Button>().ToList().Single(b=>b.text==GameText.Get("hi.retry")));
+                    Require(!drive.Safety.Failure.HasValue&&Field(game,"page").ToString()=="Jaksa","Actual retry resets safety and resumes driving");
+                    Call(game,"ShowJaksaPause");
                     Submit(root.Q("dialog").Query<Button>().ToList().Single(b=>b.text==GameText.Get("hi.choose")));
                     Require(!(bool)Field(game,"hiActive")&&Field(game,"page").ToString()=="Catalogue","Pause returns to new mission selector");
                     Require(PlayerPrefs.GetString(JourneySave.Key(mode))==original,"Main journey unchanged");
