@@ -154,11 +154,13 @@ namespace JalanKita.EditorTools
         {
             var args = System.Environment.GetCommandLineArgs();
             int outputIndex = System.Array.IndexOf(args, "-buildOutput");
+            if (outputIndex < 0)
+                outputIndex = System.Array.IndexOf(args, "-customBuildPath");
             string destination = "Builds/WebGL";
             if (outputIndex >= 0)
             {
                 if (outputIndex + 1 >= args.Length || args[outputIndex + 1].StartsWith("-"))
-                    throw new System.ArgumentException("-buildOutput requires a destination path.");
+                    throw new System.ArgumentException(args[outputIndex] + " requires a destination path.");
                 destination = args[outputIndex + 1];
             }
             Build(BuildTarget.WebGL, destination);
