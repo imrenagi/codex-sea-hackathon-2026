@@ -30,6 +30,40 @@ namespace JalanKita
                 () => ShowCatalogue(kind == MissionKind.Scenario ? MissionKind.SkillTest : MissionKind.Scenario), "quiet");
         }
 
+        // The primary chooser follows the real saved journey, not the separate skill-test catalogue.
+        // All launches use non-persistent checkpoint practice; saved journey and test scores stay intact.
+        void AddJourneyLevelChoices(VisualElement parent)
+        {
+            var tutorial = Element(parent, "mission-card selection-mission-card");
+            AddSelectionThumbnail(tutorial, "mission_tutorial", GameText.Get("missions.thumbnail_caption"));
+            var tutorialBody = Element(tutorial, "selection-mission-body");
+            AddLabel(tutorialBody, GameText.Get("level.tutorial.title"), "subhead mission-title");
+            AddLabel(tutorialBody, GameText.Get("level.tutorial.description"), "copy");
+            AddLabel(tutorialBody, GameText.Get("level.tutorial.detail"), "objective-detail");
+            AddButton(tutorialBody, GameText.Get("level.tutorial.start"), StartPitchDemo, "primary");
+
+            string[] thumbnails = { "preparation", "signals", "priority", "lanes", "focus",
+                "straight", "left_turn", "right_turn", "railway", "ambulance" };
+            string[] fallback = { "preparation", "signals", "priority", "lanes", "focus",
+                "lanes", "priority", "signals", "signals", "priority" };
+            for (int i = 0; i < RouteStage.All.Length; i++)
+            {
+                int checkpoint = i;
+                var stage = RouteStage.All[i];
+                string asset = "route_" + thumbnails[i];
+                if (!Resources.Load<Texture2D>("UI/Thumbnails/" + asset))
+                    asset = "mission_" + fallback[i];
+                var card = Element(parent, "mission-card selection-mission-card");
+                AddSelectionThumbnail(card, asset, GameText.Get("missions.thumbnail_caption"));
+                var body = Element(card, "selection-mission-body");
+                AddLabel(body, GameText.Get("level.checkpoint.title", i + 1, stage.Title), "subhead mission-title");
+                AddLabel(body, stage.Location, "kicker");
+                AddLabel(body, stage.Instruction, "copy");
+                AddLabel(body, GameText.Get("level.checkpoint.detail"), "objective-detail");
+                AddButton(body, GameText.Get("level.checkpoint.start"), () => JumpToMission(checkpoint), "primary");
+            }
+        }
+
         void AddActivityChoices(VisualElement parent, MissionKind kind)
         {
             if (kind == MissionKind.SkillTest)

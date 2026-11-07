@@ -2872,6 +2872,18 @@
     {
       "key": "demo.replay",
       "value": "Replay demo"
+    },
+    {
+      "key": "level.checkpoint.title",
+      "value": "Level {0} — {1}"
+    },
+    {
+      "key": "level.checkpoint.detail",
+      "value": "Separate practice from this checkpoint. Your saved journey is unchanged."
+    },
+    {
+      "key": "level.checkpoint.start",
+      "value": "Practice this level"
     }
   ]
 }

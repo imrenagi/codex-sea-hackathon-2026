@@ -461,7 +461,7 @@ namespace JalanKita
             AddChooserVehicle(modes, VehicleMode.Motorcycle, GameText.Get("text.motorcycle_965701"), DrivingGlyph.Kind.Motorcycle);
             AddLabel(content, GameText.Get("level.choose.title"), "subhead chooser-summary");
             var levels = Element(content, "chooser-levels");
-            AddActivityChoices(levels, MissionKind.SkillTest);
+            AddJourneyLevelChoices(levels);
             Fold(content, GameText.Get("text.more_modes"), other =>
             {
                 AddButton(other, GameText.Get("text.everyday_missions_3_journeys"), () => ShowCatalogue(MissionKind.Scenario), "quiet option");
