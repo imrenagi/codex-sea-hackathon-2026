@@ -23,7 +23,7 @@ namespace JalanKita
                         stopAt = LightLine;
                     break;
                 case 2:
-                    if (run.Front < Zebra - 2 && run.Pedestrian.HasValue)
+                    if (run.Front < Zebra - 2 && run.PedestrianBlocksPath)
                         stopAt = Zebra - 2;
                     else if (run.Front < MainJunction - 4.3f && TrafficComing(run, MainJunction))
                         stopAt = YieldLine;
@@ -46,7 +46,7 @@ namespace JalanKita
                     break;
                 case 4:
                     cruise = 7.7f;
-                    if (run.IsSchool && run.Front < run.CrossingZebra - 2 && run.Pedestrian.HasValue)
+                    if (run.IsSchool && run.Front < run.CrossingZebra - 2 && run.PedestrianBlocksPath)
                         stopAt = run.CrossingZebra - 2;
                     if (run.PhoneRinging) run.ResolvePhone(false);
                     break;
@@ -107,8 +107,14 @@ namespace JalanKita
             {
                 float nose = Boulevard.Local(stage, run.Nose).y;
                 float exit = Vector2.Dot(run.Position - Boulevard.Center(stage), Boulevard.Exit(stage));
-                if (nose < run.JunctionStopLine && (!run.MovementGreen || run.BoulevardPedestrian.HasValue))
+                if (nose < run.JunctionStopLine && (!run.MovementGreen || run.BoulevardPedestrianBlocksPath))
                     remaining = run.JunctionStopLine - 1.2f - nose;
+                if(run.BoulevardPedestrianBlocksPath)
+                {
+                    float crossNose=stage==5?nose:Vector2.Dot(run.Nose-Boulevard.Center(stage),Boulevard.Exit(stage));
+                    float crossingLine=stage==5?-16:11;
+                    if(crossNose<crossingLine) remaining=Mathf.Min(remaining,crossingLine-1.2f-crossNose);
+                }
                 if (exit > 22) signal = 0;
             }
             else if (stage == 8 && run.Nose.y < Boulevard.RailLine && run.RailWarning)

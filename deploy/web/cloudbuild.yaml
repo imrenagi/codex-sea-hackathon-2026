@@ -1,0 +1,13 @@
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args: [build, --pull, --tag, '${_IMAGE}', .]
+  - id: validate-nginx
+    name: gcr.io/cloud-builders/docker
+    args: [run, --rm, --env, PORT=8080, '${_IMAGE}', nginx, -t]
+
+# Cloud Build pushes the image only after the validation step succeeds.
+images: ['${_IMAGE}']
+options:
+  logging: CLOUD_LOGGING_ONLY
+timeout: 600s

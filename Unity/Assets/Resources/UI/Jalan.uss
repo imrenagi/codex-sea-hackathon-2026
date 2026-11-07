@@ -34,13 +34,13 @@
 .objective-title { margin-top: 3px; }
 .objective-copy { margin-top: 5px; color: #e9e6df; white-space: normal; font-size: 16px; }
 .objective-detail { font-size: 13px; color: #a9c9ea; white-space: normal; margin-top: 5px; }
-.route-panel { min-width: 226px; margin-left: 10px; }
-.route-steps { flex-wrap: wrap; max-width: 190px; margin: 10px 0 8px; }
+.route-panel { width: 284px; margin-left: 10px; }
+.route-steps { margin: 6px 0; }
 .step {
-    width: 29px; height: 27px;
-    padding: 0; margin: 0 6px 4px 0;
+    min-height: 32px; flex-shrink: 0; white-space: normal;
+    padding: 6px 9px; margin: 0 4px 4px 0;
     border-width: 1px; border-color: #555a62;
-    -unity-text-align: middle-center;
+    -unity-text-align: middle-left;
     border-radius: 5px;
     background-color: #2a2f37; color: #c9c6be;
     -unity-font-style: bold; font-size: 13px;
@@ -247,3 +247,14 @@
 .sheet-body .unity-scroll-view__content-viewport { overflow: hidden; flex-grow: 1; flex-shrink: 1; min-height: 0; }
 .sheet-body .unity-scroll-view__content-container { flex-shrink: 0; }
 .sheet-body .unity-scroller__slider { flex-grow: 1; }
+
+.mission-picker { white-space: normal; -unity-text-align: middle-left; font-size: 14px; margin: 6px 0; }
+.mission-popup { position: absolute; top: 55px; right: 0; width: 314px; height: 400px; max-height: 75%; background-color: #14191f; }
+.mission-list { flex-grow: 1; flex-shrink: 1; min-height: 0; }
+.mission-list .unity-scroll-view__content-and-vertical-scroll-container { flex-direction: row; flex-grow: 1; flex-shrink: 1; min-height: 0; }
+.mission-list .unity-scroll-view__content-viewport { overflow: hidden; flex-grow: 1; flex-shrink: 1; min-height: 0; }
+.mission-list .unity-scroll-view__content-container { flex-shrink: 0; }
+.mission-list .unity-scroller--vertical { width: 8px; }
+.mission-list .unity-scroller__low-button, .mission-list .unity-scroller__high-button { display: none; }
+
+.mission-list .unity-scroller__slider { flex-grow: 1; }

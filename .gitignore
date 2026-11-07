@@ -1,4 +1,5 @@
 .DS_Store
+gha-creds-*.json
 Unity/Library/
 Unity/Logs/
 Unity/Temp/

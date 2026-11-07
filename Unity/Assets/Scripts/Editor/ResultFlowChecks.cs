@@ -57,6 +57,7 @@ namespace JalanKita.EditorTools
                 SignalChecks.Verify(game);
                 VerifySignalTransitions(game);
                 VerifyDrivingKeyboard(game);
+                VerifyMissionPickerModal(game);
                 Debug.Log("Result flow checks passed: both vehicles, all ten completion cards, mission selection, saved progress, arrow directions, continuous resume, final quiz and checkpoint retry.");
                 EditorApplication.Exit(0);
             }
@@ -123,12 +124,20 @@ namespace JalanKita.EditorTools
                 var root = game.GetComponent<UIDocument>().rootVisualElement;
                 for (int stage = 0; stage < RouteStage.All.Length; stage++)
                 {
+                    Call(game, "JumpToMission", 1);
+                    Call(game, "RefreshHud");
+                    var picker = root.Q<Button>("missionPicker");
+                    Require(picker.text.Contains(RouteStage.All[1].Title), "Current mission title is visible");
+                    using (var open = NavigationSubmitEvent.GetPooled()) { open.target=picker; picker.SendEvent(open); }
+                    Require(!root.Q("missionPickerPopup").ClassListContains("hidden"), "Mission title opens picker");
                     // Exercise the actual Button activation handler, including keyboard support.
                     var button = root.Q<Button>("mission" + (stage+1).ToString("00"));
                     Require(button != null && button.focusable, "Mission selector is a button");
+                    Require(button.text.Contains(RouteStage.All[stage].Title) && button.text.StartsWith((stage+1).ToString("00")), "Every choice includes mission number and title");
                     button.Focus();
                     using (var submit = NavigationSubmitEvent.GetPooled()) { submit.target=button; button.SendEvent(submit); }
                     var run = (Journey)Field(game, "journey");
+                    Require(root.Q("missionPickerPopup").ClassListContains("hidden"), "Selecting a mission closes picker");
                     var start = RouteStage.All[Mathf.Max(0, stage-1)];
                     Require(run.Stage == stage && run.Position == start.Checkpoint && run.Heading == start.Heading
                         && run.Speed == 0 && !run.Failure.HasValue, $"Selected mission {stage} resets to its start pose: got {run.Stage}, {run.Position}, {run.Heading}, page {Page(game)}");
@@ -202,6 +211,64 @@ namespace JalanKita.EditorTools
                 finally { UnityEngine.Object.DestroyImmediate(probe); }
             }
             Require(checkedCount >= 36, "All junction arrow models inspected");
+        }
+
+        static void VerifyMissionPickerModal(JalanGame game)
+        {
+            var root = game.GetComponent<UIDocument>().rootVisualElement;
+            var pageType = typeof(JalanGame).GetNestedType("Page", BindingFlags.NonPublic);
+            foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
+            {
+                string key = JourneySave.Key(mode), saved = PlayerPrefs.GetString(key);
+                bool existed = PlayerPrefs.HasKey(key);
+                var run = new Journey(mode, new JourneySave { next = 1 }, persistent: false, trafficSeed: 1);
+                for (int i = 0; i < 20; i++) run.Step(.02f, true, false, 0);
+                Require(run.Speed > 0, "Picker pause fixture begins in motion");
+                Set(game, "mode", mode);
+                Set(game, "journey", run);
+                Set(game, "learner", null);
+                Set(game, "pitchDemo", false);
+                Call(game, "SetPage", Enum.Parse(pageType, "Drive"));
+                Call(game, "RefreshHud");
+                Call(game, "OpenMissionPicker");
+                Require(Page(game) == "MissionPicker" && !root.Q("missionPickerPopup").ClassListContains("hidden"),
+                    "Opening picker enters modal state");
+                var selected = root.Q<Button>("mission02");
+                Require(root.focusController.focusedElement == selected, "Picker focuses current titled mission");
+                using (var move = NavigationMoveEvent.GetPooled(Vector2.down))
+                {
+                    move.target = selected; selected.SendEvent(move);
+                    Require(!move.isImmediatePropagationStopped, "Picker navigation is not consumed by driving guard");
+                }
+                var position = run.Position;
+                float heading = run.Heading, speed = run.Speed, elapsed = run.ElapsedTime;
+                for (int i = 0; i < 20; i++) Call(game, "FixedUpdate");
+                Require(run.Position == position && run.Heading == heading && run.Speed == speed && run.ElapsedTime == elapsed,
+                    "Picker freezes vehicle and simulation clock even after navigation");
+                Call(game, "CloseMissionPicker"); // Escape and P use this same close transition.
+                Require(Page(game) == "Drive" && root.Q("missionPickerPopup").ClassListContains("hidden")
+                    && root.focusController.focusedElement == null, "Closing picker resumes without retained UI focus");
+                var progress = root.Q<Button>("progress");
+                progress.Focus();
+                using (var brake = KeyDownEvent.GetPooled(new Event { type = EventType.KeyDown, keyCode = KeyCode.Space, character = ' ' }))
+                {
+                    brake.target = progress; progress.SendEvent(brake);
+                    Require(brake.isImmediatePropagationStopped && Page(game) == "Drive", "Space driving guard restored after picker close");
+                }
+                Call(game, "OpenMissionPicker");
+                var choice = root.Q<Button>("mission07");
+                choice.Focus();
+                using (var submit = NavigationSubmitEvent.GetPooled()) { submit.target = choice; choice.SendEvent(submit); }
+                var chosen = (Journey)Field(game, "journey");
+                Require(Page(game) == "Drive" && chosen.Stage == 6 && (int)Field(game, "practiceStart") == 6
+                    && root.Q("missionPickerPopup").ClassListContains("hidden"), "Enter selects existing isolated checkpoint practice");
+                Require(PlayerPrefs.HasKey(key) == existed && PlayerPrefs.GetString(key) == saved, "Picker practice preserves saved progress");
+                Set(game, "pitchDemo", true);
+                Call(game, "OpenMissionPicker");
+                Require(Page(game) == "Drive", "Pitch demo cannot open route picker");
+                Set(game, "pitchDemo", false);
+            }
+            Debug.Log("MISSION_PICKER_MODAL_PASSED both modes: focus/nav, frozen pose/time, close/brake guard, Enter practice and save isolation.");
         }
 
         static void VerifyDrivingKeyboard(JalanGame game)

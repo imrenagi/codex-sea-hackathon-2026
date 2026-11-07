@@ -11,8 +11,8 @@
                 </ui:VisualElement>
                 <ui:VisualElement class="panel route-panel">
                     <ui:Label name="routeCount" class="label kicker" />
-                    <ui:VisualElement name="steps" class="row route-steps" />
-                    <ui:Label name="practiceHint" text="Klik nomor untuk latihan misi" class="label kicker" />
+                    <ui:Button name="missionPicker" class="button quiet mission-picker" text="Pilih misi" />
+                    <ui:Label name="practiceHint" text="Klik judul atau tekan P untuk memilih misi" class="label kicker" />
                     <ui:Button name="progress" text="Kemajuan  [Tab]" class="button quiet tiny" />
                 </ui:VisualElement>
             </ui:VisualElement>
@@ -55,6 +55,15 @@
                 <ui:Label text="Penumpang menunggu" class="label subhead" />
                 <ui:Label text="Berhenti di teluk kiri dekat penumpang sebelum menjemput." class="label copy" />
                 <ui:Button name="pickupPassenger" text="Jemput  [F]" class="button primary" />
+            </ui:VisualElement>
+            <ui:VisualElement name="missionPickerPopup" class="panel mission-popup hidden">
+                <ui:VisualElement class="row split">
+                    <ui:Label text="LOMPAT KE MISI" class="label kicker" />
+                    <ui:Button name="closeMissionPicker" text="Tutup [Esc]" class="button quiet tiny" />
+                </ui:VisualElement>
+                <ui:ScrollView name="missionPickerScroll" class="mission-list" mode="Vertical" horizontal-scroller-visibility="Hidden">
+                    <ui:VisualElement name="steps" class="route-steps" />
+                </ui:ScrollView>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="overlay" class="scrim landing">

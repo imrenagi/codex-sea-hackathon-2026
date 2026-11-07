@@ -40,7 +40,7 @@ namespace JalanKita.EditorTools
             Require(!emergency.Ambulance.HasValue && !emergency.AmbulancePassed,"Ambulance retry resets encounter");
             VerifyJunctionViolation(mode,6,Rule.TurnSignal);
             VerifyJunctionViolation(mode,7,Rule.RightArrow);
-            VerifyJunctionViolation(mode,5,Rule.Pedestrian);
+            // PedestrianChecks exercises occupied and cleared paths for all three movements.
             VerifyJunctionViolation(mode,5,mode==VehicleMode.Car?Rule.StopBox:Rule.Signal);
             VerifySaveUpgrade(mode);
         }
@@ -53,8 +53,7 @@ namespace JalanKita.EditorTools
             {
                 float local=Boulevard.Local(stage,run.Nose).y;
                 bool ready=local>run.JunctionStopLine-2.5f;
-                bool target=expected==Rule.TurnSignal ? run.MovementGreen && !run.BoulevardPedestrian.HasValue
-                    : expected==Rule.Pedestrian ? run.MovementGreen && run.BoulevardPedestrian.HasValue
+                bool target=expected==Rule.TurnSignal ? run.MovementGreen && !run.BoulevardPedestrianBlocksPath
                     : expected==Rule.RightArrow ? run.ArrowPhase==0 : !run.MovementGreen;
                 if(ready && target || injected)
                 {

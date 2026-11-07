@@ -10,7 +10,7 @@ namespace JalanKita
     [RequireComponent(typeof(UIDocument))]
     public sealed partial class JalanGame : MonoBehaviour
     {
-        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview }
+        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, MissionPicker }
 
         District district;
         GameObject trainingRoot;
@@ -89,7 +89,7 @@ namespace JalanKita
                 var button = new Button(() => JumpToMission(mission))
                 {
                     name = "mission" + (i+1).ToString("00"),
-                    text = (i+1).ToString("00"),
+                    text = (i+1).ToString("00") + " · " + All[i].Title,
                     tooltip = "Latihan misi " + (i+1) + " · " + All[i].Title
                 };
                 button.AddToClassList("step");
@@ -97,6 +97,13 @@ namespace JalanKita
                 routeSteps[i] = button;
             }
 
+            root.Q<Button>("missionPicker").clicked += () =>
+            {
+                if (page == Page.MissionPicker) CloseMissionPicker();
+                else OpenMissionPicker();
+            };
+            RevealFocusedChildren(root.Q<ScrollView>("missionPickerScroll"));
+            root.Q<Button>("closeMissionPicker").clicked += CloseMissionPicker;
             progress = root.Q<Button>("progress");
             progress.clicked += () => { if (page == Page.Jaksa) ShowJaksaPause(); else if (learner != null) EndDemonstration(); else ShowProgress(); };
             root.Q<Button>("ignorePhone").clicked += () => ResolvePhone(false);
@@ -151,10 +158,34 @@ namespace JalanKita
             button.RegisterCallback<PointerCaptureOutEvent>(_=>heldLook=0);
         }
 
+        void OpenMissionPicker()
+        {
+            if (page != Page.Drive || journey.Activity != null || pitchDemo || learner != null) return;
+            heldLook = 0;
+            page = Page.MissionPicker;
+            Show(root.Q("missionPickerPopup"), true);
+            root.focusController?.focusedElement?.Blur();
+            routeSteps[Mathf.Clamp(journey.Stage, 0, routeSteps.Length - 1)].Focus();
+        }
+
+        void CloseMissionPicker()
+        {
+            Show(root.Q("missionPickerPopup"), false);
+            if (page != Page.MissionPicker) return;
+            page = Page.Drive;
+            heldLook = 0;
+            root.focusController?.focusedElement?.Blur();
+        }
+
         void Update()
         {
             if (page == Page.Menu && Input.GetKeyDown(KeyCode.F2)) { StartPitchDemo(); return; }
             if (Input.GetKeyDown(KeyCode.M)) ToggleSound();
+            if (page == Page.MissionPicker)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) CloseMissionPicker();
+                return;
+            }
             if (page == Page.Jaksa)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab)) { ShowJaksaPause(); return; }
@@ -185,6 +216,7 @@ namespace JalanKita
             }
             if (page == Page.Drive)
             {
+                if (Input.GetKeyDown(KeyCode.P) && journey.Activity == null && !pitchDemo) { OpenMissionPicker(); return; }
                 if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Escape)) { ShowProgress(); return; }
                 if (Input.GetKeyDown(KeyCode.R)) Retry();
                 if (Input.GetKeyDown(KeyCode.C)) { hood = !hood; district.Snap(); }
@@ -369,17 +401,22 @@ namespace JalanKita
             { horizontalScrollerVisibility = ScrollerVisibility.Hidden, verticalScrollerVisibility = ScrollerVisibility.Auto };
             content.AddToClassList("menu-scroll");
             content.contentViewport.style.overflow = Overflow.Hidden;
-            content.RegisterCallback<FocusInEvent>(e =>
-            {
-                if (e.target is not VisualElement focused || !content.contentContainer.Contains(focused)) return;
-                content.schedule.Execute(() =>
-                {
-                    if (content.panel != null && content.focusController?.focusedElement == focused)
-                        content.ScrollTo(focused);
-                });
-            });
+            RevealFocusedChildren(content);
             dialog.Add(content);
             return content;
+        }
+
+        static void RevealFocusedChildren(ScrollView scroll)
+        {
+            scroll.RegisterCallback<FocusInEvent>(e =>
+            {
+                if (e.target is not VisualElement focused || !scroll.contentContainer.Contains(focused)) return;
+                scroll.schedule.Execute(() =>
+                {
+                    if (scroll.panel != null && scroll.focusController?.focusedElement == focused)
+                        scroll.ScrollTo(focused);
+                });
+            });
         }
 
         void StartJaksa()
@@ -870,7 +907,7 @@ namespace JalanKita
                 "Kamu mengikuti arah jalan, memberi sein, dan berpindah lajur dengan aman.",
                 "Kamu menjaga kecepatan dan tetap fokus melewati zona sekolah.",
                 "Kamu memilih lajur lurus, mematuhi lampu, dan menunggu pejalan kaki.",
-                "Kamu berbelok kiri dengan sein setelah lampu hijau dan zebra cross kosong.",
+                "Kamu berbelok kiri dengan sein setelah lampu hijau dan pejalan kaki melewati jalur belokanmu.",
                 "Kamu berbelok kanan dari lajur yang tepat setelah panah kanan hijau.",
                 "Kamu menunggu kereta lewat dan palang terbuka penuh sebelum melintas.",
                 "Kamu memberi jalan kepada ambulans dengan aman tanpa melampaui batas kecepatan."
@@ -946,7 +983,7 @@ namespace JalanKita
                 if (!journey.CrossedZebra)
                 {
                     target = Zebra - 2;
-                    if (journey.Pedestrian.HasValue) signal = "TUNGGU PEJALAN KAKI";
+                    if (journey.PedestrianBlocksPath) signal = "TUNGGU PEJALAN KAKI";
                 }
                 else if (z < MainJunction + 5.5f)
                 {
@@ -984,7 +1021,7 @@ namespace JalanKita
                 {
                     status = stage == 7 ? "PANAH KANAN " + (journey.ArrowPhase == 2 ? "HIJAU" : "MERAH")
                         : journey.MainPhase == 2 ? "HIJAU" : journey.MainPhase == 1 ? "KUNING" : "MERAH";
-                    if (journey.BoulevardPedestrian.HasValue) status += " · TUNGGU PEJALAN KAKI";
+                    if (journey.BoulevardPedestrianBlocksPath) status += " · TUNGGU PEJALAN KAKI";
                     prompt += mode == VehicleMode.Car ? " Mobil berhenti sebelum kotak merah." : " Motor berhenti di garis depan kotak merah.";
                 }
                 else if (stage == 8) status = journey.RailWarning ? "BERHENTI · PERINGATAN KERETA" : "PALANG TERBUKA";
@@ -1012,6 +1049,9 @@ namespace JalanKita
                 routeSteps[i].EnableInClassList("step-done", i < complete && (practiceStart < 0 || i >= practiceStart));
                 routeSteps[i].EnableInClassList("step-current", i == complete);
             }
+            var picker=root.Q<Button>("missionPicker");
+            picker.text=journey.Activity?.Title ?? (stage+1).ToString("00")+" · "+All[stage].Title;
+            picker.SetEnabled(journey.Activity==null && !pitchDemo);
             Show(root.Q("practiceHint"), journey.Activity == null && !pitchDemo);
             speed.text = Mathf.RoundToInt(journey.Kph).ToString();
             speed.EnableInClassList("speed-alert", stage == 4 && journey.Front >= SchoolLimit && journey.Kph > 30.75f || stage >= 5 && journey.Kph > 50.75f);
@@ -1037,6 +1077,8 @@ namespace JalanKita
 
         void SetPage(Page value)
         {
+            CloseMissionPicker();
+            Show(root.Q("missionPicker"),value==Page.Drive);
             if (value == Page.Drive || value == Page.Jaksa)
                 root.focusController?.focusedElement?.Blur();
             heldLook=0;
