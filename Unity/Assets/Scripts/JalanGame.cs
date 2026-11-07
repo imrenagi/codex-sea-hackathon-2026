@@ -263,7 +263,7 @@ namespace JalanKita
             }
             else if (page == Page.Progress && pitchDemo && Input.GetKeyDown(KeyCode.R)) StartPitchDemo();
             else if (page == Page.Progress && !journey.Finished &&
-                Input.GetKeyDown(KeyCode.Escape)) ReturnToJourney();
+                (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P))) ReturnToJourney();
         }
 
         void FixedUpdate()
