@@ -11,24 +11,34 @@ namespace JalanKita
         readonly List<Mesh> meshes = new();
         readonly List<Material> materials = new();
         readonly bool fog;
+        readonly Light previousSun;
+        readonly AmbientMode previousAmbientMode;
+        readonly Color previousAmbientLight;
         Vector3 focus;
         float distance = 1400;
         public CityMapPreview(Transform parent, CityMapData map)
         {
             fog = RenderSettings.fog; RenderSettings.fog = false;
+            previousSun = RenderSettings.sun;
+            previousAmbientMode = RenderSettings.ambientMode;
+            previousAmbientLight = RenderSettings.ambientLight;
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(.52f,.57f,.61f);
             root = new GameObject("OSM city preview"); root.transform.SetParent(parent,false);
             try
             {
             camera = new GameObject("City overview camera").AddComponent<Camera>();
+            camera.gameObject.AddComponent<AudioListener>();
             camera.transform.SetParent(root.transform,false); camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(.09f,.17f,.21f);
+            camera.backgroundColor = new Color(.12f,.20f,.24f);
             camera.nearClipPlane = 1; camera.farClipPlane = 12000; camera.fieldOfView = 50;
             var sun = new GameObject("City sunlight").AddComponent<Light>();
             sun.transform.SetParent(root.transform,false); sun.type = LightType.Directional;
-            sun.transform.rotation = Quaternion.Euler(55,-30,0); sun.intensity = 1.3f;
-            var ground = new Batch(this,"Ground",new Color(.27f,.39f,.33f));
+            sun.transform.rotation = Quaternion.Euler(48,-35,0); sun.intensity = 1.05f;
+            sun.color = new Color(1f,.96f,.89f); RenderSettings.sun = sun;
+            var ground = new Batch(this,"Ground",new Color(.40f,.49f,.39f));
             ground.Quad(new(-864,-.2f,-735),new(-864,-.2f,735),new(864,-.2f,735),new(864,-.2f,-735)); ground.Flush();
-            var roads = new Batch(this,"Roads",new Color(.22f,.27f,.30f));
+            var roads = new Batch(this,"Roads",new Color(.18f,.22f,.24f));
             foreach (var road in map.roads)
             {
                 if (road.points == null || road.tunnel == "yes") continue;
@@ -63,6 +73,7 @@ namespace JalanKita
                 new Batch(this,"Concrete facades",new Color(.67f,.71f,.70f)) };
             var roofs = new Batch(this,"Terracotta roofs",new Color(.52f,.24f,.15f));
             var tallRoofs = new Batch(this,"Tower roofs",new Color(.37f,.43f,.45f));
+            var roofTrim = new Batch(this,"Roof edge trim",new Color(.89f,.85f,.73f));
             var windows = new Batch(this,"Windows and shopfronts",new Color(.13f,.29f,.34f));
             foreach (var building in map.buildings)
             {
@@ -94,12 +105,16 @@ namespace JalanKita
                     if (length<3) continue;
                     Vector3 along=edge.normalized;
                     Vector3 offset=Vector3.Cross(Vector3.up,along)*.04f;
+                    // Illustrative cornices make adjoining roof silhouettes legible at overview scale.
+                    Vector3 top=Vector3.up*height;
+                    Vector3 band=Vector3.up*Mathf.Min(.35f,height*.1f);
+                    roofTrim.Quad(a+top-band+offset,a+top+offset,b+top+offset,b+top-band+offset);
                     int columns=Mathf.Min(24,Mathf.FloorToInt(length/3));
                     int floors=Mathf.Min(18,Mathf.FloorToInt(height/3));
                     for (int floor=0;floor<floors;floor++)
                         for (int col=0;col<columns;col++)
                         {
-                            Vector3 center=a+along*(length*(col+.5f)/columns)+Vector3.up*(floor*3+1.5f);
+                            Vector3 center=a+along*(length*(col+.5f)/columns)+Vector3.up*((floor+.5f)*height/floors);
                             Vector3 half=along*Mathf.Min(.7f,length/columns*.3f);
                             Vector3 up=Vector3.up*.65f;
                             windows.Quad(center-half-up+offset,center-half+up+offset,center+half+up+offset,center+half-up+offset);
@@ -108,7 +123,7 @@ namespace JalanKita
                 (height>18 ? tallRoofs : roofs).Polygon(roof);
             }
             foreach (var facade in facades) facade.Flush();
-            roofs.Flush(); tallRoofs.Flush(); windows.Flush(); MoveCamera();
+            roofs.Flush(); tallRoofs.Flush(); roofTrim.Flush(); windows.Flush(); MoveCamera();
             }
             catch { Dispose(); throw; }
         }
@@ -154,6 +169,9 @@ namespace JalanKita
             foreach (var mesh in meshes) UnityEngine.Object.Destroy(mesh);
             foreach (var material in materials) UnityEngine.Object.Destroy(material);
             RenderSettings.fog=fog;
+            RenderSettings.sun=previousSun;
+            RenderSettings.ambientMode=previousAmbientMode;
+            RenderSettings.ambientLight=previousAmbientLight;
         }
         sealed class Batch
         {
@@ -166,7 +184,7 @@ namespace JalanKita
             {
                 this.owner=owner; this.name=name;
                 material=new Material(Shader.Find("Universal Render Pipeline/Lit")); material.color=color;
-                material.SetFloat("_Cull",0); owner.materials.Add(material);
+                material.SetFloat("_Cull",0); material.SetFloat("_Smoothness",.15f); owner.materials.Add(material);
             }
             public void Polygon(Vector3[] points)
             {
