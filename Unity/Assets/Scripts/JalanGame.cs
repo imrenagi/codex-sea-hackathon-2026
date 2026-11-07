@@ -131,6 +131,12 @@ namespace JalanKita
             }, TrickleDown.TrickleDown);
             root.RegisterCallback<KeyDownEvent>(e =>
             {
+                if ((page == Page.Before || page == Page.After) && e.keyCode == KeyCode.Escape)
+                {
+                    ConsumeDrivingKey(e);
+                    BackFromQuiz();
+                    return;
+                }
                 if (DrivingKeyboardActive && e.keyCode == KeyCode.Space) ConsumeDrivingKey(e);
             }, TrickleDown.TrickleDown);
         }
@@ -184,6 +190,7 @@ namespace JalanKita
 
         void Update()
         {
+            if ((page == Page.Before || page == Page.After) && Input.GetKeyDown(KeyCode.Escape)) { BackFromQuiz(); return; }
             if ((page == Page.Menu || page == Page.PlayChooser) && Input.GetKeyDown(KeyCode.F2)) { StartPitchDemo(); return; }
             if (Input.GetKeyDown(KeyCode.M)) ToggleSound();
             if (page == Page.Controls)
@@ -1269,6 +1276,12 @@ namespace JalanKita
                 1, "Saat kendaraan berjalan pelan", "Setelah menepi dan berhenti di tempat yang aman", "Saat jalan lurus dan kosong")
         };
 
+        void BackFromQuiz()
+        {
+            if (page == Page.After) ShowProgress();
+            else if (page == Page.Before) ShowPlayChooser();
+        }
+
         void StartQuiz(bool after)
         {
             quizIndex = quizScore = 0;
@@ -1300,6 +1313,7 @@ namespace JalanKita
                     AddButton(Element(dialog, "row actions"), quizIndex == 2 ? "Lihat hasil" : "Lanjut", () => NextQuestion(true), "primary");
                 }, "option");
             }
+            AddButton(dialog, "Kembali [Esc]", BackFromQuiz, "quiet");
         }
 
         void NextQuestion(bool after)
