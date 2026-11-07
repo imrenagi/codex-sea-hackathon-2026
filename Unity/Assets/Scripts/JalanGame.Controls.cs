@@ -9,6 +9,8 @@ namespace JalanKita
         readonly HashSet<string> controlsSeen = new();
         readonly HashSet<string> controlsPracticeStarted = new();
         readonly HashSet<string> exploreBraking = new(), exploreStopped = new();
+        const string ControlsCompleteKey = "RoadSense.Onboarding.MovementBrake.v1";
+        bool entryTutorial;
         Journey controlsOriginal;
         string controlsPracticeContext;
         bool controlsMoved, controlsBraked;
@@ -26,10 +28,28 @@ namespace JalanKita
             KeyCode.Tab, KeyCode.Escape, KeyCode.P
         };
 
+        void PlayFromHome()
+        {
+            if (PlayerPrefs.GetInt(ControlsCompleteKey, 0) == 1) ShowPlayChooser();
+            else StartEntryTutorial();
+        }
+
+        void StartEntryTutorial()
+        {
+            PrepareMenuScene();
+            mode = VehicleMode.Car;
+            entryTutorial = true;
+            controlsPracticeStarted.Remove("training:" + mode);
+            journey = new Journey(mode, new JourneySave { next = 1 }, persistent: false);
+            district.Snap();
+            EnterHumanDrive(Page.Drive);
+        }
+
         void EnterHumanDrive(Page drivingPage)
         {
             string context = (drivingPage == Page.Jaksa ? "explore:" : "training:") + mode;
-            if (drivingPage == Page.Drive && !journey.LearningControls && controlsPracticeStarted.Add(context))
+            if (drivingPage == Page.Drive && !journey.LearningControls
+                && (entryTutorial || PlayerPrefs.GetInt(ControlsCompleteKey, 0) != 1) && controlsPracticeStarted.Add(context))
             {
                 controlsOriginal = journey;
                 controlsPracticeContext = context;
@@ -58,6 +78,13 @@ namespace JalanKita
             journey = controlsOriginal;
             controlsOriginal = null;
             controlsSeen.Add(controlsPracticeContext);
+            PlayerPrefs.SetInt(ControlsCompleteKey, 1);
+            PlayerPrefs.Save();
+            if (entryTutorial)
+            {
+                ShowPlayChooser();
+                return;
+            }
             district.Snap();
             inputReleaseRequired = true;
             toast.text = "Latihan selesai. Kembali ke awal; aturan normal aktif.";
@@ -239,6 +266,8 @@ namespace JalanKita
         {
             AddButton(parent, "Kontrol berkendara [F1]", () => ShowControls(page,
                 page == Page.Jaksa || page == Page.JaksaPause ? Page.Jaksa : Page.Drive, false), "quiet help-action");
+            if (page == Page.Options)
+                AddButton(parent, "Ulangi latihan gerak & rem", StartEntryTutorial, "quiet help-action");
         }
     }
 }

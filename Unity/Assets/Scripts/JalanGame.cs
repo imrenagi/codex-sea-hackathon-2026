@@ -305,6 +305,7 @@ namespace JalanKita
             journey.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
                 Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), steer);
             CompleteControlsPractice(previousSpeed);
+            if (page != Page.Drive) return;
             if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
             else if (journey.Activity != null && journey.Finished) ShowMissionProgress();
             else if (journey.Stage != priorStage || journey.Save.checkpoint != priorCheckpoint) AnnounceCheckpoint();
@@ -382,6 +383,7 @@ namespace JalanKita
             practiceStart = -1;
             learner = null;
             controlsOriginal = null;
+            entryTutorial = false;
             if (jaksa != null) jaksa.Street.Root.SetActive(false);
             trainingRoot.SetActive(true);
             district.RestoreAtmosphere();
@@ -402,7 +404,7 @@ namespace JalanKita
             AddLabel(dialog, "Simulasi keselamatan berkendara di Indonesia", "home-tagline");
             AddLabel(dialog, "We Will Handle", "team-credit");
             var actions = Element(dialog, "home-actions");
-            AddButton(actions, "Play", ShowPlayChooser, "primary home-action");
+            AddButton(actions, "Play", PlayFromHome, "primary home-action");
             AddButton(actions, "Options", ShowOptions, "quiet home-action");
             if (Application.platform != RuntimePlatform.WebGLPlayer)
                 AddButton(actions, "Exit", Application.Quit, "quiet home-action");
