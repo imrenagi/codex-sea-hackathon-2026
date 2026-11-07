@@ -6,25 +6,6 @@ namespace JalanKita
 {
     public sealed partial class JalanGame
     {
-        void AddVehiclePicker(UnityEngine.UIElements.VisualElement parent = null)
-        {
-            var selected = VehicleCatalogue.Selected(mode);
-            var picker = Element(parent ?? dialog, "vehicle-picker");
-            AddLabel(picker, GameText.Get("text.vehicle"), "kicker");
-            var choices = Element(picker, "vehicle-choices");
-            foreach (var choice in VehicleCatalogue.All.Where(v => v.Mode == mode))
-            {
-                var button = AddButton(choices, choice.Label, () =>
-                {
-                    VehicleCatalogue.Select(choice);
-                    if (page == Page.PlayChooser) ShowPlayChooser(); else ShowMenu();
-                }, choice == selected ? "vehicle-choice selected" : "vehicle-choice quiet");
-                button.tooltip = choice.Description;
-            }
-            AddLabel(picker, selected.Description, "objective-detail");
-            AddButton(picker, GameText.Get("vehicles.preview.open"), () => ShowVehiclePreview(true), "quiet");
-        }
-
         VehiclePreview vehiclePreview;
         Slider previewAngle;
         Label previewName, previewDescription;
@@ -51,16 +32,7 @@ namespace JalanKita
                 vehiclePreview.Rotate(e.keyCode == KeyCode.LeftArrow ? -15 : 15); e.StopPropagation();
             });
             panel.Add(image);
-            AddLabel(panel, GameText.Get("vehicles.preview.drag"), "preview-hint");
-            previewAngle = new Slider(GameText.Get("vehicles.preview.angle"), 0, 360) { name = "vehicleAngle" };
-            previewAngle.AddToClassList("volume-control preview-angle");
-            previewAngle.RegisterValueChangedCallback(e => vehiclePreview.SetAngle(e.newValue));
-            panel.Add(previewAngle);
-            var controls = Element(panel, "row preview-controls");
-            AddButton(controls, GameText.Get("vehicles.preview.left"), () => vehiclePreview.Rotate(-45), "quiet tiny");
-            previewAuto = AddButton(controls, "", () => vehiclePreview.AutoRotate = !vehiclePreview.AutoRotate, "quiet tiny");
-            previewAuto.name = "vehicleAutoRotate";
-            AddButton(controls, GameText.Get("vehicles.preview.right"), () => vehiclePreview.Rotate(45), "quiet tiny");
+            // Model selection stays beside its preview, before optional rotation controls.
             var choices = Element(panel, "vehicle-choices");
             foreach (var choice in VehicleCatalogue.All.Where(v => v.Mode == mode))
             {
@@ -73,6 +45,16 @@ namespace JalanKita
                 button.tooltip = choice.Description;
             }
             previewDescription = AddLabel(panel, "", "objective-detail");
+            AddLabel(panel, GameText.Get("vehicles.preview.drag"), "preview-hint");
+            previewAngle = new Slider(GameText.Get("vehicles.preview.angle"), 0, 360) { name = "vehicleAngle" };
+            previewAngle.AddToClassList("volume-control preview-angle");
+            previewAngle.RegisterValueChangedCallback(e => vehiclePreview.SetAngle(e.newValue));
+            panel.Add(previewAngle);
+            var controls = Element(panel, "row preview-controls");
+            AddButton(controls, GameText.Get("vehicles.preview.left"), () => vehiclePreview.Rotate(-45), "quiet tiny");
+            previewAuto = AddButton(controls, "", () => vehiclePreview.AutoRotate = !vehiclePreview.AutoRotate, "quiet tiny");
+            previewAuto.name = "vehicleAutoRotate";
+            AddButton(controls, GameText.Get("vehicles.preview.right"), () => vehiclePreview.Rotate(45), "quiet tiny");
             RefreshVehiclePreview(0);
         }
 

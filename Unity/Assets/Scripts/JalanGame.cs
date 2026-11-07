@@ -460,8 +460,8 @@ namespace JalanKita
                 AddButton(other, GameText.Get("text.skill_tests_5_tests"), () => ShowCatalogue(MissionKind.SkillTest), "quiet option");
                 AddButton(other, GameText.Get("text.everyday_missions_3_journeys"), () => ShowCatalogue(MissionKind.Scenario), "quiet option");
                 AddLabel(other, GameText.Get("text.results_are_saved_for_each_test_and_mission"), "menu-note");
-                Fold(other, GameText.Get("vehicles.selected", VehicleCatalogue.Selected(mode).Label), AddVehiclePicker);
-                Fold(other, stored == null ? GameText.Get("text.explore_full_journey") : GameText.Get("text.explore_saved_journey"), explore =>
+                AddLabel(other, stored == null ? GameText.Get("text.explore_full_journey") : GameText.Get("text.explore_saved_journey"), "menu-section-title");
+                var explore = Element(other, "explore-actions");
                 {
                     AddButton(explore, GameText.Get("text.sopo_del_free_drive"), StartJaksa, "option quiet");
                     AddButton(explore, GameText.Get("text.map_previews_not_playable_yet"), ShowCityMaps, "option quiet");
@@ -480,7 +480,7 @@ namespace JalanKita
                         }, "option quiet");
                         if (confirmNew) AddLabel(explore, GameText.Get("text.this_replaces_the_journey_progress_for_this_vehicle"), "copy");
                     }
-                }, confirmNew);
+                }
             }, confirmNew || expandModes);
             AddButton(content, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
         }
@@ -855,8 +855,9 @@ namespace JalanKita
                 fold.ToggleInClassList("open");
                 sign.text = fold.ClassListContains("open") ? "-" : "+";
             }, "fold-head");
-            AddLabel(button, title, "fold-title");
+            AddLabel(button, title, "fold-title").pickingMode = PickingMode.Ignore;
             sign = AddLabel(button, "+", "fold-sign");
+            sign.pickingMode = PickingMode.Ignore;
             fill(details);
             fold.Add(details);
             if (expanded) { fold.AddToClassList("open"); sign.text = "-"; }

@@ -217,7 +217,7 @@
 .button.fold-head:hover { background-color: rgba(255,255,255,0.2); }
 .button.fold-head:focus { border-color: var(--rs-text); background-color: #45474a; }
 .fold-body { flex-shrink: 0; display: none; padding: 8px 14px 12px; }
-.fold.open .fold-body { display: flex; }
+.fold.open > .fold-body { display: flex; }
 .sheet .unity-scroller--vertical { width: 8px; margin-left: 8px; }
 .sheet .unity-scroller__low-button, .sheet .unity-scroller__high-button { display: none; }
 .sheet .unity-base-slider__tracker { background-color: rgba(255,255,255,0.07); border-radius: 4px; }
@@ -605,3 +605,6 @@
     -unity-font-style: normal;
     padding-bottom: 4px;
 }
+
+.play-card .explore-actions > * { flex-shrink: 0; }
+.play-card .explore-actions .option { margin-top: 12px; }
