@@ -95,18 +95,20 @@ namespace JalanKita
                 Axis=part.parent.InverseTransformDirection(Root.transform.TransformDirection(axis))});
         }
         public void Hide(){Root.SetActive(false);positioned=false;}
-        public void Present(Vector3 position,float yaw,float speed,float dt,bool headlights=true,int indicator=0,bool braking=false,float steeringAngle=float.NaN)
+        public void Present(Vector3 position,float yaw,float speed,float dt,bool headlights=true,int indicator=0,bool braking=false,float steeringAngle=float.NaN,bool signedSpeed=false)
         {
             if(Choice==null)throw new InvalidOperationException("Select traffic before presenting");
             Root.SetActive(true);dt=Mathf.Clamp(dt,0,.1f);
             float distance=positioned?Vector3.Distance(position,previousPosition):0;
             bool teleport=!positioned||distance>3;
-            if(speed<0)speed=!teleport&&dt>0?distance/dt:0;
-            if(!teleport){travelled+=distance;if(previousSpeed-speed>2*dt&&dt>0)brakeHold=.4f;}
+            // NPCs retain their negative auto-speed sentinel; only player callers
+            // opt into signed metres/sec for reverse wheel and steering motion.
+            if(!signedSpeed&&speed<0)speed=!teleport&&dt>0?distance/dt:0;
+            if(!teleport){travelled+=signedSpeed&&speed<0?-distance:distance;if(Mathf.Abs(previousSpeed)-Mathf.Abs(speed)>2*dt&&dt>0)brakeHold=.4f;}
             else{travelled=0;brakeHold=0;}
             brakeHold=Mathf.Max(0,brakeHold-dt);
             float turn=0;
-            if(!teleport&&dt>0&&speed>.2f)
+            if(!teleport&&dt>0&&Mathf.Abs(speed)>.2f)
                 turn=Mathf.Atan(Choice.Vehicle.Wheelbase*Choice.Vehicle.Scale*Mathf.DeltaAngle(previousHeading,yaw)*Mathf.Deg2Rad/dt/speed)*Mathf.Rad2Deg;
             if(!float.IsNaN(steeringAngle))turn=steeringAngle;
             Root.transform.SetPositionAndRotation(position,Quaternion.Euler(0,yaw,0));
