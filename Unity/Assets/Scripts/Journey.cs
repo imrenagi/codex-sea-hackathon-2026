@@ -19,68 +19,73 @@ namespace JalanKita
         public const string Signals = "https://peraturan.bpk.go.id/Details/103764/permenhub-no-49-tahun-2014";
         public const string Limits = "https://peraturan.bpk.go.id/Details/103508/permenhub-no-111-tahun-2015";
 
-        public readonly string Title, Explanation, Action, Citation, Url, Regulation;
+        public readonly string Url, Regulation;
+        readonly string titleKey, explanationKey, actionKey, citationKey;
+        public string Title => GameText.Get(titleKey);
+        public string Explanation => GameText.Get(explanationKey);
+        public string Action => GameText.Get(actionKey);
+        public string Citation => GameText.Get(citationKey);
         public Lesson(string title, string explanation, string action, string citation, string url = Law,
             string regulation = "UU 22/2009")
         {
-            Title = title; Explanation = explanation; Action = action; Citation = citation; Url = url;
+            titleKey = title; explanationKey = explanation; actionKey = action; citationKey = citation; Url = url;
             Regulation = regulation;
         }
 
         public static readonly Lesson[] All =
         {
-            new("Seat belts are not fastened", "The driver and front passenger must wear seat belts.",
-                "Fasten both seat belts before selecting Start driving.", "Pasal 106 ayat (6)"),
-            new("SNI helmets are not ready", "The motorcycle rider and passenger must wear SNI-approved helmets.",
-                "Equip both people with SNI helmets. Fasten the straps to keep the helmets secure.", "Pasal 106 ayat (8)"),
-            new("Motorcycle headlight is off", "Motorcycles must use their headlights during the day too.",
-                "Turn on the headlight before setting off and keep it on.", "Pasal 107 ayat (2)"),
-            new("Crossed the STOP line", "A STOP sign requires a complete stop before the stop line.",
-                "Release the throttle, brake to 0 km/h, then check crossing traffic before moving.", "Pasal 106 ayat (4) huruf a–b"),
-            new("Ran a red light", "Drivers must obey traffic signals.",
-                "Stop before the white line and wait for green before continuing.", "Pasal 106 ayat (4) huruf c"),
-            new("Main-road traffic is still passing", "When leaving a smaller road, yield to traffic on the main road.",
-                "Hold the brake before the junction. Wait for traffic to pass and check that the road is clear.", "Pasal 113 ayat (1) huruf b"),
-            new("Pedestrians are still crossing", "Pedestrians have priority at a crossing.",
-                "Wait behind the crossing until pedestrians have cleared your path and no one is approaching it.", "Pasal 106 ayat (2) dan Pasal 131 ayat (2)"),
-            new("Entered the oncoming lane", "Drive on the left side of the road.",
-                "Return to the left of the center line and keep left on two-way roads.", "Pasal 108 ayat (1)"),
-            new("Entered against a no-entry sign", "The no-entry sign prohibits access from this direction.",
-                "Follow the straight arrows on the one-way road and avoid the branch with the red sign.", "Pasal 106 ayat (4) huruf a"),
-            new("Changed lanes without indicating", "Check traffic and signal in the intended direction before changing lanes.",
-                "Press E for the right indicator or Q for the left before changing lanes or moving sideways.", "Pasal 112 ayat (2)"),
-            new("Lane-change gap is too small", "Check traffic ahead and behind before changing lanes.",
-                "Wait for the car in your target lane to move away. Safe gaps in this simulation depend on vehicle speed.", "Pasal 112 ayat (2)"),
-            new("Lane-change exercise is incomplete", "This exercise requires a safe move right and a return left before the road narrows.",
-                "Signal right at the dashed line, then signal left and return before the markings end.", "Practice"),
-            new("Exceeded the 30 km/h limit", "The posted speed limit applies on this road.",
-                "Slow down before the 30 sign. Release the throttle or brake gently to stay below the limit.", "Pasal 106 ayat (4) huruf g dan Pasal 115 huruf a"),
-            new("Answered the phone while driving", "Drivers must stay focused. Using a phone takes attention away from driving.",
-                "Ignore calls while driving. Stop somewhere safe before using your phone.", "Pasal 106 ayat (1) dan Penjelasan"),
-            new("Left the practice route", "Your vehicle left the road provided for this exercise.",
-                "Follow the route markings and control your speed before steering.", "Practice"),
-            new("Too close to another vehicle", "Leave enough space to brake if traffic ahead slows down.",
-                "Keep your distance and brake early when approaching other vehicles.", "Safety advice"),
-            new("Stopped in a no-stopping zone", "A no-stopping sign still applies when a passenger requests a pickup there.",
-                "Continue to the pickup bay on the left beyond the restricted zone.", "Pasal 118 huruf a"),
-            new("Pickup location is not safe yet", "In this mission, pick up the passenger after stopping in the marked bay.",
-                "Signal left, enter the bay, stop beside the passenger, then press Pick up [F].", "Practice"),
-            new("Passenger has not been picked up", "Pick up the passenger, then merge back into traffic safely.",
-                "Stop in the pickup bay, press Pick up [F], then signal right and wait for a safe gap.", "Practice"),
-            new("Turned without indicating", "Check traffic and signal in the intended direction before turning.",
-                "Press Q before turning left or E before turning right. Yield to pedestrians until your turning path is clear.", "Pasal 112 ayat (1)"),
-            new("Wrong lane for this direction", "Follow lane arrows and do not cross solid lane markings near a junction.",
-                "Choose your lane before the solid line: left to turn left, middle to go straight, right to turn right.", "Pasal 106 ayat (4) huruf a–b"),
-            new("Right-turn arrow is not green", "A green light for straight traffic does not permit a right turn at a junction with separate signals.",
-                "Stop in the right lane. Wait for a green right arrow and check that pedestrians have cleared your turning path.", "Pasal 106 ayat (4) huruf c"),
-            new("Car entered the motorcycle stop box", "The car crossed its stop line on red and entered the red box reserved for motorcycles.",
-                "Cars stop before the red box. Motorcycles may use its front line but must still wait for the relevant signal.", "Pasal 106 ayat (4) huruf b–c"),
-            new("Entered a closed railway crossing", "Stop when the warning sounds or the barriers begin to close, and give trains priority.",
-                "Stop before the line. Wait for the train to pass, warning lights to go out, and barriers to open fully.", "Pasal 114"),
-            new("Blocked an ambulance", "An ambulance carrying a patient has priority; this exercise uses its lights and siren.",
-                "Locate the ambulance, signal left, and move into the left lane when safe. Do not block or follow it closely.", "Pasal 134 huruf b dan Pasal 135 ayat (1)"),
-            new("Exceeded the 50 km/h limit", "The 50 km/h limit applies on this main road, including when an ambulance approaches.",
-                "Ease off the throttle and give way calmly. Do not accelerate to get ahead of the ambulance.", "Pasal 106 ayat (4) huruf g dan Pasal 115 huruf a")
+            new("text.seat_belts_are_not_fastened", "text.the_driver_and_front_passenger_must_wear_seat_belts",
+                "text.fasten_both_seat_belts_before_selecting_start_driving", "Pasal 106 ayat (6)"),
+            new("text.sni_helmets_are_not_ready", "text.the_motorcycle_rider_and_passenger_must_wear_sni_approved",
+                "text.equip_both_people_with_sni_helmets_fasten_the_straps", "Pasal 106 ayat (8)"),
+            new("text.motorcycle_headlight_is_off", "text.motorcycles_must_use_their_headlights_during_the_day_too",
+                "text.turn_on_the_headlight_before_setting_off_and_keep", "Pasal 107 ayat (2)"),
+            new("text.crossed_the_stop_line", "text.a_stop_sign_requires_a_complete_stop_before_the",
+                "text.release_the_throttle_brake_to_0_km_h_then", "Pasal 106 ayat (4) huruf a–b"),
+            new("text.ran_a_red_light", "text.drivers_must_obey_traffic_signals",
+                "text.stop_before_the_white_line_and_wait_for_green", "Pasal 106 ayat (4) huruf c"),
+            new("text.main_road_traffic_is_still_passing", "text.when_leaving_a_smaller_road_yield_to_traffic_on",
+                "text.hold_the_brake_before_the_junction_wait_for_traffic", "Pasal 113 ayat (1) huruf b"),
+            new("text.pedestrians_are_still_crossing", "text.pedestrians_have_priority_at_a_crossing",
+                "text.wait_behind_the_crossing_until_pedestrians_have_cleared_your", "Pasal 106 ayat (2) dan Pasal 131 ayat (2)"),
+            new("text.entered_the_oncoming_lane", "text.drive_on_the_left_side_of_the_road",
+                "text.return_to_the_left_of_the_center_line_and", "Pasal 108 ayat (1)"),
+            new("text.entered_against_a_no_entry_sign", "text.the_no_entry_sign_prohibits_access_from_this_direction",
+                "text.follow_the_straight_arrows_on_the_one_way_road", "Pasal 106 ayat (4) huruf a"),
+            new("text.changed_lanes_without_indicating", "text.check_traffic_and_signal_in_the_intended_direction_before",
+                "text.press_e_for_the_right_indicator_or_q_for", "Pasal 112 ayat (2)"),
+            new("text.lane_change_gap_is_too_small", "text.check_traffic_ahead_and_behind_before_changing_lanes",
+                "text.wait_for_the_car_in_your_target_lane_to", "Pasal 112 ayat (2)"),
+            new("text.lane_change_exercise_is_incomplete", "text.this_exercise_requires_a_safe_move_right_and_a",
+                "text.signal_right_at_the_dashed_line_then_signal_left", "text.practice"),
+            new("text.exceeded_the_30_km_h_limit", "text.the_posted_speed_limit_applies_on_this_road",
+                "text.slow_down_before_the_30_sign_release_the_throttle", "Pasal 106 ayat (4) huruf g dan Pasal 115 huruf a"),
+            new("text.answered_the_phone_while_driving", "text.drivers_must_stay_focused_using_a_phone_takes_attention",
+                "text.ignore_calls_while_driving_stop_somewhere_safe_before_using", "Pasal 106 ayat (1) dan Penjelasan"),
+            new("text.left_the_practice_route", "text.your_vehicle_left_the_road_provided_for_this_exercise",
+                "text.follow_the_route_markings_and_control_your_speed_before", "text.practice"),
+            new("text.too_close_to_another_vehicle", "text.leave_enough_space_to_brake_if_traffic_ahead_slows",
+                "text.keep_your_distance_and_brake_early_when_approaching_other", "text.safety_advice_9131f9"),
+            new("text.stopped_in_a_no_stopping_zone", "text.a_no_stopping_sign_still_applies_when_a_passenger",
+                "text.continue_to_the_pickup_bay_on_the_left_beyond", "Pasal 118 huruf a"),
+            new("text.pickup_location_is_not_safe_yet", "text.in_this_mission_pick_up_the_passenger_after_stopping",
+                "text.signal_left_enter_the_bay_stop_beside_the_passenger", "text.practice"),
+            new("text.passenger_has_not_been_picked_up", "text.pick_up_the_passenger_then_merge_back_into_traffic",
+                "text.stop_in_the_pickup_bay_press_pick_up_f", "text.practice"),
+            new("text.turned_without_indicating", "text.check_traffic_and_signal_in_the_intended_direction_before_96621f",
+                "text.press_q_before_turning_left_or_e_before_turning", "Pasal 112 ayat (1)"),
+            new("text.wrong_lane_for_this_direction", "text.follow_lane_arrows_and_do_not_cross_solid_lane",
+                "text.choose_your_lane_before_the_solid_line_left_to", "Pasal 106 ayat (4) huruf a–b"),
+            new("text.right_turn_arrow_is_not_green", "text.a_green_light_for_straight_traffic_does_not_permit",
+                "text.stop_in_the_right_lane_wait_for_a_green", "Pasal 106 ayat (4) huruf c"),
+            new("text.car_entered_the_motorcycle_stop_box", "text.the_car_crossed_its_stop_line_on_red_and",
+                "text.cars_stop_before_the_red_box_motorcycles_may_use", "Pasal 106 ayat (4) huruf b–c"),
+            new("text.entered_a_closed_railway_crossing", "text.stop_when_the_warning_sounds_or_the_barriers_begin",
+                "text.stop_before_the_line_wait_for_the_train_to", "Pasal 114"),
+            new("text.blocked_an_ambulance", "text.an_ambulance_carrying_a_patient_has_priority_this_exercise",
+                "text.locate_the_ambulance_signal_left_and_move_into_the", "Pasal 134 huruf b dan Pasal 135 ayat (1)"),
+            new("text.exceeded_the_50_km_h_limit", "text.the_50_km_h_limit_applies_on_this_main",
+                "text.ease_off_the_throttle_and_give_way_calmly_do", "Pasal 106 ayat (4) huruf g dan Pasal 115 huruf a")
         };
 
         public bool HasSource => Citation.StartsWith("Pasal", StringComparison.Ordinal);
@@ -88,12 +93,15 @@ namespace JalanKita
 
     public sealed class RouteStage
     {
-        public readonly string Title, Location, Instruction;
+        readonly string titleKey, locationKey, instructionKey;
+        public string Title => GameText.Get(titleKey);
+        public string Location => GameText.Get(locationKey);
+        public string Instruction => GameText.Get(instructionKey);
         public readonly float End, Heading;
         public readonly Vector2 Checkpoint;
         RouteStage(string title, string location, string instruction, float end)
         {
-            Title = title; Location = location; Instruction = instruction; End = end;
+            titleKey = title; locationKey = location; instructionKey = instruction; End = end;
             Checkpoint = new Vector2(LeftLane, end);
         }
 
@@ -103,16 +111,16 @@ namespace JalanKita
 
         public static readonly RouteStage[] All =
         {
-            new("Before you drive", "KENANGA GARAGE", "Check the driver and passenger safety equipment.", -12),
-            new("Signs & signals", "JALAN KENANGA", "Stop completely at the STOP line before continuing.", 108),
-            new("Right of way", "PASAR BUNGA", "Give pedestrians priority at the crossing.", 204),
-            new("Directions & lanes", "JALAN MAWAR", "Follow the arrows. Signal and move into the right lane when safe.", 298),
-            new("Speed & focus", "SCHOOL ZONE", "Slow down before the 30 km/h sign.", 382),
-            new("Straight through the main road", "JALAN THAMRIN", "Choose the middle lane before the solid line. Wait for green and for pedestrians to clear.", new Vector2(-5.4f, 550)),
-            new("Left turn & pedestrians", "THAMRIN – DIPONEGORO", "Choose the leftmost lane, press Q, then wait for green and a clear path through the crossing.", new Vector2(-70, 631), 270),
-            new("Protected right turn", "DIPONEGORO – AHMAD YANI", "Choose the right lane before the solid line. Press E and wait for the green right arrow.", new Vector2(-181.8f, 720)),
-            new("Railway crossing", "AHMAD YANI CROSSING", "Stop when the bell sounds. Wait for the train to pass and the barriers to open fully.", new Vector2(-185.4f, 850)),
-            new("Yield to the ambulance", "JALAN RUMAH SAKIT", "Pass the minibus in the middle lane. When the siren sounds, signal and move left to give way.", new Vector2(-189, 1040))
+            new("text.before_you_drive", "text.kenanga_garage", "text.check_the_driver_and_passenger_safety_equipment", -12),
+            new("text.signs_signals", "text.jalan_kenanga", "text.stop_completely_at_the_stop_line_before_continuing", 108),
+            new("text.right_of_way", "text.pasar_bunga", "text.give_pedestrians_priority_at_the_crossing", 204),
+            new("text.directions_lanes", "text.jalan_mawar", "text.follow_the_arrows_signal_and_move_into_the_right", 298),
+            new("text.speed_focus", "text.school_zone", "text.slow_down_before_the_30_km_h_sign", 382),
+            new("text.straight_through_the_main_road", "text.jalan_thamrin", "text.choose_the_middle_lane_before_the_solid_line_wait", new Vector2(-5.4f, 550)),
+            new("text.left_turn_pedestrians", "text.thamrin_diponegoro", "text.choose_the_leftmost_lane_press_q_then_wait_for", new Vector2(-70, 631), 270),
+            new("text.protected_right_turn", "text.diponegoro_ahmad_yani", "text.choose_the_right_lane_before_the_solid_line_press", new Vector2(-181.8f, 720)),
+            new("text.railway_crossing", "text.ahmad_yani_crossing", "text.stop_when_the_bell_sounds_wait_for_the_train", new Vector2(-185.4f, 850)),
+            new("text.yield_to_the_ambulance", "text.jalan_rumah_sakit", "text.pass_the_minibus_in_the_middle_lane_when_the", new Vector2(-189, 1040))
         };
 
         public const float LeftLane = -2.15f;

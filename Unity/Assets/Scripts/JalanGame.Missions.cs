@@ -11,11 +11,11 @@ namespace JalanKita
         {
             catalogueKind = kind;
             SetPage(Page.Catalogue);
-            AddLabel(dialog, (mode == VehicleMode.Car ? "CAR" : "MOTORCYCLE") + "  /  CHOOSE AN ACTIVITY", "kicker");
-            AddLabel(dialog, kind == MissionKind.Scenario ? "Everyday missions" : "Skill tests", "heading");
+            AddLabel(dialog, GameText.Get("missions.choose_activity", mode == VehicleMode.Car ? GameText.Get("text.car") : GameText.Get("text.motorcycle")), "kicker");
+            AddLabel(dialog, kind == MissionKind.Scenario ? GameText.Get("text.everyday_missions") : GameText.Get("text.skill_tests"), "heading");
             AddLabel(dialog, kind == MissionKind.Scenario
-                ? "One goal, several decisions. Retry difficult sections and try the next traffic variation."
-                : "Choose a skill to test. Results and attempts are saved for each test.", "copy");
+                ? GameText.Get("text.one_goal_several_decisions_retry_difficult_sections_and_try")
+                : GameText.Get("text.choose_a_skill_to_test_results_and_attempts_are"), "copy");
             var list = new ScrollView(ScrollViewMode.Vertical);
             list.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
             list.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
@@ -30,15 +30,15 @@ namespace JalanKita
                 AddLabel(row, activity.Title, "subhead mission-title");
                 AddLabel(row, activity.Duration, "kicker duration");
                 AddLabel(card, activity.Focus, "copy");
-                string status = saved == null ? "Not attempted"
-                    : saved.next <= activity.LastStage ? "In progress  /  Attempt " + saved.attempts
-                    : "Completed " + saved.completions + " times  /  Fewest mistakes: " + saved.bestMistakes;
+                string status = saved == null ? GameText.Get("text.not_attempted")
+                    : saved.next <= activity.LastStage ? GameText.Get("missions.in_progress", saved.attempts)
+                    : GameText.Get("missions.completed", saved.completions, saved.bestMistakes);
                 AddLabel(card, status, "objective-detail");
-                AddButton(card, saved != null && saved.next <= activity.LastStage ? "Continue" : "Select", () => ShowMissionBrief(activity), "primary");
+                AddButton(card, saved != null && saved.next <= activity.LastStage ? GameText.Get("text.continue") : GameText.Get("text.select_2a7802"), () => ShowMissionBrief(activity), "primary");
             }
             var actions = Element(dialog, "row actions catalogue-footer");
-            AddButton(actions, "Main menu", BackToMenu, "quiet");
-            AddButton(actions, kind == MissionKind.Scenario ? "View skill tests" : "View everyday missions",
+            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
+            AddButton(actions, kind == MissionKind.Scenario ? GameText.Get("text.view_skill_tests") : GameText.Get("text.view_everyday_missions"),
                 () => ShowCatalogue(kind == MissionKind.Scenario ? MissionKind.SkillTest : MissionKind.Scenario), "quiet");
         }
 
@@ -48,20 +48,20 @@ namespace JalanKita
             SetPage(Page.Brief);
             var saved = JourneySave.Load(mode, activity);
             bool resume = saved != null && saved.next <= activity.LastStage;
-            AddLabel(dialog, (activity.Kind == MissionKind.Scenario ? "EVERYDAY MISSION" : "SKILL TEST")
+            AddLabel(dialog, (activity.Kind == MissionKind.Scenario ? GameText.Get("text.everyday_mission") : GameText.Get("text.skill_test"))
                 + "  /  " + activity.Duration, "kicker");
             AddLabel(dialog, activity.Title, "heading");
             AddLabel(dialog, activity.Brief, "copy");
             var note = Element(dialog, "note");
-            AddLabel(note, "PRACTICE FOCUS", "kicker");
+            AddLabel(note, GameText.Get("text.practice_focus"), "kicker");
             AddLabel(note, activity.Focus, "copy");
             AddLabel(dialog, activity.Kind == MissionKind.Scenario
-                ? "Complete the goal safely. Progress saves after each section; there is no bonus for rushing."
-                : "Complete the test without violations. After a mistake, read the explanation and try again.", "copy");
-            if (resume) AddLabel(dialog, "Saved progress is available for this vehicle.", "objective-detail");
+                ? GameText.Get("text.complete_the_goal_safely_progress_saves_after_each_section")
+                : GameText.Get("text.complete_the_test_without_violations_after_a_mistake_read"), "copy");
+            if (resume) AddLabel(dialog, GameText.Get("text.saved_progress_is_available_for_this_vehicle"), "objective-detail");
             var actions = Element(dialog, "row actions");
-            AddButton(actions, resume ? "Continue" : "Start", () => StartMission(activity, saved), "primary");
-            AddButton(actions, "Back", () => ShowCatalogue(activity.Kind), "quiet");
+            AddButton(actions, resume ? GameText.Get("text.continue") : GameText.Get("text.start"), () => StartMission(activity, saved), "primary");
+            AddButton(actions, GameText.Get("text.back"), () => ShowCatalogue(activity.Kind), "quiet");
         }
 
         void StartMission(Mission activity, JourneySave saved, bool restart = false)
@@ -83,7 +83,7 @@ namespace JalanKita
             if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
             else if (journey.PassengerPickedUp)
             {
-                toast.text = "PASSENGER BOARDING  /  STAY STOPPED";
+                toast.text = GameText.Get("text.passenger_boarding_stay_stopped");
                 toastUntil = Time.unscaledTime + 4;
             }
         }
@@ -93,32 +93,32 @@ namespace JalanKita
             SetPage(Page.Progress);
             var activity = journey.Activity;
             bool scenario = activity.Kind == MissionKind.Scenario;
-            AddLabel(dialog, journey.Finished ? scenario ? "MISSION COMPLETE" : "TEST COMPLETE" : "PROGRESS SAVED", "kicker");
+            AddLabel(dialog, journey.Finished ? scenario ? GameText.Get("text.mission_complete") : GameText.Get("text.test_complete") : GameText.Get("text.progress_saved"), "kicker");
             AddLabel(dialog, activity.Title, "heading");
-            AddLabel(dialog, journey.Finished ? scenario ? "Destination reached safely." : "Latest attempt passed."
-                : "Continue or choose another activity.", "copy");
-            AddLabel(dialog, "Attempts: " + journey.Save.attempts + "  /  Total practice mistakes: " + journey.MistakeCount, "copy");
+            AddLabel(dialog, journey.Finished ? scenario ? GameText.Get("text.destination_reached_safely") : GameText.Get("text.latest_attempt_passed")
+                : GameText.Get("text.continue_or_choose_another_activity"), "copy");
+            AddLabel(dialog, GameText.Get("missions.attempts", journey.Save.attempts, journey.MistakeCount), "copy");
             if (journey.Finished)
-                AddLabel(dialog, "Best result: " + journey.Save.bestMistakes + " mistakes  /  Completed " + journey.Save.completions + " times", "objective-detail");
+                AddLabel(dialog, GameText.Get("missions.best_result", journey.Save.bestMistakes, journey.Save.completions), "objective-detail");
             var note = Element(dialog, "note");
-            AddLabel(note, journey.Finished ? "SKILLS PRACTICED" : "PRACTICE FOCUS", "kicker");
+            AddLabel(note, journey.Finished ? GameText.Get("text.skills_practiced") : GameText.Get("text.practice_focus"), "kicker");
             AddLabel(note, activity.Focus, "copy");
             var errors = Enumerable.Range(0, Lesson.All.Length).Where(i => journey.Save.mistakes[i] > 0)
                 .OrderByDescending(i => journey.Save.mistakes[i]).Take(2).ToArray();
             foreach (int i in errors) AddLabel(note, journey.Save.mistakes[i] + "×  " + Lesson.All[i].Title, "objective-detail");
-            if (journey.Finished && errors.Length == 0) AddLabel(note, "Completed this session without mistakes.", "objective-detail");
+            if (journey.Finished && errors.Length == 0) AddLabel(note, GameText.Get("text.completed_this_session_without_mistakes"), "objective-detail");
             AddControlsHelp(dialog);
             var actions = Element(dialog, "row actions");
-            if (!journey.Finished) AddButton(actions, "Continue", () =>
+            if (!journey.Finished) AddButton(actions, GameText.Get("text.continue"), () =>
             {
                 if (journey.Stage == 0) ShowPreflight();
                 else if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
                 else ReturnToJourney();
             }, "primary");
-            else AddButton(actions, scenario ? "Retry with a variation" : "Retry test",
+            else AddButton(actions, scenario ? GameText.Get("text.retry_with_a_variation") : GameText.Get("text.retry_test"),
                 () => StartMission(activity, journey.Save, restart: true), "primary");
-            AddButton(actions, scenario ? "Choose mission" : "Choose test", () => ShowCatalogue(activity.Kind), "quiet");
-            AddButton(actions, "Main menu", BackToMenu, "quiet");
+            AddButton(actions, scenario ? GameText.Get("text.choose_mission") : GameText.Get("text.choose_test"), () => ShowCatalogue(activity.Kind), "quiet");
+            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
         }
 
         void RefreshMissionPrompt(ref string prompt, ref string signal, ref float target)
@@ -127,44 +127,44 @@ namespace JalanKita
             title.text = journey.Activity.Title;
             if (journey.Activity.IsVillage && journey.Front > RouteStage.StopJunction + 5.5f)
             {
-                prompt = "The shop is nearby. Continue to the yellow destination marker.";
-                signal = "HEADING TO THE SHOP";
+                prompt = GameText.Get("text.the_shop_is_nearby_continue_to_the_yellow_destination");
+                signal = GameText.Get("text.heading_to_the_shop");
                 target = journey.StageEnd;
             }
             if (journey.IsSchool && !journey.CrossedZebra)
             {
-                prompt = journey.Front < RouteStage.SchoolLimit ? "School is finishing. Watch for the 30 sign and pedestrian crossing."
-                    : "Check the crossing before continuing.";
+                prompt = journey.Front < RouteStage.SchoolLimit ? GameText.Get("text.school_is_finishing_watch_for_the_30_sign_and")
+                    : GameText.Get("text.check_the_crossing_before_continuing");
                 target = journey.CrossingZebra - 2;
-                if (journey.PedestrianBlocksPath) signal = "PEDESTRIANS CROSSING";
+                if (journey.PedestrianBlocksPath) signal = GameText.Get("text.pedestrians_crossing");
             }
             if (journey.IsMarket)
             {
                 if (journey.PassengerPickedUp)
                 {
-                    prompt = "Signal right [E], check traffic, then leave the bay when safe.";
-                    if (journey.Position.x > -4.25f) prompt = "Passenger on board. Continue to the yellow destination marker.";
+                    prompt = GameText.Get("text.signal_right_e_check_traffic_then_leave_the_bay");
+                    if (journey.Position.x > -4.25f) prompt = GameText.Get("text.passenger_on_board_continue_to_the_yellow_destination_marker");
                     target = journey.StageEnd;
                     if (journey.PickupTraffic.HasValue)
                     {
                         float gap = journey.PickupTraffic.Value.y - journey.Position.y;
-                        signal = "CAR IN LEFT LANE  " + Mathf.RoundToInt(Mathf.Abs(gap)) + " M "
-                            + (gap >= 0 ? "AHEAD" : "BEHIND");
+                        signal = GameText.Get("hud.car_left_gap", Mathf.RoundToInt(Mathf.Abs(gap)),
+                            gap >= 0 ? GameText.Get("text.ahead") : GameText.Get("text.behind"));
                     }
-                    else signal = "CHECK TRAFFIC BEFORE MERGING";
+                    else signal = GameText.Get("text.check_traffic_before_merging");
                     if (journey.IsBoarding)
                     {
-                        prompt = "Passenger boarding. Stay stopped, then check traffic before pulling out.";
-                        signal = "WAITING FOR PASSENGER";
+                        prompt = GameText.Get("text.passenger_boarding_stay_stopped_then_check_traffic_before_pulling");
+                        signal = GameText.Get("text.waiting_for_passenger");
                     }
                 }
                 else
                 {
-                    prompt = journey.Position.y < Mission.PickupStart ? "Follow the one-way road past the restricted zone to the pickup bay on the left."
-                        : "Signal left [Q], enter the bay, then stop beside the passenger.";
+                    prompt = journey.Position.y < Mission.PickupStart ? GameText.Get("text.follow_the_one_way_road_past_the_restricted_zone")
+                        : GameText.Get("text.signal_left_q_enter_the_bay_then_stop_beside");
                     target = Mission.PickupPoint;
-                    signal = journey.CanPickup ? "PRESS PICK UP [F]"
-                        : journey.Position.y <= Mission.NoStopEnd ? "PASSENGER ASKED TO WAIT IN THE BAY" : "PICKUP BAY ON THE LEFT";
+                    signal = journey.CanPickup ? GameText.Get("text.press_pick_up_f")
+                        : journey.Position.y <= Mission.NoStopEnd ? GameText.Get("text.passenger_asked_to_wait_in_the_bay") : GameText.Get("text.pickup_bay_on_the_left");
                 }
             }
             if (journey.Activity.Kind == MissionKind.SkillTest && learner == null)

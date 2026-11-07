@@ -1,14 +1,32 @@
-# Tutorial di dalam demo
+# Tutorial inside the demo
 
-1. Play membuka demo Pasar Bunga langsung dengan mobil. Tekan W untuk mendekati zebra cross; tahap pengenalan tidak memberi penalti atau progres.
-2. Sebelum zebra cross, simulasi dijeda. Kotak ringkas gelap transparan di kiri atas menampilkan **Pedestrian crossing ahead** dan satu instruksi putih tebal: **Press [S] to brake**. Latar layar tetap transparan agar penyeberang terlihat.
-3. Tekan S. Simulasi lanjut dan rem ditahan sampai mobil berhenti. Gas dan kemudi diabaikan selama langkah ini.
-4. Kotak kiri atas menampilkan **Wait for the pedestrian to finish crossing**. Kendaraan tetap direm, tetapi simulasi pejalan kaki terus berjalan. Menahan W tidak melewati langkah ini.
-5. Ketika aktor pejalan kaki benar-benar selesai menyeberang dan mobil berhenti, kartu berubah menjadi **Press [W] to continue** dan tetap tampil sampai W baru ditekan. Lepas lalu tekan W kembali untuk melanjutkan.
-6. Pesan mengonfirmasi aturan normal aktif. Perjalanan demo berlanjut tanpa pindah ke tutorial terpisah.
+Play starts the Pasar Bunga demo with a car. Instructions use the approved compact, dark, translucent box at the top left. The road and pedestrians stay visible. Each step shows one instruction at a time.
 
-Esc pada popup tutorial hanya menutup popup dan melanjutkan simulasi dengan rem otomatis; kendaraan tetap menunggu penyeberang sampai aman, lalu memerlukan W baru. Tombol jeda tidak ditampilkan selama demo. Esc/Tab saat berkendara tetap membuka jeda; R mengulang seluruh urutan, termasuk saat popup atau langkah menunggu aktif. Tidak ada timer buatan untuk menganggap penyeberangan aman. Mode demo tetap tidak menulis progres perjalanan.
+## Pedestrian crossing
 
-Selama tutorial, teks tujuan, toast, dan hint kontrol disembunyikan supaya satu instruksi tetap terbaca. Pesan keberhasilan memakai kotak gelap kiri atas yang sama gayanya, dengan teks membungkus dan tinggi mengikuti isi; pesan itu sementara menggantikan teks tujuan. HUD biasa kembali sesudah pesan selesai.
+1. **Press [W] to start driving.** This initial hint is small, regular text slightly below the screen center, with no opaque panel; it disappears on W. Initial guidance does not record penalties or advance the mission.
+2. At the crossing's activation zone, before the zebra line, the world pauses: **Pedestrian crossing ahead — Press [S] to brake**.
+3. Release S if already held, then press it. The world resumes and the car brakes automatically. Throttle and steering cannot bypass the step.
+4. **Wait for the pedestrian to finish crossing.** The car stays stopped while the pedestrian keeps walking.
+5. Only after the car is fully stopped and the pedestrian actor has finished does **Press [W] to continue** appear. A fresh W press resumes normal driving; holding W cannot advance the lesson.
 
-Source disinkronkan ke project Unity terbuka; gameplay belum diuji otomatis. Perubahan berlaku saat pengguna memuat ulang sendiri; sesi Unity dan Play Mode tidak dikendalikan oleh agen. Tahan W selama menunggu untuk memastikan mobil tidak berjalan sendiri, lalu lepaskan dan tekan W saat petunjuk lanjut tampil.
+## Junction and cross traffic
+
+6. Continue straight toward the main road. At the cross-traffic activation zone, 20 m before the yield line, the world pauses: **Junction ahead · yield to cross traffic — Press [S] to brake**.
+7. A fresh S press resumes the world with automatic braking. **Stop before the junction** remains visible while slowing down.
+8. **Wait for cross traffic to pass.** The car stays stopped while cross traffic moves. The step uses the same directional clearance predicate as the existing driving coach, not a delay or countdown.
+9. Once fully stopped and cross traffic has cleared the existing safe threshold, **Press [W] to continue** appears. A fresh W press restores normal rules.
+10. Continue straight through the junction to finish the demo. This route does not require a turn, so it does not introduce an artificial Q/E signal step.
+
+## Controls and boundaries
+
+- Esc on either paused tutorial prompt closes only that prompt, applies the safe action and resumes the guarded waiting phase. It does not navigate to the menu or bypass clearance.
+- Esc/Tab while driving opens pause. Focus loss also pauses driving. Returning requires releasing controls; fresh-action detection survives pauses.
+- R/replay restarts the same scenario with a new journey and resets every step.
+- During each guided step, penalties and mission/checkpoint advancement are disabled. Normal rules return after the fresh W press. Demo journeys are nonpersistent.
+- Tutorial instructions suppress competing objective, toast and control-hint text. Success feedback temporarily replaces the objective and wraps within a dark box.
+- See Example starts immediately before the failed maneuver, ends just beyond it, and returns to the same feedback with the original failure and save unchanged. It never repeats unrelated onboarding or the whole demo.
+
+Source changes are synced without controlling Unity or Play Mode. The user controls reloading and live verification; no automated gameplay test, build or explicit compile was run.
+
+See [Reusable tutorial steps](TUTORIAL_STEPS.md) for map/scenario injection, localization keys and rule references.

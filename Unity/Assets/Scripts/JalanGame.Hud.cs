@@ -9,7 +9,6 @@ namespace JalanKita
         void BindHudControls()
         {
             BindHudIcon("steeringHelp", DrivingGlyph.Kind.Steering, () => ShowControls(page, page, false));
-            BindHudIcon("throttleHelp", DrivingGlyph.Kind.Throttle, () => ShowControls(page, page, false));
             BindHudIcon("cameraControl", DrivingGlyph.Kind.Camera, () =>
             {
                 if (inputReleaseRequired || learner != null) return;
@@ -49,7 +48,6 @@ namespace JalanKita
         {
             Show(root.Q("lampControl"), mode == VehicleMode.Motorcycle && learner == null);
             Show(root.Q("cameraControl"), learner == null);
-            Show(root.Q("throttleHelp"), learner == null);
             Show(root.Q("lookLeft"), learner == null);
             Show(root.Q("lookRight"), learner == null);
             Show(headlight, mode == VehicleMode.Motorcycle);

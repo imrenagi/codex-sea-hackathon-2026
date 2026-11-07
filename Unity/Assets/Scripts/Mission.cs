@@ -5,7 +5,12 @@ namespace JalanKita
     // Missions select encounters from the shared district; their scores never replace the full journey.
     public sealed class Mission
     {
-        public readonly string Id, Title, Brief, Focus, Duration;
+        public readonly string Id;
+        readonly string titleKey, briefKey, focusKey, durationKey;
+        public string Title => GameText.Get(titleKey);
+        public string Brief => GameText.Get(briefKey);
+        public string Focus => GameText.Get(focusKey);
+        public string Duration => GameText.Get(durationKey);
         public readonly MissionKind Kind;
         public readonly int FirstStage, LastStage;
         public readonly float Finish;
@@ -16,35 +21,35 @@ namespace JalanKita
         Mission(string id, MissionKind kind, string title, string brief, string focus, string duration,
             int firstStage, int lastStage, float finish)
         {
-            Id = id; Kind = kind; Title = title; Brief = brief; Focus = focus; Duration = duration;
+            Id = id; Kind = kind; titleKey = title; briefKey = brief; focusKey = focus; durationKey = duration;
             FirstStage = firstStage; LastStage = lastStage; Finish = finish;
         }
 
         public static readonly Mission[] Tests =
         {
-            new("preparation", MissionKind.SkillTest, "Before you drive", "Prepare safety equipment for the driver and passenger.",
-                "Vehicle safety equipment", "1 minute", 0, 0, -12),
-            new("signals", MissionKind.SkillTest, "Signs & signals", "Navigate a STOP sign and a signal-controlled junction safely.",
-                "STOP / Right of way / Signals", "1–2 minutes", 1, 1, 108),
-            new("priority", MissionKind.SkillTest, "Right of way", "Navigate a pedestrian crossing and main-road traffic.",
-                "Pedestrians / Main-road traffic", "1–2 minutes", 2, 2, 204),
-            new("lanes", MissionKind.SkillTest, "Directions & lanes", "Move right, then return left before the road narrows.",
-                "Road direction / Indicators / Safe gaps", "1–2 minutes", 3, 3, 298),
-            new("focus", MissionKind.SkillTest, "Speed & focus", "Obey the 30 km/h limit and handle a phone call safely.",
-                "Speed / Concentration", "1–2 minutes", 4, 4, 382)
+            new("preparation", MissionKind.SkillTest, "text.before_you_drive", "text.prepare_safety_equipment_for_the_driver_and_passenger",
+                "text.vehicle_safety_equipment", "text.1_minute", 0, 0, -12),
+            new("signals", MissionKind.SkillTest, "text.signs_signals", "text.navigate_a_stop_sign_and_a_signal_controlled_junction",
+                "text.stop_right_of_way_signals", "text.1_2_minutes", 1, 1, 108),
+            new("priority", MissionKind.SkillTest, "text.right_of_way", "text.navigate_a_pedestrian_crossing_and_main_road_traffic",
+                "text.pedestrians_main_road_traffic", "text.1_2_minutes", 2, 2, 204),
+            new("lanes", MissionKind.SkillTest, "text.directions_lanes", "text.move_right_then_return_left_before_the_road_narrows",
+                "text.road_direction_indicators_safe_gaps", "text.1_2_minutes", 3, 3, 298),
+            new("focus", MissionKind.SkillTest, "text.speed_focus", "text.obey_the_30_km_h_limit_and_handle_a",
+                "text.speed_concentration", "text.1_2_minutes", 4, 4, 382)
         };
 
         public static readonly Mission[] Scenarios =
         {
-            new("village", MissionKind.Scenario, "Leaving the neighborhood",
-                "Drive with a passenger to the local shop. Watch for a STOP sign and crossing traffic as you leave the neighborhood.",
-                "Preparation / STOP / Right of way", "1–2 minutes", 0, 1, 56),
-            new("school", MissionKind.Scenario, "Passing the school",
-                "Drive past a school at dismissal time. Someone will cross, then your phone will ring.",
-                "Speed / Pedestrians / Focus", "1–2 minutes", 4, 4, 382),
-            new("market", MissionKind.Scenario, "Market pickup",
-                "Your passenger requests a pickup in a no-stopping zone. Follow the one-way road to the pickup bay, then merge back safely.",
-                "Road direction / Safe stopping / Indicators & gaps", "2–3 minutes", 3, 3, 298)
+            new("village", MissionKind.Scenario, "text.leaving_the_neighborhood",
+                "text.drive_with_a_passenger_to_the_local_shop_watch",
+                "text.preparation_stop_right_of_way", "text.1_2_minutes", 0, 1, 56),
+            new("school", MissionKind.Scenario, "text.passing_the_school",
+                "text.drive_past_a_school_at_dismissal_time_someone_will",
+                "text.speed_pedestrians_focus", "text.1_2_minutes", 4, 4, 382),
+            new("market", MissionKind.Scenario, "text.market_pickup_8eb628",
+                "text.your_passenger_requests_a_pickup_in_a_no_stopping",
+                "text.road_direction_safe_stopping_indicators_gaps", "text.2_3_minutes", 3, 3, 298)
         };
 
         public const float SchoolZebra = 324;

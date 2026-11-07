@@ -7,27 +7,27 @@ namespace JalanKita
         public const string Amendment = "https://peraturan.bpk.go.id/Details/337869/uu-no-1-tahun-2026";
         public readonly string Meaning, Sanction;
         LawDetails(string meaning,string sanction) { Meaning=meaning; Sanction=sanction; }
-        static string Fine(string article,string amount) => article+" · Maximum fine: Rp"+amount+".";
+        static string Fine(string article,string amount) => GameText.Get("law.maximum_fine", article, amount);
         public static LawDetails For(Rule rule) => rule switch
         {
-            Rule.SeatBelt => new("Drivers and passengers seated beside the driver in vehicles with four or more wheels must wear seat belts.",Fine("Pasal 289","250.000")),
-            Rule.Helmet => new("Motorcycle riders and passengers must wear helmets that meet Indonesian National Standards (SNI).",Fine("Pasal 291 ayat (1)–(2)","250.000")+" Applies to riders without a helmet or riders who allow their passenger to ride without one."),
-            Rule.Headlight => new("In addition to nighttime and other required lighting, motorcycle riders must use headlights during the day.",Fine("Pasal 293 ayat (2)","100.000")),
-            Rule.NoStopping => new("Vehicles may not stop where signs or markings prohibit stopping (Pasal 118 huruf a). A passenger pickup request does not override this restriction.",Fine("Pasal 287 ayat (1), for violating prohibitory signs","500.000")),
-            Rule.Stop or Rule.NoEntry or Rule.MovementLane => new("Drivers must obey regulatory signs and road markings. In this exercise, STOP and no-entry signs, lane arrows, and solid lines determine permitted movements.",Fine("Pasal 287 ayat (1)","500.000")),
-            Rule.Signal or Rule.RightArrow => new("Drivers must obey traffic signals (APILL). At junctions with separate signals, green for straight traffic does not permit a right turn while the right arrow is red.",Fine("Pasal 287 ayat (2)","500.000")),
-            Rule.StopBox => new("Drivers must obey road markings and traffic lights. Cars wait behind the car stop line; the stop box ahead is reserved for motorcycles.",Fine("Pasal 287 ayat (1), for markings; ayat (2), for traffic signals","500.000")+" The applicable provision depends on the offense; penalties are not added automatically."),
-            Rule.Junction => new("At an unsignalized junction, vehicles from a smaller road yield to main-road traffic. At a perpendicular T-junction, through traffic has priority.","Pasal 113 does not directly specify a fine amount. This exercise does not assign an automatic fine for this event."),
-            Rule.Pedestrian => new("Drivers must prioritize pedestrian and cyclist safety. Pedestrians have priority when using a crossing.",Fine("Pasal 284","500.000")),
-            Rule.KeepLeft => new("Road users keep left. The right lane may be used for overtaking or as directed by an officer under Pasal 108.","Pasal 108 does not directly specify a fine. A marking violation may fall under Pasal 287 ayat (1), with a maximum fine of Rp500.000, if the offense requirements are met."),
-            Rule.Indicator => new("Before changing lanes or moving sideways, drivers must check traffic ahead, beside, and behind them, and signal.",Fine("Pasal 295, for moving without signaling","250.000")),
-            Rule.Gap => new("Pasal 112 ayat (2) requires observation before a lane change. The game's safe-gap threshold is a training measure, not a distance specified by that provision.","Pasal 295 covers moving without signaling (maximum fine Rp250.000). A small gap alone does not automatically establish that offense."),
-            Rule.TurnSignal => new("Before turning or making a U-turn, drivers must check traffic ahead, beside, and behind them, and signal using an indicator or hand signal.",Fine("Pasal 294","250.000")),
-            Rule.Speed or Rule.BoulevardSpeed => new("Drivers must obey maximum and minimum speed limits; exceeding the maximum is prohibited. Obey the 30 or 50 km/h limits posted on these practice roads.",Fine("Pasal 287 ayat (5)","500.000")),
-            Rule.Phone => new("Drivers must drive responsibly and with full concentration. The explanation of Pasal 106 ayat (1) includes distraction caused by phone use.",Fine("Pasal 283","750.000")),
-            Rule.Railway => new("At a level crossing, drivers must stop when a warning sounds, barriers begin closing, or another warning is given. Give trains priority and yield to vehicles already crossing the tracks.",Fine("Pasal 296, for failing to stop at a warning","750.000")),
-            Rule.Emergency => new("Ambulances carrying patients have priority. Priority vehicles use a police escort and/or red or blue warning lights and a siren as specified in Pasal 135.",Fine("Pasal 287 ayat (4)","250.000")),
-            _ => new("This is a practice objective or safety recommendation.","This exercise does not assign an automatic fine.")
+            Rule.SeatBelt => new(GameText.Get("text.drivers_and_passengers_seated_beside_the_driver_in_vehicles"),Fine("Pasal 289","250.000")),
+            Rule.Helmet => new(GameText.Get("text.motorcycle_riders_and_passengers_must_wear_helmets_that_meet"),Fine("Pasal 291 ayat (1)–(2)","250.000")+GameText.Get("text.applies_to_riders_without_a_helmet_or_riders_who")),
+            Rule.Headlight => new(GameText.Get("text.in_addition_to_nighttime_and_other_required_lighting_motorcycle"),Fine("Pasal 293 ayat (2)","100.000")),
+            Rule.NoStopping => new(GameText.Get("text.vehicles_may_not_stop_where_signs_or_markings_prohibit"),Fine(GameText.Get("text.pasal_287_ayat_1_for_violating_prohibitory_signs"),"500.000")),
+            Rule.Stop or Rule.NoEntry or Rule.MovementLane => new(GameText.Get("text.drivers_must_obey_regulatory_signs_and_road_markings_in"),Fine("Pasal 287 ayat (1)","500.000")),
+            Rule.Signal or Rule.RightArrow => new(GameText.Get("text.drivers_must_obey_traffic_signals_apill_at_junctions_with"),Fine("Pasal 287 ayat (2)","500.000")),
+            Rule.StopBox => new(GameText.Get("text.drivers_must_obey_road_markings_and_traffic_lights_cars"),Fine(GameText.Get("text.pasal_287_ayat_1_for_markings_ayat_2_for"),"500.000")+GameText.Get("text.the_applicable_provision_depends_on_the_offense_penalties_are")),
+            Rule.Junction => new(GameText.Get("text.at_an_unsignalized_junction_vehicles_from_a_smaller_road"),GameText.Get("text.pasal_113_does_not_directly_specify_a_fine_amount")),
+            Rule.Pedestrian => new(GameText.Get("text.drivers_must_prioritize_pedestrian_and_cyclist_safety_pedestrians_have"),Fine("Pasal 284","500.000")),
+            Rule.KeepLeft => new(GameText.Get("text.road_users_keep_left_the_right_lane_may_be"),GameText.Get("text.pasal_108_does_not_directly_specify_a_fine_a")),
+            Rule.Indicator => new(GameText.Get("text.before_changing_lanes_or_moving_sideways_drivers_must_check"),Fine(GameText.Get("text.pasal_295_for_moving_without_signaling"),"250.000")),
+            Rule.Gap => new(GameText.Get("text.pasal_112_ayat_2_requires_observation_before_a_lane"),GameText.Get("text.pasal_295_covers_moving_without_signaling_maximum_fine_rp250")),
+            Rule.TurnSignal => new(GameText.Get("text.before_turning_or_making_a_u_turn_drivers_must"),Fine("Pasal 294","250.000")),
+            Rule.Speed or Rule.BoulevardSpeed => new(GameText.Get("text.drivers_must_obey_maximum_and_minimum_speed_limits_exceeding"),Fine("Pasal 287 ayat (5)","500.000")),
+            Rule.Phone => new(GameText.Get("text.drivers_must_drive_responsibly_and_with_full_concentration_the"),Fine("Pasal 283","750.000")),
+            Rule.Railway => new(GameText.Get("text.at_a_level_crossing_drivers_must_stop_when_a"),Fine(GameText.Get("text.pasal_296_for_failing_to_stop_at_a_warning"),"750.000")),
+            Rule.Emergency => new(GameText.Get("text.ambulances_carrying_patients_have_priority_priority_vehicles_use_a"),Fine("Pasal 287 ayat (4)","250.000")),
+            _ => new(GameText.Get("text.this_is_a_practice_objective_or_safety_recommendation"),GameText.Get("text.this_exercise_does_not_assign_an_automatic_fine"))
         };
     }
 }

@@ -14,7 +14,7 @@ namespace JalanKita
         Journey controlsOriginal;
         string controlsPracticeContext;
         bool controlsMoved, controlsBraked;
-        public bool ControlsOnboardingActive => page == Page.TutorialBrake || (pitchDemo && !demoCrossingTaught) || page == Page.Controls || journey?.LearningControls == true
+        public bool ControlsOnboardingActive => page == Page.TutorialBrake || page == Page.Controls || journey?.LearningControls == true
             || ((page == Page.Jaksa || page == Page.JaksaPause) && !exploreStopped.Contains("explore:" + mode));
         readonly HashSet<string> cueActionsSeen = new();
         Page controlsOrigin, controlsDrivingPage;
@@ -28,7 +28,7 @@ namespace JalanKita
             KeyCode.Tab, KeyCode.Escape, KeyCode.P
         };
 
-        bool demoCrossingTaught, demoBrakeLatched, demoCrossingReady, demoActionReleased;
+        TutorialRunner demoTutorial;
 
         void PlayFromHome() => StartEntryTutorial();
 
@@ -39,27 +39,46 @@ namespace JalanKita
             StartPitchDemo();
         }
 
-        bool PauseForDemoCrossing()
+        bool BeginDemoTutorialStep()
         {
-            if (!pitchDemo || demoCrossingTaught || learner != null || journey.Stage != 2
-                || !journey.Pedestrian.HasValue || journey.Position.y < journey.CrossingZebra - 19) return false;
-            demoCrossingTaught = true;
-            demoActionReleased = false;
-            journey.LearningControls = true;
-            SetPage(Page.TutorialBrake);
-            AddLabel(dialog, "Pedestrian crossing ahead", "kicker");
-            AddLabel(dialog, "Press [S] to brake", "tutorial-instruction");
+            if (!pitchDemo || learner != null || demoTutorial == null || !demoTutorial.TryBegin(journey)) return false;
+            if (demoTutorial.Simulation == TutorialSimulation.FreezeWorld)
+            {
+                SetPage(Page.TutorialBrake);
+                AddLabel(dialog, GameText.Get(demoTutorial.Active.HeadingKey), "kicker");
+                AddLabel(dialog, GameText.Get(demoTutorial.Active.ActionInstructionKey), "tutorial-instruction");
+            }
             return true;
         }
 
-        void ResumeDemoCrossing()
+        void ResumeDemoTutorial()
         {
-            demoBrakeLatched = true;
-            demoCrossingReady = demoActionReleased = false;
+            demoTutorial.AcceptAction(journey);
+            EnterDemoTutorialWaiting();
+        }
+
+        void EnterDemoTutorialWaiting()
+        {
             inputReleaseRequired = false;
             SetPage(Page.Drive);
-            toast.text = "Braking. Wait for the pedestrian to finish crossing.";
-            toastUntil = Time.unscaledTime + 6;
+        }
+
+        void ReadDemoTutorialInput()
+        {
+            if (!Application.isFocused || demoTutorial?.IsActive != true) return;
+            if (demoTutorial.Phase == TutorialPhase.AwaitAction)
+            {
+                var key = demoTutorial.Active.ActionKey;
+                if (demoTutorial.TryAction(journey, Input.GetKey(key), Input.GetKeyDown(key)))
+                    EnterDemoTutorialWaiting();
+            }
+            else
+            {
+                var completed = demoTutorial.TryContinue(journey, Input.GetKey(KeyCode.W), Input.GetKeyDown(KeyCode.W));
+                if (completed == null) return;
+                toast.text = GameText.Get(completed.SuccessMessageKey);
+                toastUntil = Time.unscaledTime + 5;
+            }
         }
 
         void EnterHumanDrive(Page drivingPage)
@@ -95,7 +114,7 @@ namespace JalanKita
             }
             district.Snap();
             inputReleaseRequired = true;
-            toast.text = "Practice complete. Back to the start; normal rules are active.";
+            toast.text = GameText.Get("text.practice_complete_back_to_the_start_normal_rules_are");
             toastUntil = Time.unscaledTime + 6;
         }
 
@@ -107,7 +126,7 @@ namespace JalanKita
                 exploreBraking.Add(context);
             if (!exploreBraking.Contains(context) || jaksa.Speed > .28f) return;
             exploreStopped.Add(context);
-            toast.text = "Practice complete. Drive as usual.";
+            toast.text = GameText.Get("text.practice_complete_drive_as_usual");
             toastUntil = Time.unscaledTime + 5;
         }
 
@@ -116,46 +135,46 @@ namespace JalanKita
             controlsOrigin = origin;
             controlsDrivingPage = drivingPage;
             SetPage(Page.Controls);
-            AddLabel(dialog, mode == VehicleMode.Car ? "Car controls" : "Motorcycle controls", "heading");
-            AddLabel(dialog, learner != null ? "The demonstration is paused. Close this guide to continue it."
-                : "The game stays paused while this guide is open.", "copy controls-intro");
+            AddLabel(dialog, mode == VehicleMode.Car ? GameText.Get("controls.car.title") : GameText.Get("controls.motorcycle.title"), "heading");
+            AddLabel(dialog, learner != null ? GameText.Get("text.the_demonstration_is_paused_close_this_guide_to_continue")
+                : GameText.Get("text.the_game_stays_paused_while_this_guide_is_open"), "copy controls-intro");
             var body = new ScrollView(ScrollViewMode.Vertical)
             { horizontalScrollerVisibility = ScrollerVisibility.Hidden };
             body.AddToClassList("controls-body");
             dialog.Add(body);
             var groups = Element(body, "control-groups");
             var movement = Element(groups, "control-group");
-            AddLabel(movement, "Moving & stopping", "subhead");
-            ControlKey(movement, "W / ↑", "Throttle", "Hold to accelerate.", DrivingGlyph.Kind.Throttle);
-            ControlKey(movement, "S / ↓ / SPACE", "Brake", "Hold to slow down or stop.");
-            ControlKey(movement, "A / D", "Steer left / right", "You can also use the ← / → arrow keys.", DrivingGlyph.Kind.Steering);
-            ControlKey(movement, "Z / X", "Look left / right", "Hold to look. Release to face forward.");
+            AddLabel(movement, GameText.Get("text.moving_stopping"), "subhead");
+            ControlKey(movement, "W / ↑", GameText.Get("text.throttle"), GameText.Get("text.hold_to_accelerate"), DrivingGlyph.Kind.Throttle);
+            ControlKey(movement, GameText.Get("text.s_space"), GameText.Get("text.brake"), GameText.Get("text.hold_to_slow_down_or_stop"));
+            ControlKey(movement, "A / D", GameText.Get("text.steer_left_right"), GameText.Get("text.you_can_also_use_the_arrow_keys"), DrivingGlyph.Kind.Steering);
+            ControlKey(movement, "Z / X", GameText.Get("text.look_left_right"), GameText.Get("text.hold_to_look_release_to_face_forward"));
             var decisions = Element(groups, "control-group");
-            AddLabel(decisions, "Signals & views", "subhead");
-            ControlKey(decisions, "Q / E", "Left / right indicator", "Press once. Press the same key again to turn it off.");
-            ControlKey(decisions, "C", "Change camera", "Switch between chase camera and driver view.", DrivingGlyph.Kind.Camera);
+            AddLabel(decisions, GameText.Get("text.signals_views"), "subhead");
+            ControlKey(decisions, "Q / E", GameText.Get("text.left_right_indicator"), GameText.Get("text.press_once_press_the_same_key_again_to_turn"));
+            ControlKey(decisions, "C", GameText.Get("text.change_camera"), GameText.Get("text.switch_between_chase_camera_and_driver_view"), DrivingGlyph.Kind.Camera);
             if (mode == VehicleMode.Motorcycle)
-                ControlKey(decisions, "L", "Motorcycle headlight", "Press to switch on or off.");
-            ControlKey(decisions, "ESC / TAB", "Pause", "Open progress and journey options.");
-            Fold(body, "More controls", extra =>
+                ControlKey(decisions, "L", GameText.Get("text.motorcycle_headlight"), GameText.Get("text.press_to_switch_on_or_off"));
+            ControlKey(decisions, "ESC / TAB", GameText.Get("text.pause"), GameText.Get("text.open_progress_and_journey_options"));
+            Fold(body, GameText.Get("text.more_controls"), extra =>
             {
-                ControlKey(extra, "R", drivingPage == Page.Jaksa ? "Restart road section" : "Retry from checkpoint", "Restart your current section.");
-                ControlKey(extra, "H", "Horn", "Hold to sound the horn.");
-                ControlKey(extra, "M", "Sound", "Press to mute or unmute.");
+                ControlKey(extra, "R", drivingPage == Page.Jaksa ? GameText.Get("text.restart_road_section") : GameText.Get("text.retry_from_checkpoint"), GameText.Get("text.restart_your_current_section"));
+                ControlKey(extra, "H", GameText.Get("text.horn"), GameText.Get("text.hold_to_sound_the_horn"));
+                ControlKey(extra, "M", GameText.Get("text.sound"), GameText.Get("text.press_to_mute_or_unmute"));
                 if (drivingPage == Page.Drive)
-                    ControlKey(extra, "F / G", journey.IsMarket ? "Pickup / phone" : "Phone",
-                        journey.IsMarket ? "F picks up a passenger while stopped in the bay. G answers a call."
-                        : "F ignores a call. G answers; stop somewhere safe first.");
-                AddLabel(extra, "On the violation screen: R retries, D shows a correct demonstration.", "control-note");
+                    ControlKey(extra, "F / G", journey.IsMarket ? GameText.Get("text.pickup_phone") : GameText.Get("text.phone"),
+                        journey.IsMarket ? GameText.Get("text.f_picks_up_a_passenger_while_stopped_in_the")
+                        : GameText.Get("text.f_ignores_a_call_g_answers_stop_somewhere_safe"));
+                AddLabel(extra, GameText.Get("text.on_the_violation_screen_r_retries_d_shows_a"), "control-note");
             });
             var footer = Element(dialog, "controls-footer");
-            string action = origin == Page.Progress || origin == Page.JaksaPause ? "Back to pause [Enter]"
-                : origin == Page.Options ? "Back to Options [Enter]"
-                : origin == Page.PlayChooser ? "Back to journey selection [Enter]"
-                : origin == Page.Menu ? "Back to menu [Enter]"
-                : learner != null ? "Continue demonstration [Enter]" : "Resume driving [Enter]";
+            string action = origin == Page.Progress || origin == Page.JaksaPause ? GameText.Get("text.back_to_pause_enter")
+                : origin == Page.Options ? GameText.Get("text.back_to_options_enter")
+                : origin == Page.PlayChooser ? GameText.Get("text.back_to_journey_selection_enter")
+                : origin == Page.Menu ? GameText.Get("text.back_to_menu_enter")
+                : learner != null ? GameText.Get("text.continue_demonstration_enter") : GameText.Get("text.resume_driving_enter");
             AddButton(footer, action, () => CloseControls(true), "primary tutorial-start");
-            AddLabel(footer, "F1 opens this guide while driving. Esc closes it.", "control-note");
+            AddLabel(footer, GameText.Get("text.f1_opens_this_guide_while_driving_esc_closes_it"), "control-note");
         }
 
         static void ControlKey(VisualElement parent, string key, string title, string note, DrivingGlyph.Kind? glyph = null)
@@ -202,15 +221,15 @@ namespace JalanKita
             hud.EnableInClassList("demo-guided", guidedDemo);
             hud.EnableInClassList("demo-feedback", page == Page.Drive && pitchDemo
                 && !guidedDemo && Time.unscaledTime < toastUntil);
-            Show(root.Q("demoTutorialCue"), guidedDemo);
+            var tutorialCue = root.Q("demoTutorialCue");
+            bool initialCue = guidedDemo && !demoTutorial.IsActive && !inputReleaseRequired;
+            tutorialCue.EnableInClassList("tutorial-initial", initialCue);
+            Show(tutorialCue, guidedDemo && (!initialCue || !demoTutorial.InitialInstructionDismissed));
             if (guidedDemo)
             {
                 root.Q<Label>("demoTutorialInstruction").text = inputReleaseRequired
-                    ? "Release the controls to continue"
-                    : demoBrakeLatched
-                        ? demoCrossingReady ? "Press [W] to continue"
-                            : "Wait for the pedestrian to finish crossing"
-                        : "Press [W] to start driving";
+                    ? GameText.Get("tutorial.action.release")
+                    : demoTutorial.IsActive ? demoTutorial.Instruction(journey) : GameText.Get(demoTutorial.Scenario.InitialInstructionKey);
                 return;
             }
             if ((page != Page.Drive && page != Page.Jaksa) || learner != null
@@ -218,7 +237,7 @@ namespace JalanKita
             if (!root.Q("hudHint").ClassListContains("hidden")) return;
             if (page == Page.Drive && journey.LearningControls)
             {
-                PresentCue(controlsMoved ? "S" : "W A S D", controlsMoved ? "Press S to brake" : "Try accelerating and steering. No penalties.");
+                PresentCue(controlsMoved ? "S" : "W A S D", controlsMoved ? GameText.Get("text.press_s_to_brake") : GameText.Get("text.try_accelerating_and_steering_no_penalties"));
                 return;
             }
             string context = (page == Page.Jaksa ? "explore:" : "training:") + mode;
@@ -226,11 +245,11 @@ namespace JalanKita
             if (!controlsSeen.Contains(context))
             {
                 if (drivingSpeed > .2f && Pressed(KeyCode.W, KeyCode.UpArrow)) controlsSeen.Add(context);
-                else { PresentCue("W A S D", "Try accelerating and steering."); return; }
+                else { PresentCue("W A S D", GameText.Get("text.try_accelerating_and_steering")); return; }
             }
             if (page == Page.Jaksa)
             {
-                if (!exploreStopped.Contains(context)) PresentCue("S", "Press S to brake");
+                if (!exploreStopped.Contains(context)) PresentCue("S", GameText.Get("text.press_s_to_brake"));
                 return;
             }
             if (journey.Finished || journey.Failure.HasValue) return;
@@ -251,7 +270,7 @@ namespace JalanKita
             if (brake != null && drivingSpeed > .28f)
             {
                 bool braking = Input.GetKey(KeyCode.Space) || Pressed(KeyCode.S, KeyCode.DownArrow);
-                Suggest("brake:" + brake, "SPACE / S", "Brake before the stopping area.", braking);
+                Suggest("brake:" + brake, GameText.Get("text.space_s"), GameText.Get("text.brake_before_the_stopping_area"), braking);
                 return;
             }
             int direction = 0;
@@ -268,7 +287,7 @@ namespace JalanKita
                 direction = -1;
             if (direction != 0)
                 Suggest("indicator:" + direction, direction < 0 ? "Q" : "E",
-                    direction < 0 ? "Signal left before maneuvering." : "Signal right before maneuvering.", journey.Indicator == direction);
+                    direction < 0 ? GameText.Get("text.signal_left_before_maneuvering") : GameText.Get("text.signal_right_before_maneuvering"), journey.Indicator == direction);
 
             void Suggest(string action, string keys, string copy, bool performed)
             {
@@ -287,10 +306,10 @@ namespace JalanKita
 
         void AddControlsHelp(VisualElement parent)
         {
-            AddButton(parent, "Driving controls [F1]", () => ShowControls(page,
+            AddButton(parent, GameText.Get("controls.open"), () => ShowControls(page,
                 page == Page.Jaksa || page == Page.JaksaPause ? Page.Jaksa : Page.Drive, false), "quiet help-action");
             if (page == Page.Options)
-                AddButton(parent, "Replay demo tutorial", StartEntryTutorial, "quiet help-action");
+                AddButton(parent, GameText.Get("text.replay_demo_tutorial"), StartEntryTutorial, "quiet help-action");
         }
     }
 }

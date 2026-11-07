@@ -11,16 +11,16 @@
                 </ui:VisualElement>
                 <ui:VisualElement class="panel route-panel">
                     <ui:Label name="routeCount" class="label kicker" />
-                    <ui:Button name="progress" text="" tooltip="Pause / progress [Tab]" class="button quiet hud-icon-button" />
-                    <ui:Button name="toggleMissions" text="Choose mission" class="button quiet hud-action hidden" />
+                    <ui:Button name="progress" text="" tooltip="" class="button quiet hud-icon-button i18n-tooltip--text.pause_progress_tab" />
+                    <ui:Button name="toggleMissions" text="" class="button quiet hud-action hidden i18n-text--text.choose_mission" />
                     <ui:VisualElement name="missionDrawer" class="hidden">
                         <ui:VisualElement name="steps" class="row route-steps" />
-                        <ui:Label name="practiceHint" text="Choose a number to practice a mission" class="label menu-note" />
+                        <ui:Label name="practiceHint" text="" class="label menu-note i18n-text--text.choose_a_number_to_practice_a_mission" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="signalPanel" class="panel signal-panel hidden" picking-mode="Ignore">
-                <ui:Label text="JUNCTION SIGNALS · LIVE" class="label kicker" />
+                <ui:Label text="" class="label kicker i18n-text--text.junction_signals_live" />
                 <ui:VisualElement class="row signal-views" picking-mode="Ignore">
                     <ui:Image name="signalZoom" class="signal-zoom" picking-mode="Ignore" />
                     <ui:Image name="signalArrowZoom" class="signal-zoom" picking-mode="Ignore" />
@@ -38,35 +38,34 @@
                 <ui:VisualElement class="driving-controls" picking-mode="Ignore">
                     <ui:Label name="hudHint" class="label hud-hint hidden" picking-mode="Ignore" />
                     <ui:VisualElement name="hudControlBar" class="row look-controls" picking-mode="Ignore">
-                        <ui:Button name="steeringHelp" tooltip="Steer A / D · Brake Space · Controls [F1]" class="button quiet hud-icon-button" />
-                        <ui:Button name="throttleHelp" tooltip="Throttle: hold W / ↑. Brake: Space / S. [F1 controls]" class="button quiet hud-icon-button" />
-                        <ui:Button name="cameraControl" tooltip="Change camera [C]" class="button quiet hud-icon-button" />
-                        <ui:Button name="lampControl" tooltip="Motorcycle headlight [L]" class="button quiet hud-icon-button" />
-                        <ui:Button name="lookLeft" text="" tooltip="Hold to look left [Z]" class="button quiet hud-icon-button" />
-                        <ui:Button name="lookRight" text="" tooltip="Hold to look right [X]" class="button quiet hud-icon-button" />
+                        <ui:Button name="steeringHelp" tooltip="" class="button quiet hud-icon-button i18n-tooltip--text.steer_a_d_brake_space_controls_f1" />
+                        <ui:Button name="cameraControl" tooltip="" class="button quiet hud-icon-button i18n-tooltip--text.change_camera_c" />
+                        <ui:Button name="lampControl" tooltip="" class="button quiet hud-icon-button i18n-tooltip--text.motorcycle_headlight_l" />
+                        <ui:Button name="lookLeft" text="" tooltip="" class="button quiet hud-icon-button i18n-tooltip--text.hold_to_look_left_z" />
+                        <ui:Button name="lookRight" text="" tooltip="" class="button quiet hud-icon-button i18n-tooltip--text.hold_to_look_right_x" />
                     </ui:VisualElement>
-                    <ui:Label text="W throttle · Space brake · A / D steer · Q / E indicators · Tab pause" class="label controls hidden" />
+                    <ui:Label text="" class="label controls hidden i18n-text--text.w_throttle_space_brake_a_d_steer_q_e" />
                 </ui:VisualElement>
                 <ui:VisualElement class="panel cluster" picking-mode="Ignore">
                     <ui:Label name="speed" text="0" class="label speed" />
-                    <ui:Label text="km/h" class="label unit" />
+                    <ui:Label text="" class="label unit i18n-text--text.km_h" />
                     <ui:VisualElement name="indicators" class="indicators" picking-mode="Ignore" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="phone" class="panel phone hidden">
-                <ui:Label text="INCOMING CALL" class="label kicker" />
-                <ui:Label text="Mom is calling" class="label subhead" />
-                <ui:Label text="Ignore, or stop in the left bay before answering." class="label copy" />
+                <ui:Label text="" class="label kicker i18n-text--text.incoming_call" />
+                <ui:Label text="" class="label subhead i18n-text--text.mom_is_calling" />
+                <ui:Label text="" class="label copy i18n-text--text.ignore_or_stop_in_the_left_bay_before_answering" />
                 <ui:VisualElement class="row actions">
-                    <ui:Button name="ignorePhone" text="Ignore  [F]" class="button primary" />
-                    <ui:Button name="answerPhone" text="Answer  [G]" class="button quiet" />
+                    <ui:Button name="ignorePhone" text="" class="button primary i18n-text--text.ignore_f" />
+                    <ui:Button name="answerPhone" text="" class="button quiet i18n-text--text.answer_g" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="pickup" class="panel phone hidden">
-                <ui:Label text="MARKET PICKUP" class="label kicker" />
-                <ui:Label text="Passenger waiting" class="label subhead" />
-                <ui:Label text="Stop in the left bay beside the passenger before picking them up." class="label copy" />
-                <ui:Button name="pickupPassenger" text="Pick up  [F]" class="button primary" />
+                <ui:Label text="" class="label kicker i18n-text--text.market_pickup" />
+                <ui:Label text="" class="label subhead i18n-text--text.passenger_waiting" />
+                <ui:Label text="" class="label copy i18n-text--text.stop_in_the_left_bay_beside_the_passenger_before" />
+                <ui:Button name="pickupPassenger" text="" class="button primary i18n-text--text.pick_up_f" />
             </ui:VisualElement>
             <ui:VisualElement name="demoTutorialCue" class="tutorial-cue-layer hidden" picking-mode="Ignore">
                 <ui:VisualElement class="panel tutorial-card" picking-mode="Ignore">
