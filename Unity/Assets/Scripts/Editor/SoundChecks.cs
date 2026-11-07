@@ -12,12 +12,16 @@ namespace JalanKita.EditorTools
             const string key = "jalan-kita:muted";
             bool had = PlayerPrefs.HasKey(key);
             int previous = PlayerPrefs.GetInt(key);
+            const string volumeKey = "jalan-kita:volume";
+            bool hadVolume = PlayerPrefs.HasKey(volumeKey);
+            float previousVolume = PlayerPrefs.GetFloat(volumeKey);
             var parent = new GameObject("Audio validation");
             try
             {
                 var sound = SoundEngine.Create(parent.transform);
                 sound.GetComponent<AudioSource>().Stop();
                 sound.SetMuted(false);
+                sound.SetVolume(1f);
                 var render = typeof(SoundEngine).GetMethod("OnAudioFilterRead", BindingFlags.Instance|BindingFlags.NonPublic);
                 var samples = new float[9600];
                 foreach (bool motorcycle in new[] { false, true })
@@ -45,6 +49,7 @@ namespace JalanKita.EditorTools
             {
                 UnityEngine.Object.DestroyImmediate(parent);
                 if (had) PlayerPrefs.SetInt(key, previous); else PlayerPrefs.DeleteKey(key);
+                if (hadVolume) PlayerPrefs.SetFloat(volumeKey, previousVolume); else PlayerPrefs.DeleteKey(volumeKey);
                 PlayerPrefs.Save();
             }
         }

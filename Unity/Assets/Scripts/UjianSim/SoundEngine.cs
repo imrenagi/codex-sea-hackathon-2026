@@ -52,6 +52,7 @@ namespace UjianSim.Game
         }
 
         const string PrefKey = "jalan-kita:muted";
+        const string VolumeKey = "jalan-kita:volume";
 
         readonly object gate = new object();
         readonly List<Voice> voices = new List<Voice>();
@@ -72,6 +73,7 @@ namespace UjianSim.Game
         float ringTimer, sirenPhase, bellTimer, ambienceTimer = 2f;
 
         public bool Muted { get; private set; }
+        public float Volume { get; private set; } = 1f;
 
         public static SoundEngine Create(Transform parent)
         {
@@ -87,7 +89,9 @@ namespace UjianSim.Game
             var engine = go.AddComponent<SoundEngine>();
             engine.rate = sr;
             engine.Muted = PlayerPrefs.GetInt(PrefKey, 0) == 1;
-            engine.tMaster = engine.Muted ? 0f : 0.7f;
+            float volume = PlayerPrefs.GetFloat(VolumeKey, 1f);
+            engine.Volume = float.IsNaN(volume) || float.IsInfinity(volume) ? 1f : Mathf.Clamp01(volume);
+            engine.tMaster = engine.Muted ? 0f : 0.7f * engine.Volume;
 #if UNITY_WEBGL && !UNITY_EDITOR
             UjianAudio_Init();
             engine.PushTargets();
@@ -100,8 +104,17 @@ namespace UjianSim.Game
         public void SetMuted(bool muted)
         {
             Muted = muted;
-            tMaster = muted ? 0f : 0.7f;
+            tMaster = muted ? 0f : 0.7f * Volume;
             PlayerPrefs.SetInt(PrefKey, muted ? 1 : 0);
+            PushTargets();
+        }
+
+        public void SetVolume(float volume)
+        {
+            if (float.IsNaN(volume) || float.IsInfinity(volume)) return;
+            Volume = Mathf.Clamp01(volume);
+            tMaster = Muted ? 0f : 0.7f * Volume;
+            PlayerPrefs.SetFloat(VolumeKey, Volume);
             PushTargets();
         }
 
