@@ -1,0 +1,58 @@
+{
+  "captured": "2026-11-07T12:02:54.205247+07:00",
+  "status": "Preserved locally as codex/queued-* refs; intentionally not integrated in this tested milestone.",
+  "branches": [
+    {
+      "commit": "bbdc4c7efc55b75330b44f19bf5ebca29b67ce65",
+      "branch": "origin/codex/browser-audio-lifecycle"
+    },
+    {
+      "commit": "b787b9c288a86fdbee2a694233e9ed43d4bdb387",
+      "branch": "origin/codex/controls-help"
+    },
+    {
+      "commit": "70f181b3c6870d9accf54f5655cf40ed9b7abfd0",
+      "branch": "origin/codex/demo-checkpoint-markers"
+    },
+    {
+      "commit": "341e46966a6bf24a7373a56af7ccd75da4be6368",
+      "branch": "origin/codex/demo-keyboard-entry"
+    },
+    {
+      "commit": "7ddc8f3823eda1e5759e462cea110bb599fa671f",
+      "branch": "origin/codex/demo-ready"
+    },
+    {
+      "commit": "9793de39189e7d6eb77d6daa777f6572a9bc9f2f",
+      "branch": "origin/codex/demo-school-frontage"
+    },
+    {
+      "commit": "7d956be15e53f78428e7a02e8c68a45cd074ba7f",
+      "branch": "origin/codex/demo-session-duration"
+    },
+    {
+      "commit": "f135151dfc7e0dd2ef4161a43544b6160881f509",
+      "branch": "origin/codex/map-data-validation"
+    },
+    {
+      "commit": "e0575619050846a0213c8f53b3a23ccbe99dc304",
+      "branch": "origin/codex/map-overview-framing"
+    },
+    {
+      "commit": "e5d00de832933ca34243ddaad0e9b352983eecdb",
+      "branch": "origin/codex/map-polygon-robustness"
+    },
+    {
+      "commit": "21f4e63355292b3e9e2308187de01a2089874db7",
+      "branch": "origin/codex/map-wheel-zoom"
+    },
+    {
+      "commit": "0c6fac33d6a2c4e4b6dc266bd1f6ad1435c04702",
+      "branch": "origin/codex/mute-feedback"
+    },
+    {
+      "commit": "d44356f0d4dc9af630d964adb628fea8c88bb854",
+      "branch": "origin/codex/pause-on-focus-loss"
+    }
+  ]
+}

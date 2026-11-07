@@ -1,0 +1,512 @@
+[
+  {
+    "file": "city_hatchback/city_hatchback_coral.glb",
+    "sha256": "15a8a2c19983fdc874c8c8d0cfeb527e7a2035783e1713d6ee28276bcee751c9",
+    "triangles": 9338,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0499999523162842,
+      -1.9859999418258667,
+      0.0
+    ],
+    "bounds_max": [
+      1.0499999523162842,
+      1.9709999561309814,
+      1.4875000715255737
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "city_hatchback/city_hatchback_coral_lod1.glb",
+    "sha256": "7976e80a9dae87a5e0ad2455beb3021c3d8839ea899e9f0c8c702634e25c5d97",
+    "triangles": 4008,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.052516222000122,
+      -1.9859999418258667,
+      -0.0004947185516357422
+    ],
+    "bounds_max": [
+      1.052516222000122,
+      1.971000075340271,
+      1.4850000143051147
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "city_hatchback/city_hatchback_sunflower.glb",
+    "sha256": "936bb668874314c718bdf667a95524953d1ed470c66a31532bcd6561df3998a4",
+    "triangles": 9338,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0499999523162842,
+      -1.9859999418258667,
+      0.0
+    ],
+    "bounds_max": [
+      1.0499999523162842,
+      1.9709999561309814,
+      1.4875000715255737
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "city_hatchback/city_hatchback_sunflower_lod1.glb",
+    "sha256": "0c06777c8b7d590e5a0795ac28bab48367e12be24f496c5aad3d27cd35b18e64",
+    "triangles": 4008,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.052516222000122,
+      -1.9859999418258667,
+      -0.0004947185516357422
+    ],
+    "bounds_max": [
+      1.052516222000122,
+      1.971000075340271,
+      1.4850000143051147
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "city_hatchback/city_hatchback.fbx",
+    "sha256": "4d021d231d4e842c9ceff75640f9325c87a55f09a5b705b3041267912c0427c6",
+    "triangles": 9338,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0499999523162842,
+      -1.9859998226165771,
+      -2.086162567138672e-07
+    ],
+    "bounds_max": [
+      1.0499999523162842,
+      1.971000075340271,
+      1.4875003099441528
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "family_mpv/family_mpv_deep_blue.glb",
+    "sha256": "af9f1ebe54a4ca38ee27b760bab6ea52d6fd2204d75b7103c5de6a0c2f4e9830",
+    "triangles": 9417,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0750000476837158,
+      -2.2785000801086426,
+      0.0
+    ],
+    "bounds_max": [
+      1.0750000476837158,
+      2.2634999752044678,
+      1.7024999856948853
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "family_mpv/family_mpv_deep_blue_lod1.glb",
+    "sha256": "ff3642d165c28a5b84fe201208770d9f9caa4ad133f93a8866e7cef38104fd3b",
+    "triangles": 4042,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0775161981582642,
+      -2.2785000801086426,
+      0.0008303523063659668
+    ],
+    "bounds_max": [
+      1.0775161981582642,
+      2.2634999752044678,
+      1.7000000476837158
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "family_mpv/family_mpv_pearl.glb",
+    "sha256": "743fe78c2fecec94447aa2b12c6eda08eee49919d61ab6a5399292033e6e8798",
+    "triangles": 9417,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0750000476837158,
+      -2.2785000801086426,
+      0.0
+    ],
+    "bounds_max": [
+      1.0750000476837158,
+      2.2634999752044678,
+      1.7024999856948853
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "family_mpv/family_mpv_pearl_lod1.glb",
+    "sha256": "08a2ffccfde2d1a762196988168e24cc5e62150ed2089d1d3492ae709b5842eb",
+    "triangles": 4042,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0775161981582642,
+      -2.2785000801086426,
+      0.0008303523063659668
+    ],
+    "bounds_max": [
+      1.0775161981582642,
+      2.2634999752044678,
+      1.7000000476837158
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "family_mpv/family_mpv.fbx",
+    "sha256": "16bf21badcdb292f591aca3df0a1324720287d7345ee467d7650fd9c6b93d6b9",
+    "triangles": 9417,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0750000476837158,
+      -2.2785000801086426,
+      -2.384185791015625e-07
+    ],
+    "bounds_max": [
+      1.0750000476837158,
+      2.2634999752044678,
+      1.7025002241134644
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "maxi_scooter/maxi_scooter_pearl.glb",
+    "sha256": "930965d51562907750fc6422202e41ec518e9bbe204b238acdb80553306216c6",
+    "triangles": 8872,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.36000001430511475,
+      -1.0096495151519775,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.36000001430511475,
+      0.9405797719955444,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "maxi_scooter/maxi_scooter_pearl_lod1.glb",
+    "sha256": "1edaef7b7278283b471adfdb07b3566feb031d2e9abb1e1f6c90b7974e5b3819",
+    "triangles": 3797,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.3589509427547455,
+      -1.0113556385040283,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.3589509427547455,
+      0.9407761096954346,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "maxi_scooter/maxi_scooter_slate.glb",
+    "sha256": "7585515c97bf981fb98a9ac80cb0183019801b8b7bcc72ced3f3d7e2dd3595fd",
+    "triangles": 8872,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.36000001430511475,
+      -1.0096495151519775,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.36000001430511475,
+      0.9405797719955444,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "maxi_scooter/maxi_scooter_slate_lod1.glb",
+    "sha256": "dedbe3bac9d2f996a76ab60b32d9237567bc44e58d3745af4babc6d73197b4ba",
+    "triangles": 3797,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.3589509427547455,
+      -1.0113556385040283,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.3589509427547455,
+      0.9407761096954346,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "maxi_scooter/maxi_scooter.fbx",
+    "sha256": "98b90fc0584fc8116a7e5ea13729c7ed82d0208c4553327b4f1af9012bf8519d",
+    "triangles": 8872,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.36000001430511475,
+      -1.009649395942688,
+      -0.0018000903073698282
+    ],
+    "bounds_max": [
+      0.36000001430511475,
+      0.940579891204834,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "retro_scooter/retro_scooter_mint.glb",
+    "sha256": "83dea825854337b907e73e6ef52b2bc87c651fde9b4d4864488b8d7f87ac18e8",
+    "triangles": 9610,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.34700000286102295,
+      -0.9527583122253418,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.34700000286102295,
+      0.8745380640029907,
+      1.2370001077651978
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "retro_scooter/retro_scooter_mint_lod1.glb",
+    "sha256": "f3f84fa46e975f408395cd018d48196af937133c23a8f9d9ed771a7465e8b505",
+    "triangles": 4118,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.3463810682296753,
+      -0.9527985453605652,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.346077024936676,
+      0.8741676807403564,
+      1.2370001077651978
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "retro_scooter/retro_scooter_terracotta.glb",
+    "sha256": "5b3db41e0591b54feafe98a3b7d75550f8e649774bbfe04f4fbefe16c2fc3cdd",
+    "triangles": 9610,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.34700000286102295,
+      -0.9527583122253418,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.34700000286102295,
+      0.8745380640029907,
+      1.2370001077651978
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "retro_scooter/retro_scooter_terracotta_lod1.glb",
+    "sha256": "884a6e1ff15c54ae3712f923fff877f7111cf145168fec3e6843658f77bc615f",
+    "triangles": 4118,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.3463810682296753,
+      -0.9527985453605652,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.346077024936676,
+      0.8741676807403564,
+      1.2370001077651978
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "retro_scooter/retro_scooter.fbx",
+    "sha256": "8734e32ef2736005e5f819513664abfb263c64fe751ce6dd6bd331c473fff070",
+    "triangles": 9610,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.34700000286102295,
+      -0.952758252620697,
+      -0.0018000903073698282
+    ],
+    "bounds_max": [
+      0.34700000286102295,
+      0.8745381832122803,
+      1.2369999885559082
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "sport_scooter/sport_scooter_cobalt.glb",
+    "sha256": "a69a5199869ccc5cae1c66ee711c5e1798a4f9ea4a2fa61908ef6f11e230d20a",
+    "triangles": 8138,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.36000001430511475,
+      -0.9662584066390991,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.36000001430511475,
+      0.8996237516403198,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "sport_scooter/sport_scooter_cobalt_lod1.glb",
+    "sha256": "8af0c46db7a1f8316ea1f6ad77cecc5cf7b83a54361727b556e49cb51c5922fb",
+    "triangles": 3482,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.3589509427547455,
+      -0.9662985801696777,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.3589509427547455,
+      0.8997938632965088,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "sport_scooter/sport_scooter_crimson.glb",
+    "sha256": "d44ed421700b2047a93a0d06c359de70cbc7dae930643912961f96bdc1e893af",
+    "triangles": 8138,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.36000001430511475,
+      -0.9662584066390991,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.36000001430511475,
+      0.8996237516403198,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "sport_scooter/sport_scooter_crimson_lod1.glb",
+    "sha256": "c413ce90cf7dc8233edd153be63e694ab7643dd64f4f2e6fec8656b4780a886d",
+    "triangles": 3482,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.3589509427547455,
+      -0.9662985801696777,
+      -0.0018000006675720215
+    ],
+    "bounds_max": [
+      0.3589509427547455,
+      0.8997938632965088,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "sport_scooter/sport_scooter.fbx",
+    "sha256": "b09ef070cffe4ff6331edcbd5eabb4e8f3a6b455640e8bb7b2202ff3d4958b5d",
+    "triangles": 8138,
+    "mesh_count": 7,
+    "bounds_min": [
+      -0.36000001430511475,
+      -0.9662583470344543,
+      -0.0018000903073698282
+    ],
+    "bounds_max": [
+      0.36000001430511475,
+      0.8996237516403198,
+      1.2280000448226929
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "utility_pickup/utility_pickup_forest.glb",
+    "sha256": "2e0bb35cc8c54a057e48a82e07d8957da84be6e3a1dfd09ede6931e2594706be",
+    "triangles": 10480,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0475000143051147,
+      -2.1559998989105225,
+      0.0
+    ],
+    "bounds_max": [
+      1.0475000143051147,
+      2.1410000324249268,
+      1.8460708856582642
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "utility_pickup/utility_pickup_forest_lod1.glb",
+    "sha256": "ab65e4a3e0f9e71515f346f29928146a586ccdf7d35cebdbadf637cbd62b003a",
+    "triangles": 4527,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.050016164779663,
+      -2.1559998989105225,
+      -0.00029858946800231934
+    ],
+    "bounds_max": [
+      1.050016164779663,
+      2.141000270843506,
+      1.8460708856582642
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "utility_pickup/utility_pickup_silver.glb",
+    "sha256": "8e1b21d0ba7eb1b91a125221d272ff87f26ceb74d003b1783cab28127f53d989",
+    "triangles": 10480,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0475000143051147,
+      -2.1559998989105225,
+      0.0
+    ],
+    "bounds_max": [
+      1.0475000143051147,
+      2.1410000324249268,
+      1.8460708856582642
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "utility_pickup/utility_pickup_silver_lod1.glb",
+    "sha256": "3d074cd671f922b7f17656baf167dfcc33d6797e742b45e2bc7541858dccbb69",
+    "triangles": 4527,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.050016164779663,
+      -2.1559998989105225,
+      -0.00029858946800231934
+    ],
+    "bounds_max": [
+      1.050016164779663,
+      2.141000270843506,
+      1.8460708856582642
+    ],
+    "result": "PASS"
+  },
+  {
+    "file": "utility_pickup/utility_pickup.fbx",
+    "sha256": "3c351bc55cd80a6ce0d3497d487ba7a7fc3d11cfa2c5ec6c8ba31ce156c401c4",
+    "triangles": 10480,
+    "mesh_count": 8,
+    "bounds_min": [
+      -1.0475000143051147,
+      -2.1559998989105225,
+      -1.7881393432617188e-07
+    ],
+    "bounds_max": [
+      1.0475000143051147,
+      2.1410000324249268,
+      1.8460708856582642
+    ],
+    "result": "PASS"
+  }
+]

@@ -70,10 +70,13 @@ namespace JalanKita.EditorTools
 
         static void VerifySaveUpgrade(VehicleMode mode)
         {
-            string key=JourneySave.Key(mode), backup=PlayerPrefs.GetString(key);
+            string key=JourneySave.LegacyKey(mode), current=JourneySave.Key(mode), currentBackup=PlayerPrefs.GetString(current);
+            bool hadCurrent=PlayerPrefs.HasKey(current);
+            string backup=PlayerPrefs.GetString(key);
             bool existed=PlayerPrefs.HasKey(key);
             try
             {
+                PlayerPrefs.DeleteKey(current);
                 var old=new JourneySave { next=5, before=3, after=4, mistakes=new int[16] };
                 old.mistakes[3]=2;
                 PlayerPrefs.SetString(key,JsonUtility.ToJson(old));
@@ -81,7 +84,7 @@ namespace JalanKita.EditorTools
                 Require(upgraded!=null && upgraded.next==5 && upgraded.before==3 && upgraded.after==-1
                     && upgraded.mistakes.Length==Lesson.All.Length && upgraded.mistakes[3]==2,"Old completed save must resume new lessons without losing mistakes");
             }
-            finally { if(existed) PlayerPrefs.SetString(key,backup); else PlayerPrefs.DeleteKey(key); PlayerPrefs.Save(); }
+            finally { if(hadCurrent) PlayerPrefs.SetString(current,currentBackup); else PlayerPrefs.DeleteKey(current); if(existed) PlayerPrefs.SetString(key,backup); else PlayerPrefs.DeleteKey(key); PlayerPrefs.Save(); }
         }
     }
 }

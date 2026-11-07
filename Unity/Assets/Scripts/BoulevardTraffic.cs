@@ -156,7 +156,6 @@ namespace JalanKita
     public sealed partial class Journey
     {
         public BoulevardTraffic CityTraffic { get; private set; }
-        readonly int trafficSeed;
         int trafficAttempt;
         void ResetCityTraffic() => CityTraffic=Stage>=5 && !Finished?new BoulevardTraffic(trafficSeed+trafficAttempt++,Position):null;
         void StepCityTraffic(float dt)

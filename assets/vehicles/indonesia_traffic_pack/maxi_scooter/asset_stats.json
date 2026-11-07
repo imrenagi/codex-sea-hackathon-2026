@@ -1,0 +1,54 @@
+{
+  "lod0_triangles": 8872,
+  "lod1_triangles": 3797,
+  "export_meshes": 7,
+  "id": "maxi_scooter",
+  "name": "Touring 155",
+  "kind": "scooter",
+  "colors": [
+    [
+      "slate",
+      "546679"
+    ],
+    [
+      "pearl",
+      "D5DBD9"
+    ]
+  ],
+  "materials": 2,
+  "atlas_size": 128,
+  "bounds_m": {
+    "min": [
+      -0.36000001430511475,
+      -1.0096495151519775,
+      -0.0017999999690800905
+    ],
+    "max": [
+      0.36000001430511475,
+      0.9405797719955444,
+      1.2280000448226929
+    ]
+  },
+  "wheels": [
+    {
+      "node": "Wheel_Front",
+      "position": [
+        0,
+        0.675,
+        0.263
+      ],
+      "radius": 0.263
+    },
+    {
+      "node": "Wheel_Rear",
+      "position": [
+        0,
+        -0.675,
+        0.263
+      ],
+      "radius": 0.263
+    }
+  ],
+  "blender_forward": "+Y",
+  "glb_forward": "-Z"
+}

@@ -1,0 +1,72 @@
+{
+  "lod0_triangles": 9417,
+  "lod1_triangles": 4042,
+  "export_meshes": 8,
+  "id": "family_mpv",
+  "name": "Keluarga MPV",
+  "kind": "car",
+  "colors": [
+    [
+      "pearl",
+      "DCE1DD"
+    ],
+    [
+      "deep_blue",
+      "254859"
+    ]
+  ],
+  "materials": 2,
+  "atlas_size": 128,
+  "bounds_m": {
+    "min": [
+      -1.0750000476837158,
+      -2.2785000801086426,
+      0.0
+    ],
+    "max": [
+      1.0750000476837158,
+      2.2634999752044678,
+      1.7024999856948853
+    ]
+  },
+  "wheels": [
+    {
+      "node": "Wheel_FL",
+      "position": [
+        -0.8099999999999999,
+        1.375,
+        0.32
+      ],
+      "radius": 0.32
+    },
+    {
+      "node": "Wheel_FR",
+      "position": [
+        0.8099999999999999,
+        1.375,
+        0.32
+      ],
+      "radius": 0.32
+    },
+    {
+      "node": "Wheel_RL",
+      "position": [
+        -0.8099999999999999,
+        -1.375,
+        0.32
+      ],
+      "radius": 0.32
+    },
+    {
+      "node": "Wheel_RR",
+      "position": [
+        0.8099999999999999,
+        -1.375,
+        0.32
+      ],
+      "radius": 0.32
+    }
+  ],
+  "blender_forward": "+Y",
+  "glb_forward": "-Z"
+}

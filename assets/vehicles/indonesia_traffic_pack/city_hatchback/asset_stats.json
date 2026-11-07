@@ -1,0 +1,72 @@
+{
+  "lod0_triangles": 9338,
+  "lod1_triangles": 4008,
+  "export_meshes": 8,
+  "id": "city_hatchback",
+  "name": "Kota Hatch",
+  "kind": "car",
+  "colors": [
+    [
+      "sunflower",
+      "E3B534"
+    ],
+    [
+      "coral",
+      "C74F39"
+    ]
+  ],
+  "materials": 2,
+  "atlas_size": 128,
+  "bounds_m": {
+    "min": [
+      -1.0499999523162842,
+      -1.9859999418258667,
+      0.0
+    ],
+    "max": [
+      1.0499999523162842,
+      1.9709999561309814,
+      1.4875000715255737
+    ]
+  },
+  "wheels": [
+    {
+      "node": "Wheel_FL",
+      "position": [
+        -0.7849999999999999,
+        1.2025,
+        0.293
+      ],
+      "radius": 0.293
+    },
+    {
+      "node": "Wheel_FR",
+      "position": [
+        0.7849999999999999,
+        1.2025,
+        0.293
+      ],
+      "radius": 0.293
+    },
+    {
+      "node": "Wheel_RL",
+      "position": [
+        -0.7849999999999999,
+        -1.2025,
+        0.293
+      ],
+      "radius": 0.293
+    },
+    {
+      "node": "Wheel_RR",
+      "position": [
+        0.7849999999999999,
+        -1.2025,
+        0.293
+      ],
+      "radius": 0.293
+    }
+  ],
+  "blender_forward": "+Y",
+  "glb_forward": "-Z"
+}

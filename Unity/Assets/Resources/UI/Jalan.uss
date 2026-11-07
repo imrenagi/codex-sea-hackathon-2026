@@ -86,7 +86,7 @@
     padding-left: 5%;
     background-color: rgba(8, 10, 14, 0.3);
 }
-.dialog { width: 610px; max-width: 100%; padding: 25px 29px; }
+.dialog { width: 610px; max-width: 100%; max-height: 100%; padding: 25px 29px; }
 .landing-card { width: 570px; background-color: rgba(16, 19, 24, 0.86); padding: 29px; }
 .rule-card { border-color: #e5484d; }
 .section { margin-top: 16px; }
@@ -114,6 +114,26 @@
 .quiet { background-color: #2a2f37; }
 .tiny { min-height: 25px; padding: 4px 7px; font-size: 12px; margin: 3px 0 0; }
 .option { -unity-text-align: middle-left; margin: 7px 0 0; }
+.route-row { padding: 5px 0; }
+.route-num { color: #83d8c1; width: 29px; font-size: 13px; -unity-font-style: bold; }
+.route-text { font-size: 15px; color: #eef1dc; }
+.rule-source { font-size: 13px; margin-top: 11px; color: #f1c79a; white-space: normal; }
+.negative { color: #f9ab9b; }
+.catalogue-card { width: 780px; height: 94%; max-height: 650px; min-height: 0; overflow: hidden; }
+.catalogue-card > .label, .catalogue-footer { flex-shrink: 0; }
+.mission-list { height: 340px; min-height: 0; margin-top: 13px; flex-grow: 1; flex-shrink: 1; overflow: hidden; }
+.mission-list .unity-scroll-view__content-and-vertical-scroll-container { flex-grow: 1; flex-shrink: 1; min-height: 0; }
+.mission-list .unity-scroll-view__content-viewport { flex-grow: 1; flex-shrink: 1; min-height: 0; overflow: hidden; }
+.mission-list .unity-scroll-view__content-container { flex-direction: column; flex-shrink: 0; }
+.mission-list .unity-base-slider__dragger { background-color: #85dcc5; border-color: #85dcc5; }
+.vehicle-picker { margin-top: 9px; margin-bottom: 2px; }
+.vehicle-choices { flex-direction: row; flex-wrap: wrap; margin-top: 3px; flex-shrink: 0; }
+.vehicle-choice { font-size: 13px; min-height: 32px; padding: 6px 9px; flex-shrink: 0; }
+.mission-card { background-color: #23474a; border-radius: 8px; padding: 12px 15px; margin-bottom: 10px; margin-right: 8px; min-height: 132px; flex-shrink: 0; }
+.mission-card > .row, .mission-card > .label, .mission-card > .button { flex-shrink: 0; }
+.mission-card .mission-title, .mission-card .duration { flex-shrink: 0; }
+.mission-title { flex-shrink: 1; }
+.duration { margin-left: 12px; flex-shrink: 0; font-size: 12px; }
 .route-row { padding: 2px 0; }
 .route-num { color: #2fae64; width: 29px; font-size: 13px; -unity-font-style: bold; }
 .route-text { font-size: 15px; color: #e9e6df; }
@@ -181,8 +201,14 @@
 .sheet .unity-base-slider__tracker { background-color: rgba(255,255,255,0.07); border-radius: 4px; }
 .sheet .unity-base-slider__dragger { background-color: rgba(255,255,255,0.32); border-radius: 4px; }
 
-.city-preview { align-items: flex-start; justify-content: flex-end; background-color: transparent; }
-.city-preview .dialog { width: 570px; padding: 15px 19px; }
+/* Bounded menu: all experiences remain keyboard-accessible at smaller windows. */
+.landing-card { width: 650px; height: 94%; max-height: 680px; min-height: 0; overflow: hidden; }
+.menu-scroll { flex-grow: 1; flex-shrink: 1; min-height: 0; overflow: hidden; }
+.menu-scroll .unity-scroll-view__content-viewport { flex-grow: 1; flex-shrink: 1; min-height: 0; overflow: hidden; }
+.menu-scroll .unity-scroll-view__content-container { flex-shrink: 0; padding-right: 10px; }
+.menu-scroll .unity-scroll-view__content-container > * { flex-shrink: 0; }
+.city-preview { justify-content: flex-end; align-items: flex-start; background-color: transparent; }
+.city-preview .dialog { width: 510px; background-color: rgba(16,19,24,.93); }
 
 .volume-control { margin-top: 10px; min-height: 28px; }
 .volume-control .unity-base-field__label { color: #e9e6df; min-width: 115px; }
@@ -198,7 +224,7 @@
 .compact .stamp-caption { margin-top: 15px; font-size: 16px; }
 .compact .sheet { margin-top: 12px; padding: 12px 14px 10px; }
 
-.dialog { max-height: 100%; }
+
 .dialog-scroll { flex-grow: 1; flex-shrink: 1; min-height: 0; max-height: 100%; }
 .dialog-scroll .unity-scroll-view__content-container > * { flex-shrink: 0; }
 .dialog-scroll .unity-scroller--vertical { width: 8px; margin-left: 8px; }

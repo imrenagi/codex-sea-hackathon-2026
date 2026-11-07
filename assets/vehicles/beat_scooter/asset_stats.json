@@ -1,0 +1,13 @@
+{
+  "lod0_triangles": 9528,
+  "lod1_triangles": 4730,
+  "authoring_meshes": 169,
+  "materials": 1,
+  "atlas_size": "128x128",
+  "wheelbase_m": 1.255,
+  "front_wheel_radius_m": 0.2498,
+  "rear_wheel_radius_m": 0.2588,
+  "blender_forward": "+Y",
+  "glb_forward": "-Z",
+  "glb_up": "+Y"
+}

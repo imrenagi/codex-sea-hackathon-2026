@@ -1,0 +1,62 @@
+[
+  {
+    "model": "sport_scooter",
+    "lod": 0,
+    "triangles": 9734
+  },
+  {
+    "model": "sport_scooter",
+    "lod": 1,
+    "triangles": 4302
+  },
+  {
+    "model": "retro_scooter",
+    "lod": 0,
+    "triangles": 11206
+  },
+  {
+    "model": "retro_scooter",
+    "lod": 1,
+    "triangles": 4938
+  },
+  {
+    "model": "maxi_scooter",
+    "lod": 0,
+    "triangles": 10468
+  },
+  {
+    "model": "maxi_scooter",
+    "lod": 1,
+    "triangles": 4617
+  },
+  {
+    "model": "city_hatchback",
+    "lod": 0,
+    "triangles": 9338
+  },
+  {
+    "model": "city_hatchback",
+    "lod": 1,
+    "triangles": 4008
+  },
+  {
+    "model": "family_mpv",
+    "lod": 0,
+    "triangles": 9417
+  },
+  {
+    "model": "family_mpv",
+    "lod": 1,
+    "triangles": 4042
+  },
+  {
+    "model": "utility_pickup",
+    "lod": 0,
+    "triangles": 10480
+  },
+  {
+    "model": "utility_pickup",
+    "lod": 1,
+    "triangles": 4527
+  }
+]
