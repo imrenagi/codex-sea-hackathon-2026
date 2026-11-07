@@ -32,12 +32,18 @@ To run in the editor, open the [Unity project](Unity) in Unity **6000.3.27f1**, 
 | 04 | Jalan Mawar | Following the one-way route, checking the gap, signalling to change lanes, and merging left |
 | 05 | Zona Sekolah | Staying within 30 km/h and ignoring a phone call or pulling into the stopping bay |
 
-The route keeps moving at each pass. On a retry or relaunch, the vehicle starts at the last cleared checkpoint and resets the upcoming traffic and lesson checks. Traffic or pedestrian direction can change after a failed attempt. Progress, mistake counts, and quiz scores are stored locally and separately for each vehicle. The feedback screen offers a short in-scene demonstration that leaves the player's save intact.
+Each passed mission shows a green completion card and saves its checkpoint. The card pauses the simulation; Continue resumes from the same position and speed without loading another scene. On a retry or relaunch, the vehicle starts at the last cleared checkpoint and resets the upcoming traffic and lesson checks. Traffic or pedestrian direction can change after a failed attempt. Progress, mistake counts, and quiz scores are stored locally and separately for each vehicle. The feedback screen offers a short in-scene demonstration that leaves the player's save intact.
 
 ## Build and verify
 
 Use **Jalan Kita → Verify Checkpoints**, **Build macOS**, or **Build WebGL** in Unity. Install Web Build Support for WebGL. Serve a browser build over HTTP with `python3 -m http.server 8080 --directory Unity/Builds/WebGL` and open `http://localhost:8080`. Play uses keyboard and mouse.
 
-[Journey.cs](Unity/Assets/Scripts/Journey.cs) defines the route, thresholds, and lesson sources. [District.cs](Unity/Assets/Scripts/District.cs) lays out the road using the same coordinates. The FBX assets in [Resources/Models](Unity/Assets/Resources/Models) are copied directly from Ujian SIM. Its original material library and model loader are included in [Scripts/UjianSim](Unity/Assets/Scripts/UjianSim) to preserve the material palettes, atlas textures, glass, and light emission. The continuous route and checkpoint logic are implemented in this project.
+[Journey.cs](Unity/Assets/Scripts/Journey.cs) defines the route, thresholds, and lesson sources. [District.cs](Unity/Assets/Scripts/District.cs) lays out the road using the same coordinates. The FBX assets in [Resources/Models](Unity/Assets/Resources/Models) are copied directly from Ujian SIM. Its original material library and model loader are included in [Scripts/UjianSim](Unity/Assets/Scripts/UjianSim) to preserve the material palettes, atlas textures, glass, and light emission. The original surface texture generators, world-space mesh builder, and atmosphere are also included: textured asphalt and paving, the source wall palette and shop-sign colors, and afternoon lighting/post-processing. Roadside models include street-name plates, lamps, power poles, trees, road arrows, and parking signs. Result screens follow the original red/green tilted stamps, dark sheets, red buttons, and expandable explanation panels. The continuous route and checkpoint logic are implemented in this project.
 
 Lesson wording is draft for the hackathon. The clearance distances, timing thresholds, and exact route maneuvers are choices for the simulation. [UU 22/2009](https://peraturan.bpk.go.id/Details/38654/uu-no-22-tahun-2009), [PM 13/2014 on signs](https://peraturan.bpk.go.id/Details/103683/permenhub-no-13-tahun-2014), [PM 49/2014 on traffic signals](https://peraturan.bpk.go.id/Details/103764/permenhub-no-49-tahun-2014), [PM 111/2015 on speed limits](https://peraturan.bpk.go.id/Details/103508/permenhub-no-111-tahun-2015).
+
+For automated result-flow checks, run Unity in batch mode with
+`-projectPath Unity -executeMethod JalanKita.EditorTools.ResultFlowChecks.Run`
+(without `-quit`). This enters Play mode, checks both vehicles through all
+five completion cards, pause/resume, the final quiz, and violation retry,
+then exits with the check result. Existing player saves are preserved.

@@ -9,7 +9,7 @@ namespace JalanKita
     [RequireComponent(typeof(UIDocument))]
     public sealed class JalanGame : MonoBehaviour
     {
-        enum Page { Menu, Before, Preflight, Drive, Lesson, Progress, After }
+        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After }
 
         District district;
         Journey journey;
@@ -74,7 +74,17 @@ namespace JalanKita
                 if (Input.GetKeyDown(KeyCode.F)) ResolvePhone(false);
                 if (Input.GetKeyDown(KeyCode.G)) ResolvePhone(true);
             }
-            else if (page == Page.Lesson && Input.GetKeyDown(KeyCode.R)) Retry();
+            else if (page == Page.Lesson)
+            {
+                if (Input.GetKeyDown(KeyCode.R)) Retry();
+                else if (Input.GetKeyDown(KeyCode.D) && journey.Stage > 0) StartDemonstration();
+                else if (Input.GetKeyDown(KeyCode.Escape)) BackToMenu();
+            }
+            else if (page == Page.Checkpoint)
+            {
+                if (Input.GetKeyDown(KeyCode.R) && !journey.Finished) Retry();
+                else if (Input.GetKeyDown(KeyCode.Escape)) BackToMenu();
+            }
             else if (page == Page.Progress && !journey.Finished &&
                 (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Escape))) ReturnToJourney();
         }
@@ -99,7 +109,6 @@ namespace JalanKita
             journey.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
                 Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), steer);
             if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
-            else if (journey.Finished) StartQuiz(true);
             else if (journey.Stage != priorStage) AnnounceCheckpoint();
         }
 
@@ -217,24 +226,88 @@ namespace JalanKita
         void ShowLesson(Rule rule)
         {
             SetPage(Page.Lesson);
-            dialog.AddToClassList("rule-card");
             var lesson = Lesson.All[(int)rule];
-            AddLabel(dialog, "LATIHAN " + (journey.Stage + 1).ToString("00") + "  /  COBA LAGI", "kicker negative");
-            AddLabel(dialog, lesson.Title, "heading");
-            AddLabel(dialog, lesson.Explanation, "copy");
-            var note = Element(dialog, "note");
-            AddLabel(note, "CARA MELAKUKANNYA", "kicker");
-            AddLabel(note, lesson.Action, "copy");
-            if (lesson.HasSource) AddLabel(dialog, lesson.Regulation + " · " + lesson.Citation, "rule-source");
-            var actions = Element(dialog, "row actions");
-            AddButton(actions, journey.Stage == 0 ? "Ulangi persiapan  [R]" : "Ulangi dari checkpoint  [R]", Retry, "primary");
-            if (journey.Stage > 0) AddButton(actions, "Lihat peragaan", StartDemonstration, "quiet");
-            if (lesson.HasSource) AddButton(actions, "Buka sumber resmi", () => Application.OpenURL(lesson.Url), "quiet");
-            if (rule == Rule.Stop) AddButton(actions, "Peraturan rambu", () => Application.OpenURL(Lesson.Signs), "quiet");
-            if (rule == Rule.Signal) AddButton(actions, "Peraturan lampu", () => Application.OpenURL(Lesson.Signals), "quiet");
-            if (rule == Rule.Speed) AddButton(actions, "Peraturan kecepatan", () => Application.OpenURL(Lesson.Limits), "quiet");
-            AddButton(actions, "Menu", BackToMenu, "quiet");
+            var sheet = Result(lesson.HasSource ? "PELANGGARAN!" : "AWAS!",
+                lesson.HasSource ? "bad" : "warn", lesson.Title);
+            var body = ResultBody(sheet);
+            AddLabel(body, lesson.HasSource ? "PELANGGARAN HUKUM" : "SARAN KESELAMATAN",
+                lesson.HasSource ? "kind legal" : "kind advice");
+            AddLabel(body, lesson.Explanation, "sheet-lead");
+            AddLabel(body, "YANG BENAR", "result-label");
+            AddLabel(body, lesson.Action, "sheet-text");
+            Fold(body, "Kenapa ini penting?", content =>
+                AddLabel(content, Why(rule), "sheet-text"));
+            if (lesson.HasSource) Fold(body, "Dasar hukum", content =>
+            {
+                AddLabel(content, lesson.Regulation + " · " + lesson.Citation, "sheet-text");
+                AddButton(content, "Buka sumber resmi", () => Application.OpenURL(lesson.Url), "quiet");
+                if (rule == Rule.Stop) AddButton(content, "Peraturan rambu", () => Application.OpenURL(Lesson.Signs), "quiet");
+                if (rule == Rule.Signal) AddButton(content, "Peraturan lampu", () => Application.OpenURL(Lesson.Signals), "quiet");
+                if (rule == Rule.Speed) AddButton(content, "Peraturan kecepatan", () => Application.OpenURL(Lesson.Limits), "quiet");
+            });
+            var actions = Element(sheet, "sheet-actions");
+            var retry = AddButton(actions, "Coba lagi", Retry, "big primary");
+            if (journey.Stage > 0) AddButton(actions, "Lihat cara benar", StartDemonstration, "big quiet");
+            AddButton(actions, "Menu", BackToMenu, "big quiet");
+            AddLabel(sheet, journey.Stage > 0
+                ? "R: coba lagi dari checkpoint · D: lihat cara benar · Esc: menu"
+                : "R: ulangi persiapan · Esc: menu", "result-keys");
+            retry.schedule.Execute(retry.Focus).StartingIn(550);
         }
+
+        VisualElement Result(string stamp, string tone, string caption)
+        {
+            dialog.AddToClassList("result-layout");
+            var head = Element(dialog, "result-head");
+            var banner = AddLabel(head, stamp, "stamp " + tone + " pre");
+            AddLabel(head, caption, "stamp-caption");
+            var sheet = Element(dialog, "sheet " + tone + " rise pre");
+            banner.schedule.Execute(() => banner.RemoveFromClassList("pre")).StartingIn(40);
+            sheet.schedule.Execute(() => sheet.RemoveFromClassList("pre")).StartingIn(240);
+            return sheet;
+        }
+
+        static ScrollView ResultBody(VisualElement sheet)
+        {
+            var body = new ScrollView(ScrollViewMode.Vertical)
+            {
+                horizontalScrollerVisibility = ScrollerVisibility.Hidden
+            };
+            body.AddToClassList("sheet-body");
+            sheet.Add(body);
+            return body;
+        }
+
+        static void Fold(VisualElement parent, string title, Action<VisualElement> fill)
+        {
+            var fold = Element(parent, "fold");
+            var details = new VisualElement();
+            details.AddToClassList("fold-body");
+            Label sign = null;
+            var button = AddButton(fold, "", () =>
+            {
+                fold.ToggleInClassList("open");
+                sign.text = fold.ClassListContains("open") ? "-" : "+";
+            }, "fold-head");
+            AddLabel(button, title, "fold-title");
+            sign = AddLabel(button, "+", "fold-sign");
+            fill(details);
+            fold.Add(details);
+        }
+
+        static string Why(Rule rule) => rule switch
+        {
+            Rule.SeatBelt => "Sabuk menahan tubuh saat pengereman mendadak atau benturan.",
+            Rule.Helmet => "Helm yang sesuai dan terkunci membantu melindungi kepala saat terjatuh.",
+            Rule.Headlight => "Lampu membantu pengguna jalan lain melihat sepeda motor lebih awal.",
+            Rule.Stop or Rule.Junction or Rule.Signal => "Berhenti dan memberi jalan menyediakan waktu untuk melihat kendaraan dari arah silang.",
+            Rule.Pedestrian => "Pejalan kaki tidak memiliki pelindung seperti pengendara. Tunggu sampai jalur mereka aman.",
+            Rule.Indicator or Rule.Gap or Rule.ReturnLeft => "Isyarat dan ruang yang cukup membantu pengendara lain memahami perpindahan lajurmu.",
+            Rule.KeepLeft or Rule.NoEntry => "Mengikuti arah yang ditetapkan mengurangi risiko berhadapan dengan kendaraan dari arah berlawanan.",
+            Rule.Speed => "Kecepatan lebih rendah memberi waktu untuk bereaksi, terutama saat anak-anak berada di dekat jalan.",
+            Rule.Phone => "Perhatian yang teralihkan membuat bahaya di depan lebih mudah terlewat.",
+            _ => "Jaga ruang di sekitar kendaraan agar ada waktu untuk mengerem dan menghindari bahaya."
+        };
 
         void StartDemonstration()
         {
@@ -312,8 +385,36 @@ namespace JalanKita
 
         void AnnounceCheckpoint()
         {
-            toast.text = "✓  CHECKPOINT " + journey.Stage.ToString("00") + " TERSIMPAN";
-            toastUntil = Time.unscaledTime + 3;
+            SetPage(Page.Checkpoint);
+            int completed = journey.Stage - 1;
+            var sheet = Result("MISI SELESAI!", "good",
+                "Misi " + journey.Stage + " · " + All[completed].Title);
+            string[] recaps =
+            {
+                "Semua orang memakai perlengkapan keselamatan sebelum kendaraan bergerak.",
+                "Kamu berhenti di rambu STOP, memberi jalan, dan mematuhi lampu lalu lintas.",
+                "Kamu memberi prioritas kepada pejalan kaki dan arus di jalan utama.",
+                "Kamu mengikuti arah jalan, memberi sein, dan berpindah lajur dengan aman.",
+                "Kamu menjaga kecepatan dan tetap fokus sampai akhir perjalanan."
+            };
+            var body = ResultBody(sheet);
+            AddLabel(body, recaps[completed], "sheet-lead");
+            AddLabel(body, "Checkpoint " + journey.Stage.ToString("00") + "/05 tersimpan. "
+                + (journey.Finished ? "Seluruh rute selesai." : "Lanjutkan di jalan yang sama."), "checkpoint-saved");
+            var actions = Element(sheet, "sheet-actions");
+            var next = AddButton(actions, journey.Finished ? "Kuis akhir" : "Lanjutkan perjalanan",
+                ContinueCheckpoint, "big primary");
+            if (!journey.Finished) AddButton(actions, "Ulang dari checkpoint", Retry, "big quiet");
+            AddButton(actions, "Menu", BackToMenu, "big quiet");
+            AddLabel(sheet, journey.Finished ? "Enter: kuis akhir · Esc: menu"
+                : "Enter: lanjutkan · R: ulang dari checkpoint · Esc: menu", "result-keys");
+            next.schedule.Execute(next.Focus).StartingIn(550);
+        }
+
+        void ContinueCheckpoint()
+        {
+            if (journey.Finished) StartQuiz(true);
+            else SetPage(Page.Drive);
         }
 
         void RefreshHud()
@@ -407,6 +508,7 @@ namespace JalanKita
             overlay.EnableInClassList("landing", page == Page.Menu);
             dialog.EnableInClassList("landing-card", page == Page.Menu);
             dialog.RemoveFromClassList("rule-card");
+            dialog.RemoveFromClassList("result-layout");
             dialog.Clear();
         }
 
