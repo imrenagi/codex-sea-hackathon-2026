@@ -1,0 +1,102 @@
+.screen {
+    flex-grow: 1;
+    -unity-font-definition: url("project://database/Assets/Settings/JalanFont.asset");
+    color: #f5f1df;
+    -unity-font-style: normal;
+    font-size: 16px;
+}
+.label { margin: 0; padding: 0; }
+.kicker { color: #85dcc5; font-size: 13px; letter-spacing: 1.6px; -unity-font-style: bold; }
+.copy { white-space: normal; font-size: 17px; color: #d7e5dc; margin-top: 7px; }
+.hero { font-size: 67px; -unity-font-style: bold; letter-spacing: -2.5px; color: #fff2d0; }
+.heading { font-size: 35px; -unity-font-style: bold; white-space: normal; color: #fff2d0; }
+.subhead { font-size: 23px; -unity-font-style: bold; white-space: normal; color: #fff2d0; }
+.row { flex-direction: row; align-items: center; }
+.split { justify-content: space-between; }
+.panel {
+    background-color: rgba(16, 43, 48, 0.97);
+    padding: 15px 19px;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: #386165;
+}
+.hidden { display: none; }
+.hud { position: absolute; left: 20px; right: 20px; top: 19px; bottom: 18px; justify-content: space-between; }
+.top-row { align-items: flex-start; }
+.objective { width: 452px; }
+.objective-title { margin-top: 3px; }
+.objective-copy { margin-top: 5px; color: #deece3; white-space: normal; font-size: 16px; }
+.objective-detail { font-size: 13px; color: #f9cf85; white-space: normal; margin-top: 5px; }
+.route-panel { min-width: 226px; margin-left: 10px; }
+.route-steps { margin: 10px 0 8px; }
+.step {
+    width: 29px; height: 27px;
+    -unity-text-align: middle-center;
+    border-radius: 5px; margin-right: 6px;
+    background-color: #2d4e51; color: #c5d7cb;
+    -unity-font-style: bold; font-size: 13px;
+}
+.step-current { background-color: #fac875; color: #233436; }
+.step-done { background-color: #83d8c1; color: #183e41; }
+.bottom-row { align-items: flex-end; }
+.controls {
+    background-color: rgba(16, 43, 48, 0.92);
+    color: #eceddc; padding: 10px 13px; border-radius: 7px;
+    font-size: 13px;
+}
+.cluster { min-width: 160px; align-items: center; }
+.speed { font-size: 43px; -unity-font-style: bold; -unity-text-align: middle-center; }
+.speed-alert { color: #f9ab9b; }
+.unit { margin-left: 6px; color: #c3d8cc; }
+.toast {
+    position: absolute; top: 142px; align-self: center;
+    background-color: #c4efd9; color: #173a3a; padding: 9px 20px;
+    -unity-font-style: bold; border-radius: 6px;
+}
+.phone {
+    position: absolute; right: 0; bottom: 141px; width: 338px;
+    border-color: #ac8253;
+}
+.scrim {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    align-items: center; justify-content: center; padding: 18px;
+    background-color: rgba(8, 23, 27, 0.69);
+}
+.landing {
+    align-items: flex-start;
+    padding-left: 5%;
+    background-color: rgba(8, 23, 27, 0.32);
+}
+.dialog { width: 610px; max-width: 100%; padding: 25px 29px; }
+.landing-card { width: 540px; background-color: rgba(15, 46, 51, 0.97); padding: 29px; }
+.rule-card { border-color: #b67959; }
+.section { margin-top: 16px; }
+.note {
+    background-color: #23474a; border-radius: 8px; padding: 11px 13px; margin-top: 13px;
+}
+.note .copy { margin-top: 4px; }
+.actions { flex-wrap: wrap; margin-top: 15px; }
+.button {
+    margin: 3px 7px 3px 0;
+    padding: 8px 13px;
+    min-height: 36px;
+    border-width: 1px; border-color: #5b7a75; border-radius: 6px;
+    color: #f5f1df; background-color: #315659;
+    -unity-font-style: bold; -unity-text-align: middle-center;
+    white-space: normal; font-size: 15px;
+}
+.button:hover { background-color: #406b6c; }
+.button:focus { border-color: #f7ce85; }
+.button:disabled { opacity: 0.53; }
+.primary { background-color: #9ae5c9; color: #16373a; border-color: #9ae5c9; }
+.primary:hover { background-color: #bdf5de; }
+.selected { background-color: #f4cb7d; border-color: #f4cb7d; color: #1c393a; }
+.selected:hover { background-color: #f5d99e; }
+.quiet { background-color: #203f44; }
+.tiny { min-height: 25px; padding: 4px 7px; font-size: 12px; margin: 3px 0 0; }
+.option { -unity-text-align: middle-left; margin: 7px 0 0; }
+.route-row { padding: 5px 0; }
+.route-num { color: #83d8c1; width: 29px; font-size: 13px; -unity-font-style: bold; }
+.route-text { font-size: 15px; color: #eef1dc; }
+.rule-source { font-size: 13px; margin-top: 11px; color: #f1c79a; white-space: normal; }
+.negative { color: #f9ab9b; }

@@ -1,0 +1,9 @@
+.jalan-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+.unity-label { -unity-text-align: middle-left; }
+.unity-button { -unity-text-align: middle-center; }

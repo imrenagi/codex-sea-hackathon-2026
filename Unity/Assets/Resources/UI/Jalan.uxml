@@ -1,0 +1,43 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Jalan.uss" />
+    <ui:VisualElement class="screen" picking-mode="Ignore">
+        <ui:VisualElement name="hud" class="hud hidden" picking-mode="Ignore">
+            <ui:VisualElement class="row split top-row" picking-mode="Ignore">
+                <ui:VisualElement class="panel objective" picking-mode="Ignore">
+                    <ui:Label name="district" class="label kicker" />
+                    <ui:Label name="objectiveTitle" class="label subhead objective-title" />
+                    <ui:Label name="instruction" class="label objective-copy" />
+                    <ui:Label name="detail" class="label objective-detail" />
+                </ui:VisualElement>
+                <ui:VisualElement class="panel route-panel">
+                    <ui:Label name="routeCount" class="label kicker" />
+                    <ui:VisualElement name="steps" class="row route-steps" />
+                    <ui:Button name="progress" text="Kemajuan  [Tab]" class="button quiet tiny" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label name="toast" class="label toast hidden" picking-mode="Ignore" />
+            <ui:VisualElement class="row split bottom-row" picking-mode="Ignore">
+                <ui:Label text="W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    C Kamera    R Ulang" class="label controls" />
+                <ui:VisualElement class="panel cluster">
+                    <ui:VisualElement class="row" picking-mode="Ignore">
+                        <ui:Label name="speed" text="00" class="label speed" />
+                        <ui:Label text="km/j" class="label unit" />
+                    </ui:VisualElement>
+                    <ui:Label name="vehicleState" class="label kicker" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="phone" class="panel phone hidden">
+                <ui:Label text="PANGGILAN MASUK" class="label kicker" />
+                <ui:Label text="Ibu menelepon" class="label subhead" />
+                <ui:Label text="Abaikan, atau berhenti di teluk kiri sebelum menjawab." class="label copy" />
+                <ui:VisualElement class="row actions">
+                    <ui:Button name="ignorePhone" text="Abaikan  [F]" class="button primary" />
+                    <ui:Button name="answerPhone" text="Jawab  [G]" class="button quiet" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="overlay" class="scrim landing">
+            <ui:VisualElement name="dialog" class="panel dialog landing-card" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
