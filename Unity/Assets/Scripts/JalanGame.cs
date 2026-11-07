@@ -369,6 +369,15 @@ namespace JalanKita
             { horizontalScrollerVisibility = ScrollerVisibility.Hidden, verticalScrollerVisibility = ScrollerVisibility.Auto };
             content.AddToClassList("menu-scroll");
             content.contentViewport.style.overflow = Overflow.Hidden;
+            content.RegisterCallback<FocusInEvent>(e =>
+            {
+                if (e.target is not VisualElement focused || !content.contentContainer.Contains(focused)) return;
+                content.schedule.Execute(() =>
+                {
+                    if (content.panel != null && content.focusController?.focusedElement == focused)
+                        content.ScrollTo(focused);
+                });
+            });
             dialog.Add(content);
             return content;
         }
