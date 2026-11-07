@@ -21,7 +21,7 @@ namespace JalanKita
             if (homeScene < 0 || homeSceneTime >= 5f)
             {
                 homeSceneTime = 0;
-                homeScene = (homeScene + 1) % 3;
+                homeScene = homeScene < 0 ? 1 : (homeScene + 1) % 3;
                 ActivateHomeScene();
             }
             if (homeScene == 1 && homeCity != null) homeCity.PresentShowcase(homeOrbitTime);
