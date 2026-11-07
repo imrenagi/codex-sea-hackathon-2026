@@ -2736,6 +2736,14 @@
     {
       "key": "level.choose.summary",
       "value": "Choose a tutorial or driving challenge. Your saved journey remains available in More modes."
+    },
+    {
+      "key": "tutorial.initial.press",
+      "value": "Press"
+    },
+    {
+      "key": "tutorial.initial.drive",
+      "value": "to start driving"
     }
   ]
 }

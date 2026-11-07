@@ -70,6 +70,11 @@
             <ui:VisualElement name="demoTutorialCue" class="tutorial-cue-layer hidden" picking-mode="Ignore">
                 <ui:VisualElement class="panel tutorial-card" picking-mode="Ignore">
                     <ui:Label name="demoTutorialInstruction" class="label tutorial-instruction" picking-mode="Ignore" />
+                    <ui:VisualElement class="tutorial-start-control" picking-mode="Ignore">
+                        <ui:Label class="label tutorial-start-copy i18n-text--tutorial.initial.press" picking-mode="Ignore" />
+                        <ui:Label text="W" class="label tutorial-start-key" picking-mode="Ignore" />
+                        <ui:Label class="label tutorial-start-copy i18n-text--tutorial.initial.drive" picking-mode="Ignore" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
