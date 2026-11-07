@@ -183,3 +183,8 @@
 
 .city-preview { align-items: flex-start; justify-content: flex-end; background-color: transparent; }
 .city-preview .dialog { width: 570px; padding: 15px 19px; }
+
+.volume-control { margin-top: 10px; min-height: 28px; }
+.volume-control .unity-base-field__label { color: #e9e6df; min-width: 115px; }
+.volume-control .unity-base-slider__tracker { background-color: #45474a; }
+.volume-control .unity-base-slider__dragger { background-color: #f3f1ec; }

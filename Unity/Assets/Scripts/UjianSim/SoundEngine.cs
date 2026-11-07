@@ -38,6 +38,7 @@ namespace UjianSim.Game
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] static extern void UjianAudio_Init();
+        [DllImport("__Internal")] static extern void UjianAudio_Dispose();
         [DllImport("__Internal")] static extern void UjianAudio_Set(float master, float engineFreq, float engineCut, float engineGain,
             float sirenFreq, float sirenGain, float hornA, float hornB, float hornGain, float wind, float rain);
         [DllImport("__Internal")] static extern void UjianAudio_Tone(double freq, double delay, double dur, int wave, double volume, double slideTo);
@@ -52,11 +53,14 @@ namespace UjianSim.Game
         }
 
         const string PrefKey = "jalan-kita:muted";
+        const string VolumeKey = "jalan-kita:volume";
+        const string AmbienceKey = "jalan-kita:ambience";
 
         readonly object gate = new object();
         readonly List<Voice> voices = new List<Voice>();
         readonly System.Random random = new System.Random();
 
+        AudioClip silentClip;
         int rate = 48000;
         /// <summary>Audio-thread clock in seconds; tones are scheduled against it.</summary>
         double now;
@@ -76,6 +80,8 @@ namespace UjianSim.Game
         public long RenderedFrames => System.Threading.Interlocked.Read(ref renderedFrames);
         volatile float outputPeak;
         public float OutputPeak => outputPeak;
+        public float Volume { get; private set; } = 1f;
+        public bool AmbienceEnabled { get; private set; } = true;
 
         public static SoundEngine Create(Transform parent)
         {
@@ -91,9 +97,13 @@ namespace UjianSim.Game
             source.volume = 1f;
             source.playOnAwake = false;
             var engine = go.AddComponent<SoundEngine>();
+            engine.silentClip = source.clip;
             engine.rate = sr;
             engine.Muted = PlayerPrefs.GetInt(PrefKey, 0) == 1;
-            engine.tMaster = engine.Muted ? 0f : 0.7f;
+            engine.AmbienceEnabled = PlayerPrefs.GetInt(AmbienceKey, 1) != 0;
+            float volume = PlayerPrefs.GetFloat(VolumeKey, 1f);
+            engine.Volume = float.IsNaN(volume) || float.IsInfinity(volume) ? 1f : Mathf.Clamp01(volume);
+            engine.tMaster = engine.Muted ? 0f : 0.7f * engine.Volume;
 #if UNITY_WEBGL && !UNITY_EDITOR
             UjianAudio_Init();
             engine.PushTargets();
@@ -103,11 +113,40 @@ namespace UjianSim.Game
             return engine;
         }
 
+        void OnDestroy()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            UjianAudio_Dispose();
+#endif
+            if (silentClip)
+            {
+                if (Application.isPlaying) Destroy(silentClip);
+                else DestroyImmediate(silentClip);
+            }
+        }
+
         public void SetMuted(bool muted)
         {
             Muted = muted;
-            tMaster = muted ? 0f : 0.7f;
+            tMaster = muted ? 0f : 0.7f * Volume;
             PlayerPrefs.SetInt(PrefKey, muted ? 1 : 0);
+            PushTargets();
+        }
+
+        public void SetVolume(float volume)
+        {
+            if (float.IsNaN(volume) || float.IsInfinity(volume)) return;
+            Volume = Mathf.Clamp01(volume);
+            tMaster = Muted ? 0f : 0.7f * Volume;
+            PlayerPrefs.SetFloat(VolumeKey, Volume);
+            PushTargets();
+        }
+
+        public void SetAmbience(bool enabled)
+        {
+            AmbienceEnabled = enabled;
+            PlayerPrefs.SetInt(AmbienceKey, enabled ? 1 : 0);
+            if (!enabled) { tWind = tRain = 0f; ambienceTimer = 2f; }
             PushTargets();
         }
 
@@ -138,14 +177,24 @@ namespace UjianSim.Game
         {
             if (violation)
             {
-                Tone(660, 0, 0.35, Wave.Sine, 0.18);
-                Tone(495, 0.18, 0.5, Wave.Sine, 0.16);
+                // A soft downward phrase leaves room for the explanation.
+                Tone(392, 0, 0.24, Wave.Triangle, 0.12);
+                Tone(330, 0.12, 0.24, Wave.Sine, 0.11);
+                Tone(262, 0.24, 0.32, Wave.Sine, 0.10);
             }
             else
             {
+                Tone(262, 0, 0.55, Wave.Sine, 0.06);
                 double[] notes = { 523, 659, 784, 1047 };
-                for (int i = 0; i < notes.Length; i++) Tone(notes[i], i * 0.11, 0.4, Wave.Triangle, 0.14);
+                for (int i = 0; i < notes.Length; i++) Tone(notes[i], i * 0.10, 0.32, Wave.Triangle, 0.11);
+                Tone(784, 0.30, 0.40, Wave.Sine, 0.06);
             }
+        }
+
+        public void RetryCue()
+        {
+            Tone(440, 0, 0.14, Wave.Sine, 0.07);
+            Tone(587, 0.09, 0.20, Wave.Sine, 0.07);
         }
 
         public void UpdateFrame(float dt, SoundFrame f)
@@ -156,7 +205,7 @@ namespace UjianSim.Game
                 float rpm = Mathf.Abs(f.Speed) / (moto ? 18f : 20f);
                 float b = moto ? 62f : 34f;
                 tEngineFreq = b * (1f + rpm * 2.6f);
-                tEngineCut = 280f + f.Throttle * 900f + rpm * 600f;
+                tEngineCut = (moto ? 460f : 240f) + f.Throttle * (moto ? 1100f : 700f) + rpm * 600f;
                 tEngineGain = (moto ? 0.07f : 0.06f) + f.Throttle * 0.05f;
             }
             else tEngineGain = 0f;
@@ -201,11 +250,12 @@ namespace UjianSim.Game
             }
             else bellTimer = 0f;
 
-            tWind = 0.035f;
-            tRain = f.Rain ? 0.05f : 0f;
+            tWind = !AmbienceEnabled ? 0f : f.Motorcycle.HasValue ? 0.018f + Mathf.Clamp01(Mathf.Abs(f.Speed) / 18f) * 0.025f : 0.006f;
+            tRain = AmbienceEnabled && f.Rain ? 0.05f : 0f;
 
-            // Town ambience: a distant motorcycle passing, or a bird.
-            ambienceTimer -= dt;
+            // Keep menus and feedback quiet for the instructor or presenter.
+            if (AmbienceEnabled && f.Motorcycle.HasValue) ambienceTimer -= dt;
+            else ambienceTimer = 2f;
             if (ambienceTimer <= 0f)
             {
                 if (random.NextDouble() < 0.6) Tone(110 + random.NextDouble() * 40, 0, 2.4, Wave.Saw, 0.012, 70);
