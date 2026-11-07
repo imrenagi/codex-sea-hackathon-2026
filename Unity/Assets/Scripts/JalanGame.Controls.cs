@@ -15,7 +15,7 @@ namespace JalanKita
         string controlsPracticeContext;
         bool controlsMoved, controlsBraked;
         public bool ControlsOnboardingActive => page == Page.TutorialBrake || (pitchDemo && !demoCrossingTaught) || page == Page.Controls || journey?.LearningControls == true
-            || ((page == Page.Jaksa || page == Page.JaksaPause) && !exploreStopped.Contains("explore:" + mode));
+            || (!hiActive && (page == Page.Jaksa || page == Page.JaksaPause) && !exploreStopped.Contains("explore:" + mode));
         readonly HashSet<string> cueActionsSeen = new();
         Page controlsOrigin, controlsDrivingPage;
         bool inputReleaseRequired;
@@ -154,7 +154,7 @@ namespace JalanKita
             ControlKey(decisions, "ESC / TAB", "Jeda", "Buka kemajuan dan pilihan perjalanan.");
             Fold(body, "Kontrol lainnya", extra =>
             {
-                ControlKey(extra, "R", drivingPage == Page.Jaksa ? "Ulangi ruas jalan" : "Ulangi dari checkpoint", "Mulai ulang bagian yang sedang dijalani.");
+                ControlKey(extra, "R", hiActive ? "Ulangi misi HI" : drivingPage == Page.Jaksa ? "Ulangi ruas jalan" : "Ulangi dari checkpoint", "Mulai ulang bagian yang sedang dijalani.");
                 ControlKey(extra, "H", "Klakson", "Tahan untuk membunyikan.");
                 ControlKey(extra, "M", "Suara", "Tekan untuk mematikan atau mengaktifkan suara.");
                 if (drivingPage == Page.Drive)
@@ -235,7 +235,7 @@ namespace JalanKita
                 return;
             }
             string context = (page == Page.Jaksa ? "explore:" : "training:") + mode;
-            float drivingSpeed = page == Page.Jaksa ? jaksa.Speed : journey.Speed;
+            float drivingSpeed = page == Page.Jaksa ? ExploreSpeed : journey.Speed;
             if (!controlsSeen.Contains(context))
             {
                 if (drivingSpeed > .2f && Pressed(KeyCode.W, KeyCode.UpArrow)) controlsSeen.Add(context);
@@ -243,7 +243,7 @@ namespace JalanKita
             }
             if (page == Page.Jaksa)
             {
-                if (!exploreStopped.Contains(context)) PresentCue("S", "Tekan S untuk rem");
+                if (!hiActive && !exploreStopped.Contains(context)) PresentCue("S", "Tekan S untuk rem");
                 return;
             }
             if (journey.Finished || journey.Failure.HasValue) return;

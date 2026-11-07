@@ -13,13 +13,13 @@ namespace JalanKita
             BindHudIcon("cameraControl", DrivingGlyph.Kind.Camera, () =>
             {
                 if (inputReleaseRequired || learner != null) return;
-                if (page == Page.Jaksa) jaksa.ToggleCamera();
+                if (page == Page.Jaksa) ToggleExploreCamera();
                 else if (page == Page.Drive) { hood = !hood; district.Snap(); }
             });
             BindHudIcon("lampControl", DrivingGlyph.Kind.Lamp, () =>
             {
                 if (inputReleaseRequired || learner != null || mode != VehicleMode.Motorcycle) return;
-                if (page == Page.Jaksa) jaksa.ToggleHeadlight();
+                if (page == Page.Jaksa) ToggleExploreHeadlight();
                 else if (page == Page.Drive) journey.ToggleHeadlight();
             });
             BindHudIcon("lookLeft", DrivingGlyph.Kind.Left);

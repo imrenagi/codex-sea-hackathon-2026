@@ -36,6 +36,7 @@ namespace JalanKita
                 AddLabel(card, status, "objective-detail");
                 AddButton(card, saved != null && saved.next <= activity.LastStage ? "Lanjutkan" : "Pilih", () => ShowMissionBrief(activity), "primary");
             }
+            if (kind == MissionKind.Scenario) AddHiMissionCard(list.contentContainer);
             var actions = Element(dialog, "row actions catalogue-footer");
             AddButton(actions, "Menu utama", BackToMenu, "quiet");
             AddButton(actions, kind == MissionKind.Scenario ? "Lihat uji keterampilan" : "Lihat misi sehari-hari",

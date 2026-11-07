@@ -230,16 +230,16 @@ namespace JalanKita
             if (page == Page.Jaksa)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab)) { ShowJaksaPause(); return; }
-                if (Input.GetKeyDown(KeyCode.C)) jaksa.ToggleCamera();
-                if (Input.GetKeyDown(KeyCode.Q)) jaksa.ToggleIndicator(-1);
-                if (Input.GetKeyDown(KeyCode.E)) jaksa.ToggleIndicator(1);
-                if (Input.GetKeyDown(KeyCode.L) && mode == VehicleMode.Motorcycle) jaksa.ToggleHeadlight();
-                if (Input.GetKeyDown(KeyCode.R)) jaksa.Reset(mode);
+                if (Input.GetKeyDown(KeyCode.C)) ToggleExploreCamera();
+                if (Input.GetKeyDown(KeyCode.Q)) ToggleExploreIndicator(-1);
+                if (Input.GetKeyDown(KeyCode.E)) ToggleExploreIndicator(1);
+                if (Input.GetKeyDown(KeyCode.L) && mode == VehicleMode.Motorcycle) ToggleExploreHeadlight();
+                if (Input.GetKeyDown(KeyCode.R)) ResetExplore();
                 return;
             }
             if (page == Page.JaksaPause)
             {
-                if (Input.GetKeyDown(KeyCode.Escape)) EnterHumanDrive(Page.Jaksa);
+                if (Input.GetKeyDown(KeyCode.Escape)) { if (hiActive && HiEnded) LeaveHiForCatalogue(); else EnterHumanDrive(Page.Jaksa); }
                 return;
             }
             if (page == Page.CityPreview)
@@ -304,6 +304,7 @@ namespace JalanKita
             if (page == Page.Jaksa)
             {
                 float turn = (Pressed(KeyCode.D, KeyCode.RightArrow) ? 1 : 0) - (Pressed(KeyCode.A, KeyCode.LeftArrow) ? 1 : 0);
+                if (hiActive) { StepHi(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow), Input.GetKey(KeyCode.Space), turn, Pressed(KeyCode.S, KeyCode.DownArrow)); return; }
                 float previousExploreSpeed = jaksa.Speed;
                 jaksa.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
                     Input.GetKey(KeyCode.Space), turn, Pressed(KeyCode.S, KeyCode.DownArrow));
@@ -360,7 +361,8 @@ namespace JalanKita
             if (page == Page.CityPreview) return;
             if (page == Page.Jaksa || page == Page.JaksaPause || page == Page.Controls && controlsDrivingPage == Page.Jaksa)
             {
-                jaksa.Present(presentationDt, page == Page.Jaksa && !inputReleaseRequired, look);
+                if (hiActive) hi.Present(page == Page.Jaksa && !inputReleaseRequired ? presentationDt : 0, page == Page.Jaksa && !inputReleaseRequired, look);
+                else jaksa.Present(presentationDt, page == Page.Jaksa && !inputReleaseRequired, look);
                 if (page == Page.Jaksa) RefreshJaksaHud();
                 return;
             }
@@ -385,14 +387,15 @@ namespace JalanKita
             }
             if (page == Page.Jaksa && !inputReleaseRequired)
             {
-                frame.Speed = Mathf.Abs(jaksa.Speed);
+                frame.Speed = Mathf.Abs(ExploreSpeed);
                 frame.Throttle = Pressed(KeyCode.W, KeyCode.UpArrow) || Pressed(KeyCode.S, KeyCode.DownArrow) ? 1 : 0;
                 frame.Motorcycle = mode == VehicleMode.Motorcycle;
                 frame.Horn = Input.GetKey(KeyCode.H);
             }
             sound.UpdateFrame(dt, frame);
+            if (hiActive) hi.Environment.Water.SetAudio(sound.Muted || !sound.AmbienceEnabled ? 0 : sound.Volume, page == Page.Jaksa && !inputReleaseRequired);
             bool blink = Time.unscaledTime % .7f < .42f;
-            if (blink != blinkWas && (driving && journey.Indicator != 0 || page == Page.Jaksa && !inputReleaseRequired && jaksa.Indicator != 0)) sound.Tick(blink);
+            if (blink != blinkWas && (driving && journey.Indicator != 0 || page == Page.Jaksa && !inputReleaseRequired && ExploreIndicator != 0)) sound.Tick(blink);
             blinkWas = blink;
         }
 
@@ -473,7 +476,7 @@ namespace JalanKita
                 AddButton(other, "Coba demo · Hak utama [F2]", StartPitchDemo, "quiet option");
                 AddLabel(other, "Demo singkat Pasar Bunga. Progres perjalanan tidak berubah.", "menu-note");
                 AddButton(other, "Uji keterampilan · 5 tes", () => ShowCatalogue(MissionKind.SkillTest), "quiet option");
-                AddButton(other, "Misi sehari-hari · 3 perjalanan", () => ShowCatalogue(MissionKind.Scenario), "quiet option");
+                AddButton(other, "Misi sehari-hari · 4 perjalanan", () => ShowCatalogue(MissionKind.Scenario), "quiet option");
                 AddLabel(other, "Hasil tersimpan untuk tiap tes dan misi.", "menu-note");
                 Fold(other, "Kendaraan · " + VehicleCatalogue.Selected(mode).Label, AddVehiclePicker);
                 Fold(other, stored == null ? "Jelajah & perjalanan lengkap" : "Jelajah & perjalanan tersimpan", explore =>
@@ -551,6 +554,7 @@ namespace JalanKita
 
         void StartJaksa()
         {
+            CloseHi();
             trainingRoot.SetActive(false);
             jaksa ??= new JaksaDrive(transform);
             jaksa.Reset(mode);
@@ -564,6 +568,7 @@ namespace JalanKita
 
         void RefreshJaksaHud()
         {
+            if (hiActive) { RefreshHiHud(); return; }
             location.text = "MEGA KUNINGAN  /  JAKARTA SELATAN";
             title.text = jaksa.AtEnd ? "Selesai menjelajahi Sopo Del" : "Sea Labs Indonesia · Sopo Del";
             instruction.text = jaksa.AtEnd ? "Tekan R untuk mengulang, atau Esc untuk kembali ke menu."
@@ -586,6 +591,7 @@ namespace JalanKita
 
         void ShowJaksaPause()
         {
+            if (hiActive) { ShowHiProgress(); return; }
             SetPage(Page.JaksaPause);
             AddLabel(dialog, "SOPO DEL  /  MEGA KUNINGAN", "kicker");
             AddLabel(dialog, "Jeda perjalanan", "heading");
@@ -601,6 +607,7 @@ namespace JalanKita
 
         void CloseCityPreview()
         {
+            CloseHi();
             cityPreview?.Dispose();
             cityPreview = null;
             trainingRoot.SetActive(true);
@@ -703,7 +710,7 @@ namespace JalanKita
         }
 
         void OnDestroy()
-        { vehiclePreview?.Dispose(); cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
+        { CloseHi(); vehiclePreview?.Dispose(); cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
 
         void SelectMode(VehicleMode value)
         {
@@ -1230,7 +1237,7 @@ namespace JalanKita
             page = value;
             if (page != Page.Drive) Show(root.Q("signalPanel"), false);
             var mirrorImages = root.Q("mirrors").Query<Image>().ToList();
-            var textures = (page == Page.Jaksa || page == Page.Controls && controlsDrivingPage == Page.Jaksa) && jaksa != null ? jaksa.Mirrors.Textures : district.Mirrors.Textures;
+            var textures = (page == Page.Jaksa || page == Page.Controls && controlsDrivingPage == Page.Jaksa) && (hiActive || jaksa != null) ? (hiActive ? hi.Mirrors.Textures : jaksa.Mirrors.Textures) : district.Mirrors.Textures;
             for (int i = 0; i < mirrorImages.Count; i++) mirrorImages[i].image = textures[i];
             Show(hud, page == Page.Drive || page == Page.Jaksa);
             Show(progress, !pitchDemo);
