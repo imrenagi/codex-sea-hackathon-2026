@@ -21,6 +21,9 @@ namespace JalanKita
         public bool TrafficContact { get; private set; }
         float collisionRemaining;
         public bool VehicleCollision => collisionRemaining > 0;
+        public readonly DriveSafetyState Safety = new();
+        public float PostedLimitKph => 30;
+        readonly DrivePedestrian[] pedestrians = new DrivePedestrian[PedestrianPaths.SopoCount];
         public readonly TrafficSimulation Traffic;
         readonly PlayerVehicleView player;
         readonly Transform actors;
@@ -38,10 +41,18 @@ namespace JalanKita
             actors = new GameObject("Jaksa vehicles").transform;actors.SetParent(Street.Root.transform,false);
             player = new PlayerVehicleView(actors);
             Traffic = new TrafficSimulation(actors, Street);
-            foreach(var spot in new[]{new Vector3(-4.7f,0,34),new Vector3(4.8f,0,87),new Vector3(-4.9f,0,164),new Vector3(4.6f,0,219)})
+            PedestrianPaths.FillSopo(Street,pedestrians);
+            for(int i=0;i<pedestrians.Length;i++)
             {
                 var person=Actor("Person");person.name="Sidewalk pedestrian";
-                person.transform.SetPositionAndRotation(new Vector3(Street.RoadX(spot.z)+spot.x,.25f,spot.z),Quaternion.Euler(0,spot.x<0?90:270,0));
+                var spot=pedestrians[i].Position;
+                person.transform.SetPositionAndRotation(new Vector3(spot.x,.25f,spot.y),Quaternion.Euler(0,PedestrianPaths.SopoHeading(i),0));
+            }
+            foreach(float z in new[]{14f,135f})
+            {
+                float yaw=RoadFrame(new Vector2(0,z)).Heading;
+                RoadSpeedSign.Create(Street.Root.transform,new Vector3(Street.RoadX(z)-4.15f,.12f,z),yaw,30);
+                if(!Street.Data.oneway)RoadSpeedSign.Create(Street.Root.transform,new Vector3(Street.RoadX(z)+4.15f,.12f,z+12),yaw+180,30);
             }
             Camera = new GameObject("Jaksa camera").AddComponent<Camera>();
             Camera.gameObject.AddComponent<AudioListener>();
@@ -69,7 +80,7 @@ namespace JalanKita
             Heading=frame.Heading;
             Position=RoadBoundary.Fit(roadFrame,mode,new Vector2(Street.RoadX(8)-1.48f/frame.Forward.y,8),Heading);
             Speed=0;
-            motion.Reset();
+            motion.Reset();Safety.Reset();PedestrianPaths.FillSopo(Street,pedestrians);
             Traffic.Reset(trafficSeed++);TrafficContact=false;collisionRemaining=0;
             Hood=false;CurbContact=false;Headlight=true;Indicator=0;snap=true;Street.Activate();Present(0);
         }
@@ -88,7 +99,7 @@ namespace JalanKita
 
         public void Step(float dt,bool throttle,bool brake,float steer,bool reverse=false)
         {
-            if(dt<=0)return;
+            if(dt<=0||Safety.Failure.HasValue)return;
             dt=Mathf.Min(dt,.05f);
             collisionRemaining=Mathf.Max(0,collisionRemaining-dt);
             Traffic.Step(dt,Position,Heading,Mode);
@@ -118,6 +129,13 @@ namespace JalanKita
                 CurbContact|=!contained;TrafficContact|=vehicleContact;
                 if(vehicleContact)collisionRemaining=.8f;
             }
+            bool personContact=DriveSafetyState.PedestrianContact(Position,next,previousHeading,Heading,Mode,pedestrians);
+            var road=RoadFrame(next);
+            var allowed=road.Forward;
+            if(!Street.Data.oneway&&Vector2.Dot(next-road.Center,road.Right)>0)allowed=-allowed;
+            Safety.Step(dt,new DriveSafetySample{SignedSpeed=Speed,Heading=Heading,AllowedForward=allowed,DirectionKnown=true,
+                ReverseRequested=reverse,PostedLimitKph=PostedLimitKph,VehicleContact=vehicleContact,PedestrianContact=personContact});
+            if(personContact){next=Position;Heading=previousHeading;Speed=0;}
             Position=next;
         }
 

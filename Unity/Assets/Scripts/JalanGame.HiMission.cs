@@ -14,7 +14,7 @@ namespace JalanKita
         static string HiFocus => GameText.Get("hi.focus");
         [Serializable] sealed class HiMissionRecord { public int attempts, completions, failures; }
         string HiSaveKey => "RoadSense.Mission.HI.v1." + mode;
-        bool HiEnded => hiObjective != null && (hiObjective.Complete || hiObjective.Failed);
+        bool HiEnded => hiObjective != null && (hiObjective.Complete || hiObjective.Failed || hi.Safety.Failure.HasValue);
         float ExploreSpeed => hiActive ? hi.Speed : jaksa.Speed;
         int ExploreIndicator => hiActive ? hi.Indicator : jaksa.Indicator;
 
@@ -72,7 +72,7 @@ namespace JalanKita
         {
             if (HiEnded) return;
             hi.Step(dt, throttle, brake, steer, reverse);
-            hiObjective.Step(dt);
+            if(!hi.Safety.Failure.HasValue)hiObjective.Step(dt);
             if (!HiEnded) return;
             if (!hiResultRecorded)
             {
@@ -89,7 +89,7 @@ namespace JalanKita
             detail.text = hiObjective.Title;
             routeCount.text = "SUDIRMAN → BUNDARAN HI → THAMRIN";
             speed.text = (hi.Speed < -.05f ? "R " : "") + Mathf.RoundToInt(Mathf.Abs(hi.Speed) * 3.6f).ToString("00");
-            speed.EnableInClassList("speed-alert", false);
+            RefreshSpeedFeedback(hi.Safety,hi.PostedLimitKph);
             bool blink = Time.unscaledTime % .7f < .42f;
             signalLeft.On = hi.Indicator < 0 && blink; signalRight.On = hi.Indicator > 0 && blink;
             headlight.On = mode == VehicleMode.Motorcycle && hi.Headlight;
@@ -100,9 +100,9 @@ namespace JalanKita
         {
             SetPage(Page.JaksaPause);
             var content = ScrollDialog();
-            AddLabel(content, hiObjective.Complete ? GameText.Get("hi.completed") : hiObjective.Failed ? GameText.Get("hi.try_again") : GameText.Get("hi.paused"), "kicker");
+            AddLabel(content, hiObjective.Complete ? GameText.Get("hi.completed") : HiEnded ? GameText.Get("hi.try_again") : GameText.Get("hi.paused"), "kicker");
             AddLabel(content, HiTitle, "heading");
-            AddLabel(content, hiObjective.Complete ? GameText.Get("hi.success") : hiObjective.Failed ? hiObjective.FailureReason : hiObjective.Instruction, "copy");
+            AddLabel(content, hiObjective.Complete ? GameText.Get("hi.success") : hi.Safety.Failure.HasValue ? Lesson.All[(int)hi.Safety.Failure.Value].Explanation : hiObjective.Failed ? hiObjective.FailureReason : hiObjective.Instruction, "copy");
             AddLabel(content, GameText.Get("hi.result_counts", hiRecord.attempts, hiRecord.completions, hiRecord.failures), "copy");
             var note = Element(content, "note");
             AddLabel(note, GameText.Get("text.practice_focus"), "kicker"); AddLabel(note, HiFocus, "copy");

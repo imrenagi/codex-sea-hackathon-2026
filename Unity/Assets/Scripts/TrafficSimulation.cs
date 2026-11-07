@@ -84,7 +84,7 @@ namespace JalanKita
         }
         public float SafePlayerSpeed(Vector2 player,float heading,VehicleMode mode)
         {
-            float safe=8.33f;float angle=heading*Mathf.Deg2Rad;
+            float safe=RoadVehicleMotion.FreeSpeed(mode);float angle=heading*Mathf.Deg2Rad;
             Vector2 forward=new(Mathf.Sin(angle),Mathf.Cos(angle)),right=new(forward.y,-forward.x);
             foreach(var a in Actors)
             {

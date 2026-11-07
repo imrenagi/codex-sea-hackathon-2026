@@ -237,7 +237,7 @@ namespace JalanKita
             }
             if (page == Page.JaksaPause)
             {
-                if (Input.GetKeyDown(KeyCode.Escape)) { if (hiActive && HiEnded) LeaveHiForCatalogue(); else EnterHumanDrive(Page.Jaksa); }
+                if (Input.GetKeyDown(KeyCode.Escape)) { if (hiActive && HiEnded) LeaveHiForCatalogue(); else if(!hiActive && jaksa.Safety.Failure.HasValue) ShowMenu(); else EnterHumanDrive(Page.Jaksa); }
                 return;
             }
             if (page == Page.CityPreview)
@@ -302,6 +302,7 @@ namespace JalanKita
                 jaksa.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
                     Input.GetKey(KeyCode.Space), turn, Pressed(KeyCode.S, KeyCode.DownArrow));
                 CompleteExploreControls(previousExploreSpeed);
+                if(jaksa.Safety.Failure.HasValue)ShowJaksaPause();
                 return;
             }
             if (page != Page.Drive) return;
@@ -567,7 +568,7 @@ namespace JalanKita
             detail.text = GameText.Get("hud.explore_remaining", Mathf.RoundToInt(Mathf.Max(0,246-jaksa.Position.y)));
             routeCount.text = GameText.Get("text.sopo_del_approx_250_m");
             speed.text = (jaksa.Speed < -.05f ? "R " : "") + Mathf.RoundToInt(Mathf.Abs(jaksa.Speed)*3.6f).ToString("00");
-            speed.EnableInClassList("speed-alert", false);
+            RefreshSpeedFeedback(jaksa.Safety,jaksa.PostedLimitKph);
             bool blink = Time.unscaledTime % .7f < .42f;
             signalLeft.On = jaksa.Indicator < 0 && blink;
             signalRight.On = jaksa.Indicator > 0 && blink;
@@ -582,11 +583,11 @@ namespace JalanKita
             if (hiActive) { ShowHiProgress(); return; }
             SetPage(Page.JaksaPause);
             AddLabel(dialog, GameText.Get("text.sopo_del_mega_kuningan"), "kicker");
-            AddLabel(dialog, GameText.Get("text.journey_paused"), "heading");
-            AddLabel(dialog, GameText.Get("text.explore_about_250_meters_of_jl_mega_kuningan_barat"), "copy");
+            AddLabel(dialog, jaksa.Safety.Failure.HasValue ? Lesson.All[(int)jaksa.Safety.Failure.Value].Title : GameText.Get("text.journey_paused"), "heading");
+            AddLabel(dialog, jaksa.Safety.Failure.HasValue ? Lesson.All[(int)jaksa.Safety.Failure.Value].Explanation : GameText.Get("text.explore_about_250_meters_of_jl_mega_kuningan_barat"), "copy");
             AddControlsHelp(dialog);
             var actions=Element(dialog,"row actions");
-            AddButton(actions,GameText.Get("text.continue"),()=>EnterHumanDrive(Page.Jaksa),"primary");
+            if(!jaksa.Safety.Failure.HasValue)AddButton(actions,GameText.Get("text.continue"),()=>EnterHumanDrive(Page.Jaksa),"primary");
             AddButton(actions,GameText.Get("text.restart_road_section"),()=>{jaksa.Reset(mode);EnterHumanDrive(Page.Jaksa);},"quiet");
             AddButton(actions,GameText.Get("text.main_menu"),ShowMenu,"quiet");
             AddLabel(dialog,GameText.Get("text.map_data_openstreetmap_contributors_odbl_surface_materials_poly_haven"),"rule-source");
@@ -1201,7 +1202,7 @@ namespace JalanKita
             Show(root.Q("toggleMissions"), false);
             RefreshMissionPickerLabel();
             speed.text = (journey.Speed < -.05f ? "R " : "") + Mathf.RoundToInt(journey.Kph).ToString();
-            speed.EnableInClassList("speed-alert", stage == 4 && journey.Front >= SchoolLimit && journey.Kph > 30.75f || stage >= 5 && journey.Kph > 50.75f);
+            RefreshSpeedFeedback(journey.Safety,journey.PostedLimitKph);
             bool blink = Time.unscaledTime % .7f < .42f;
             signalLeft.On = journey.Indicator == -1 && blink;
             signalRight.On = journey.Indicator == 1 && blink;

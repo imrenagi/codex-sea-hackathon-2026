@@ -95,6 +95,15 @@ namespace JalanKita
                 if(score<=best)continue;best=score;center=c;forward=f;halfWidth=b.Width*.5f;
             }
         }
+        public void AllowedDirections(Vector2 position,out Vector2 primary,out Vector2 alternate)
+        {
+            Sample(position,out _,out primary,out _);alternate=Vector2.zero;
+            if(Clearance(Ring,RingWidth,position,out _,out var ringForward)>=-.2f
+                &&Vector2.Dot(primary,ringForward)<.999f)alternate=ringForward;
+            foreach(var branch in Branches)
+                if(Clearance(branch.Route,branch.Width,position,out _,out var forward)>=-.2f
+                    &&Vector2.Dot(primary,forward)<.999f)alternate=forward;
+        }
         public bool OnBranch(Vector2 p,float margin=0,Branch except=null)
         {
             foreach(var b in Branches)if(b!=except&&Clearance(b.Route,b.Width,p,out _,out _)>=-margin)return true;

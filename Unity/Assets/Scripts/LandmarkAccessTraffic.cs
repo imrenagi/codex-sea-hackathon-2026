@@ -23,16 +23,18 @@ namespace JalanKita
         readonly bool forwardMissionTraffic;
         readonly StreetPerson[] people;
         float elapsed;
+        public readonly DrivePedestrian[] Pedestrians;
         public LandmarkAccessTraffic(Transform parent,LandmarkRoadNetwork roads,bool forwardMissionTraffic=false)
         {
             network=roads;this.forwardMissionTraffic=forwardMissionTraffic;Actors=new Actor[roads.HasAccess?(forwardMissionTraffic?4:8):0];
             for(int i=0;i<Actors.Length;i++)Actors[i]=new Actor(parent,roads.TrafficPaths[forwardMissionTraffic?0:i%2],forwardMissionTraffic?0:i%2,i);
             people=new StreetPerson[roads.HasAccess?16:0];
+            Pedestrians=new DrivePedestrian[people.Length];
             for(int i=0;i<people.Length;i++)people[i]=new StreetPerson(parent,"HI sidewalk walker "+i,new[]{"6587a0","b58869","7b9167","d6c9ad"}[i%4],1,false,i+47);
         }
         public void Reset(int seed)
         {
-            var roster=new TrafficRoster(seed);elapsed=0;
+            var roster=new TrafficRoster(seed);elapsed=0;PedestrianPaths.FillHiAccess(network,Pedestrians,0,0);
             for(int i=0;i<Actors.Length;i++)
             {
                 var a=Actors[i];a.Choice=roster.Choices[i%6];a.S=55+(forwardMissionTraffic?i:i/2)*44;a.Speed=5;
@@ -70,7 +72,8 @@ namespace JalanKita
         }
         public void Step(float dt,Vector2 player,float playerHeading,VehicleMode mode,LandmarkDrive.Actor[] circulating)
         {
-            elapsed+=dt;
+            float previous=elapsed;elapsed+=dt;
+            PedestrianPaths.FillHiAccess(network,Pedestrians,previous,elapsed);
             foreach(var a in Actors)
             {
                 var def=a.Choice.Vehicle;float target=7;
@@ -108,9 +111,8 @@ namespace JalanKita
             }
             for(int i=0;i<people.Length;i++)
             {
-                var b=network.Branches[i%4];float s=45+(i/4)*54+Mathf.Sin(elapsed*.08f+i)*7;
-                var p=b.Route.At(s,-b.Width*.5f-1.2f);people[i].Root.SetActive(Vector2.Distance(player,p)<250);
-                people[i].Draw(new Vector3(p.x,.25f,p.y),b.Route.Heading(s)+(Mathf.Cos(elapsed*.08f+i)<0?180:0),elapsed+i,.65f,false);
+                var p=PedestrianPaths.HiAccessPosition(network,i,elapsed);people[i].Root.SetActive(Vector2.Distance(player,p)<250);
+                people[i].Draw(new Vector3(p.x,.25f,p.y),PedestrianPaths.HiAccessHeading(network,i,elapsed),elapsed+i,.65f,false);
             }
         }
     }

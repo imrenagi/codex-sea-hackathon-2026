@@ -81,9 +81,9 @@ namespace JalanKita
             // A glancing contact retains forward travel. Even a nose-on approach
             // gets a small tangent crawl so steering can recover without reverse.
             // Yaw correction is distance-based: a stopped car never spins in place.
-            speed = Mathf.Min(Mathf.Abs(speed), 4.5f) * direction;
+            speed *= Mathf.Exp(-3 * (1 - Mathf.Abs(alignment)) * Mathf.Max(0, dt));
             distance = Mathf.Abs(speed) * Mathf.Max(0, dt);
-            heading = Mathf.MoveTowardsAngle(heading, tangentHeading, distance * 65);
+            heading = Mathf.MoveTowardsAngle(heading, tangentHeading, Mathf.Min(distance * 35, 70 * Mathf.Max(0, dt)));
             next = from + tangent * (distance * Mathf.Max(.25f, Mathf.Abs(alignment)));
             return Fit(road, mode, next, heading);
         }

@@ -606,3 +606,7 @@
 
 .play-card .explore-actions > * { flex-shrink: 0; }
 .play-card .explore-actions .option { margin-top: 12px; }
+
+.posted-limit { font-size: 11px; color: #ffffff; -unity-text-align: middle-center; white-space: normal; flex-shrink: 0; }
+
+.posted-warning { color: #ffb45c; -unity-font-style: bold; }

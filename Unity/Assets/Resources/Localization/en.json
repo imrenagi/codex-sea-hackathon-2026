@@ -2872,6 +2872,14 @@
     {
       "key": "demo.replay",
       "value": "Replay demo"
+    },
+    {
+      "key": "safety.posted",
+      "value": "LIMIT {0} km/h"
+    },
+    {
+      "key": "safety.overspeed",
+      "value": "SLOW DOWN · {0} km/h limit"
     }
   ]
 }

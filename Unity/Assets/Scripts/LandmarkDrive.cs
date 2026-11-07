@@ -16,6 +16,9 @@ namespace JalanKita
         public float Elapsed {get;private set;}
         public bool CurbContact {get;private set;}
         public bool TrafficContact {get;private set;}
+        public readonly DriveSafetyState Safety = new();
+        public float PostedLimitKph => 40;
+        readonly DrivePedestrian[] pedestrians;
         public bool Headlight {get;private set;}=true;
         public int Indicator {get;private set;}
         public int CameraMode {get;private set;}
@@ -47,16 +50,22 @@ namespace JalanKita
             Traffic=new Actor[place==JakartaPlace.BundaranHI?16:28];for(int i=0;i<Traffic.Length;i++)Traffic[i]=new Actor(actors,i);
             AccessTraffic=new LandmarkAccessTraffic(actors,Environment.Network,forwardMissionTraffic);
             people=new StreetPerson[place==JakartaPlace.BundaranHI?20:44];
+            pedestrians=new DrivePedestrian[people.Length];
             for(int i=0;i<people.Length;i++)people[i]=new StreetPerson(actors,"Pedestrian "+i,new[]{"d2c4a6","4d718a","bb8166","697a61"}[i%4],i%7==0?.8f:1,false,i);
             Camera=new GameObject("Landmark camera").AddComponent<Camera>();Camera.transform.SetParent(Environment.Root.transform,false);Camera.tag="MainCamera";
             Camera.clearFlags=CameraClearFlags.Skybox;Camera.fieldOfView=65;Camera.nearClipPlane=.1f;Camera.farClipPlane=1500;Camera.allowHDR=true;Camera.GetUniversalAdditionalCameraData().renderPostProcessing=true;
             Camera.gameObject.AddComponent<AudioListener>();
             Mirrors=new DrivingMirrors(Environment.Root.transform);
+            foreach(var branch in Environment.Network.Branches)
+            {
+                float s=branch.Incoming?20:40;var p=branch.Route.At(s,-branch.Width*.5f-1.1f);
+                RoadSpeedSign.Create(Environment.Root.transform,new Vector3(p.x,.12f,p.y),branch.Route.Heading(s),40);
+            }
             Reset(VehicleMode.Car);
         }
         public void Reset(VehicleMode mode)
         {
-            Mode=mode;motion.Reset();Speed=Distance=Elapsed=0;CurbContact=TrafficContact=false;Headlight=true;Indicator=0;CameraMode=0;
+            Mode=mode;motion.Reset();Safety.Reset();Speed=Distance=Elapsed=0;CurbContact=TrafficContact=false;Headlight=true;Indicator=0;CameraMode=0;
             Heading=Environment.Network.SpawnHeading;Position=RoadBoundary.Fit(roadFrame,mode,Environment.Network.Spawn,Heading);snap=true;Environment.Activate();
             int rosterSeed=seed++;var roster=new TrafficRoster(rosterSeed);
             AccessTraffic.Reset(rosterSeed);
@@ -66,6 +75,7 @@ namespace JalanKita
                 a.S=32+i*Environment.Route.Length/Traffic.Length;a.Target=Environment.Place==JakartaPlace.BundaranHI?6+i%3:8+i%3;a.Speed=a.Target;
                 a.Position=Environment.Route.At(a.S,a.Lane);a.Heading=Environment.Route.Heading(a.S);a.View.Select(a.Choice);
             }
+            PedestrianPaths.FillHiRing(Environment.Route,pedestrians,0,0);
             Present(0);
         }
         public void ToggleCamera(){CameraMode=(CameraMode+1)%3;snap=true;}
@@ -98,9 +108,11 @@ namespace JalanKita
         }
         public void Step(float dt,bool throttle,bool brake,float steer,bool reverse=false)
         {
-            if(dt<=0)return;dt=Mathf.Min(dt,.04f);Elapsed+=dt;
+            if(dt<=0||Safety.Failure.HasValue)return;dt=Mathf.Min(dt,.04f);float previousTime=Elapsed;Elapsed+=dt;
+            PedestrianPaths.FillHiRing(Environment.Route,pedestrians,previousTime,Elapsed);
+            var previousPosition=Position;float previousHeading=Heading;
             if(TrafficEnabled){StepTraffic(dt);AccessTraffic.Step(dt,Position,Heading,Mode,Traffic);}
-            float target=(throttle||reverse)&&!brake?11.1f:0;
+            float target=RoadVehicleMotion.FreeSpeed(Mode);
             float travelHeading=Heading+(Speed<0||reverse&&Speed<=0?180:0);
             var forward=new Vector2(Mathf.Sin(travelHeading*Mathf.Deg2Rad),Mathf.Cos(travelHeading*Mathf.Deg2Rad));var right=new Vector2(forward.y,-forward.x);
             if(TrafficEnabled)foreach(var a in Traffic)
@@ -121,7 +133,12 @@ namespace JalanKita
             bool outside=Vector2.Distance(Position,next)>Mathf.Abs(nextSpeed)*dt+.5f
                 ||!RoadBoundary.Contains(roadFrame,Mode,next,nextHeading)||!OnFiniteRoad(next,nextHeading);
             bool actorBlocked=TrafficEnabled&&(TrafficBlocks(next,nextHeading)||AccessTraffic.BlocksPath(Position,next,Heading,nextHeading,TrafficFootprint.PlayerHalfWidth(Mode),TrafficFootprint.PlayerHalfLength(Mode)));
-            if(outside||actorBlocked){Speed=0;CurbContact|=outside;TrafficContact|=actorBlocked;}
+            bool personContact=DriveSafetyState.PedestrianContact(Position,next,Heading,nextHeading,Mode,pedestrians)
+                ||DriveSafetyState.PedestrianContact(Position,next,Heading,nextHeading,Mode,AccessTraffic.Pedestrians);
+            Environment.Network.AllowedDirections(next,out var allowed,out var alternate);
+            Safety.Step(dt,new DriveSafetySample{SignedSpeed=Speed,Heading=nextHeading,AllowedForward=allowed,AlternateForward=alternate,
+                DirectionKnown=true,ReverseRequested=reverse,PostedLimitKph=PostedLimitKph,VehicleContact=actorBlocked,PedestrianContact=personContact});
+            if(outside||actorBlocked||personContact){Speed=0;CurbContact|=outside;TrafficContact|=actorBlocked;}
             else{Distance+=Vector2.Distance(Position,next);Position=next;Heading=nextHeading;}
         }
         void StepTraffic(float dt)
@@ -155,10 +172,9 @@ namespace JalanKita
             AccessTraffic.Present(Position,dt,TrafficEnabled);
             for(int i=0;i<people.Length;i++)
             {
-                float start=i*Environment.Route.Length/people.Length,walk=Mathf.Sin(Elapsed*.075f+i)*7;
-                float s=start+walk;var q=Environment.Route.At(s,i%3==0?9.6f:-9.6f);
+                var q=PedestrianPaths.HiRingPosition(Environment.Route,i,people.Length,Elapsed);
                 people[i].Root.SetActive(Vector2.Distance(Position,q)<240);
-                people[i].Draw(new Vector3(q.x,.25f,q.y),Environment.Route.Heading(s)+(Mathf.Cos(Elapsed*.075f+i)<0?180:0),Elapsed+i,.7f,i%4==0);
+                people[i].Draw(new Vector3(q.x,.25f,q.y),PedestrianPaths.HiRingHeading(Environment.Route,i,people.Length,Elapsed),Elapsed+i,.7f,i%4==0);
             }
             lookAngle=Mathf.Lerp(lookAngle,driving?lookInput*65:0,1-Mathf.Exp(-8*dt));
             Vector3 eye,look;

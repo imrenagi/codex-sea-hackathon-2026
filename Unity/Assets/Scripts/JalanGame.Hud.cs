@@ -44,6 +44,14 @@ namespace JalanKita
             button.RegisterCallback<FocusOutEvent>(_ => Hint(false));
         }
 
+        void RefreshSpeedFeedback(DriveSafetyState safety,float limit)
+        {
+            speed.EnableInClassList("speed-alert",safety.SpeedWarning);
+            var posted=root.Q<Label>("postedLimit");
+            posted.text=limit>0 ? GameText.Get(safety.SpeedWarning ? "safety.overspeed" : "safety.posted",Mathf.RoundToInt(limit)) : "";
+            posted.EnableInClassList("posted-warning",safety.SpeedWarning);
+        }
+
         void RefreshHudControls()
         {
             Show(root.Q("lampControl"), mode == VehicleMode.Motorcycle && learner == null);

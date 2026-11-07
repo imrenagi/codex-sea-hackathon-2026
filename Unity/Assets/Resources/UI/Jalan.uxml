@@ -49,6 +49,7 @@
                 <ui:VisualElement class="panel cluster" picking-mode="Ignore">
                     <ui:Label name="speed" text="0" class="label speed" />
                     <ui:Label text="" class="label unit i18n-text--text.km_h" />
+                    <ui:Label name="postedLimit" text="" class="label posted-limit" />
                     <ui:VisualElement name="indicators" class="indicators" picking-mode="Ignore" />
                 </ui:VisualElement>
             </ui:VisualElement>
