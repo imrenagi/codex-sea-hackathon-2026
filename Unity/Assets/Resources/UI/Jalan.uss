@@ -720,3 +720,10 @@
 .screen .button.vehicle-thumbnail-choice:focus { border-color: #ffffff; background-color: #354148; }
 .screen .button.vehicle-thumbnail-choice:active { background-color: #46524c; }
 .screen .button.vehicle-thumbnail-choice:disabled { opacity: .45; }
+
+
+/* Keep vehicle-mode cards inside the scroll viewport. The old -8px row
+   margins outgrew the new 6px card margins and clipped the left Car edge. */
+.screen .chooser-vehicles { margin-left: 0; margin-right: 0; min-width: 0; }
+.screen .chooser-vehicles > .button.chooser-vehicle { margin-left: 0; margin-right: 8px; }
+.screen .chooser-vehicles > .button.chooser-vehicle:last-child { margin-right: 0; }
