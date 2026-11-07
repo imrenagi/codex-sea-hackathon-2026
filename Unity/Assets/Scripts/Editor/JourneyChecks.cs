@@ -91,7 +91,11 @@ namespace JalanKita.EditorTools
                 Require(drive.Failure == Rule.Indicator, $"Detect lane change without indicator: {mode}, {drive.Failure}, {drive.Position}");
 
                 drive = new Journey(mode, new JourneySave { next = 4 }, persistent: false, trafficSeed: 1);
-                DriveUntilFailure(drive, Rule.Speed);
+                for (int i = 0; i < 1200 && !drive.Safety.SpeedWarning && !drive.Failure.HasValue; i++)
+                    drive.Step(.02f, true, false, 0);
+                Require(drive.Safety.SpeedWarning && !drive.Failure.HasValue
+                    && drive.Kph > drive.PostedLimitKph && drive.Save.mistakes[(int)Rule.Speed] == 0,
+                    "School overspeed warns without stopping the vehicle or recording a violation");
                 drive.Retry();
                 for (int i = 0; i < 500 && !drive.PhoneRinging; i++)
                     DrivingCoach.Step(drive, .02f);

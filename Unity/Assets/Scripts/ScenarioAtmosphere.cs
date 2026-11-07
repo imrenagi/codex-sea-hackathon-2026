@@ -10,8 +10,7 @@ namespace JalanKita
         sealed class Neighbour
         {
             public StreetPerson Person;
-            public Vector3 Start, End;
-            public float Pace, Offset, Facing;
+            public int Index;
             public bool Gesture;
         }
 
@@ -33,25 +32,25 @@ namespace JalanKita
             Platform(village.transform, new Vector3(-7.6f, .065f, 51), new Vector3(4.6f, .13f, 15));
             Stall(village.transform, new Vector3(-8.8f, .13f, 52), "e2ad54", false);
             Label(village.transform, GameText.Get("text.bu_sari_s_shop"), new Vector3(-7.98f, 1.95f, 52), .055f);
-            Add(village, "Penjual warung", -9.5f, 52, -9.5f, 52, "e1b05d", 1, 90, true);
-            Add(village, "Pembeli warung", -6.6f, 51.4f, -6.6f, 51.4f, "3c728b", 1, -90, true);
-            Add(village, "Tetangga menyapa", -5.8f, 6, -5.8f, 6, "a35662", 1, 90, true);
-            Add(village, "Warga berjalan", 5.65f, 9, 5.65f, 25, "497f67", .97f, 180);
-            Add(village, "Warga menuju warung", -5.7f, 43, -5.7f, 48, "ded5c0", 1.03f, 0);
-            Add(village, "Tetangga di teras", 6.5f, 17, 6.5f, 17, "d0a15a", 1, -90, true);
+            Add(village, "Penjual warung", "e1b05d", 1, true);
+            Add(village, "Pembeli warung", "3c728b", 1, true);
+            Add(village, "Tetangga menyapa", "a35662", 1, true);
+            Add(village, "Warga berjalan", "497f67", .97f);
+            Add(village, "Warga menuju warung", "ded5c0", 1.03f);
+            Add(village, "Tetangga di teras", "d0a15a", 1, true);
 
             // Children and guardians wait behind the curb; only the simulated pedestrian crosses.
             Platform(school.transform, new Vector3(-7.05f, .065f, 318.5f), new Vector3(3.8f, .13f, 21));
             BuildSchool(school.transform);
-            Add(school, "Siswa menuju gerbang", -6.35f, 310, -6.35f, 319.5f, "f2eee4", .79f, 0, false, true);
-            Add(school, "Teman di gerbang", -7.05f, 320.2f, -7.05f, 320.2f, "f2eee4", .8f, 90, true, true);
-            Add(school, "Siswa menunggu jemputan", -6.5f, 321.5f, -6.5f, 321.5f, "f2eee4", .76f, 65, true, true);
-            Add(school, "Orang tua menunggu", -7.3f, 316, -7.3f, 316, "c4974c", 1, 90, true);
-            Add(school, "Wali murid", -6.65f, 326.8f, -6.65f, 326.8f, "447e80", .98f, 75, true);
-            Add(school, "Siswa bersama wali", -7.4f, 327.1f, -7.4f, 327.1f, "f2eee4", .77f, 85, false, true);
-            Add(school, "Siswa di seberang", 5.8f, 325.5f, 5.8f, 325.5f, "f2eee4", .8f, -90, false, true);
-            Add(school, "Orang tua di seberang", 6.65f, 326, 6.65f, 326, "986d91", 1.02f, -90, true);
-            Add(school, "Warga melewati sekolah", 5.65f, 307, 5.65f, 319, "4f748c", 1, 0);
+            Add(school, "Siswa menuju gerbang", "f2eee4", .79f, false, true);
+            Add(school, "Teman di gerbang", "f2eee4", .8f, true, true);
+            Add(school, "Siswa menunggu jemputan", "f2eee4", .76f, true, true);
+            Add(school, "Orang tua menunggu", "c4974c", 1, true);
+            Add(school, "Wali murid", "447e80", .98f, true);
+            Add(school, "Siswa bersama wali", "f2eee4", .77f, false, true);
+            Add(school, "Siswa di seberang", "f2eee4", .8f, false, true);
+            Add(school, "Orang tua di seberang", "986d91", 1.02f, true);
+            Add(school, "Warga melewati sekolah", "4f748c", 1);
             Bench(school.transform, new Vector3(-7.7f, .13f, 312.7f));
             Box(school.transform, "Papan gerbang", new Vector3(-8.25f, 1.65f, 318), new Vector3(.12f, .65f, 3.2f), "3d786b");
             for (int i = 0; i < 4; i++)
@@ -69,13 +68,13 @@ namespace JalanKita
                 Box(market.transform, "Bukaan kios", new Vector3(-11.88f, 1.25f, 252 + bay * 4.8f), new Vector3(.08f, 2.25f, 3.1f), bay % 2 == 0 ? "778c7c" : "718399");
                 Box(market.transform, "Kanopi kios", new Vector3(-11.2f, 2.85f, 252 + bay * 4.8f), new Vector3(1.85f, .13f, 4.4f), bay % 2 == 0 ? "8b534b" : "527e6e");
             }
-            Add(market, "Pedagang buah", -10.9f, 255, -10.9f, 255, "d7b46b", 1.02f, 90, true);
-            Add(market, "Pedagang sayur", -10.9f, 273, -10.9f, 273, "6d8b65", .98f, 90, true);
-            Add(market, "Pembeli memilih buah", -8.8f, 254.6f, -8.8f, 254.6f, "c08d75", .96f, -90, true);
-            Add(market, "Pembeli membawa belanjaan", -8.15f, 250.8f, -8.15f, 260.3f, "547786", 1.01f, 0);
-            Add(market, "Pelanggan sayur", -8.9f, 272.5f, -8.9f, 272.5f, "9380aa", 1.03f, -90, true);
-            Add(market, "Warga di pasar", -8.15f, 268.4f, -8.15f, 277, "c8a653", .99f, 180);
-            Add(market, "Anak bersama pembeli", -8.8f, 256.1f, -8.8f, 256.1f, "6c9b89", .76f, -75);
+            Add(market, "Pedagang buah", "d7b46b", 1.02f, true);
+            Add(market, "Pedagang sayur", "6d8b65", .98f, true);
+            Add(market, "Pembeli memilih buah", "c08d75", .96f, true);
+            Add(market, "Pembeli membawa belanjaan", "547786", 1.01f);
+            Add(market, "Pelanggan sayur", "9380aa", 1.03f, true);
+            Add(market, "Warga di pasar", "c8a653", .99f);
+            Add(market, "Anak bersama pembeli", "6c9b89", .76f);
             passenger = new StreetPerson(market.transform, "Penumpang menunggu di teluk", "4d8991", 1, false, 23);
             Bench(market.transform, new Vector3(-9.9f, .13f, 265));
         }
@@ -89,24 +88,9 @@ namespace JalanKita
             foreach (var npc in neighbours)
             {
                 if (!npc.Person.Root.activeInHierarchy) continue;
-                Vector3 delta = npc.End - npc.Start;
-                float distance = delta.magnitude;
-                float yaw = npc.Facing, walking = 0;
-                Vector3 position = npc.Start;
-                if (distance > .1f)
-                {
-                    float duration = distance / npc.Pace;
-                    const float wait = 2.5f;
-                    float cycle = Mathf.Repeat(time + npc.Offset, 2 * (duration + wait));
-                    bool outward = cycle < duration + wait;
-                    float part = outward ? cycle : cycle - duration - wait;
-                    float u = Mathf.Clamp01(part / duration);
-                    position = Vector3.Lerp(npc.Start, npc.End, outward ? u : 1 - u);
-                    yaw = Mathf.Atan2(delta.x, delta.z) * Mathf.Rad2Deg + (outward ? 0 : 180);
-                    if (part < duration) walking = npc.Pace / 1.35f;
-                    else yaw += 180 * Mathf.SmoothStep(0, 1, (part - duration) / wait);
-                }
-                npc.Person.Draw(position, yaw, time + npc.Offset, walking, npc.Gesture);
+                TrainingPedestrianPaths.Sample(npc.Index, time, out var position, out float yaw, out float walking);
+                npc.Person.Draw(new Vector3(position.x, .13f, position.y), yaw,
+                    time + TrainingPedestrianPaths.Offset(npc.Index), walking, npc.Gesture);
             }
 
             if (previous != run || !run.PassengerPickedUp)
@@ -115,7 +99,8 @@ namespace JalanKita
                 wasPickedUp = false;
             }
             if (!run.IsMarket) return;
-            Vector3 waiting = new(-8.12f, .13f, Mission.PickupPoint);
+            Vector2 waitingPoint = TrainingPedestrianPaths.WaitingPassenger;
+            Vector3 waiting = new(waitingPoint.x, .13f, waitingPoint.y);
             if (run.PassengerPickedUp && !wasPickedUp)
             {
                 boardingStart = waiting;
@@ -133,15 +118,14 @@ namespace JalanKita
                 passenger.Draw(waiting, 90, time, 0, run.Position.y > 253);
         }
 
-        void Add(GameObject group, string name, float x, float z, float endX, float endZ, string shirt,
-            float height, float facing, bool gesture = false, bool pupil = false)
+        void Add(GameObject group, string name, string shirt,
+            float height, bool gesture = false, bool pupil = false)
         {
             int index = neighbours.Count;
             neighbours.Add(new Neighbour
             {
                 Person = new StreetPerson(group.transform, name, shirt, height, pupil, index),
-                Start = new Vector3(x, .13f, z), End = new Vector3(endX, .13f, endZ),
-                Pace = .7f + index % 4 * .11f, Offset = index * 1.71f, Facing = facing, Gesture = gesture
+                Index = index, Gesture = gesture
             });
         }
 

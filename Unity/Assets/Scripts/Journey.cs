@@ -294,6 +294,7 @@ namespace JalanKita
             if (!Finished && IsMarket && Save.checkpoint > 0)
                 Position = Save.checkpoint == 1 ? new Vector2(RouteStage.LeftLane, 246) : new Vector2(-5.8f, Mission.PickupPoint);
             Speed = wrongWay = overSpeed = Throttle = 0;
+            Safety.Reset();
             motion.Reset();
             motionFrom = Position; motionHeading = Heading; reverseSweep = false;
             steering.Reset();
@@ -370,7 +371,8 @@ namespace JalanKita
 
         public void Step(float dt, bool throttle, bool brake, float steer, bool reverse = false)
         {
-            if (Stage == 0 || Finished || Failure.HasValue) return;
+            if (dt <= 0 || Stage == 0 || Finished || Failure.HasValue) return;
+            BeginSafetyStep(reverse);
             motionFrom = Position; motionHeading = Heading; reverseSweep = reverse || Speed < 0;
             ElapsedTime += dt;
             Throttle = (throttle || reverse) && !brake ? 1 : 0;
@@ -379,7 +381,10 @@ namespace JalanKita
             {
                 boardingTime = Mathf.Max(0, boardingTime - dt);
                 Speed = 0;
+                var boardingActors = (CrossTraffic, LaneTraffic, SpurTraffic, PickupTraffic);
                 UpdateActors(dt);
+                CheckEncounterContacts(motionFrom, motionHeading, boardingActors);
+                StepCommonSafety(dt);
                 return;
             }
 
@@ -390,13 +395,11 @@ namespace JalanKita
             var oldActors = (CrossTraffic, LaneTraffic, SpurTraffic, PickupTraffic);
             float oldFront = Front;
             float oldX = Position.x;
-            float targetSpeed = Mode == VehicleMode.Car ? 16.1f : 16.7f;
+            float targetSpeed = RoadVehicleMotion.FreeSpeed(Mode);
             float speed = Speed, heading = Heading;
             if (UsesRouteSteering)
             {
-                speed = reverse || speed < 0 ? RoadVehicleMotion.AdvanceSpeed(dt, Mode, throttle, brake, reverse, targetSpeed, speed)
-                    : brake ? Mathf.MoveTowards(speed, 0, 10.5f * dt)
-                    : Mathf.MoveTowards(speed, throttle ? targetSpeed : 0, dt * (throttle ? (Mode == VehicleMode.Car ? 2.85f : 3.3f) : 1.7f));
+                speed = RoadVehicleMotion.AdvanceSpeed(dt, Mode, throttle, brake, reverse, targetSpeed, speed, 10.5f);
                 heading = steering.Step(Mode, speed, heading, steer, dt);
             }
             else motion.Step(dt, Mode, throttle, brake, steer, targetSpeed, ref speed, ref heading, reverse);
@@ -416,7 +419,7 @@ namespace JalanKita
             bay |= IsMarket && z >= Mission.PickupStart && z <= Mission.PickupEnd;
             if (x < (bay ? -7.45f : -4.45f) || x > (spur ? 9.1f : 4.45f)) Fail(Rule.OffRoad);
             if (Mode == VehicleMode.Motorcycle && !Headlight && Kph >= 3) Fail(Rule.Headlight);
-            if (!oneWay && x > .42f && Mathf.Abs(Speed) > 1)
+            if (!oneWay && x > .42f && Speed > 1)
             {
                 wrongWay += dt;
                 if (wrongWay > .6f) Fail(Rule.KeepLeft);
@@ -480,12 +483,6 @@ namespace JalanKita
 
             if (Stage == 4)
             {
-                if (Front >= RouteStage.SchoolLimit && Kph > 30.75f)
-                {
-                    overSpeed += dt;
-                    if (overSpeed >= .6f) Fail(Rule.Speed);
-                }
-                else overSpeed = 0;
                 if (IsSchool)
                 {
                     if (Crosses(oldFront, CrossingZebra - 2) && PedestrianBlocksPath) Fail(Rule.Pedestrian);
@@ -497,9 +494,7 @@ namespace JalanKita
             }
 
             CheckEncounterContacts(oldPosition, oldHeading, oldActors);
-            for (int i = 0; i < CrossingPedestrianCount; i++)
-                if (crossingPedestrians[i].HasValue && TouchesPedestrian(crossingPedestrians[i].Value))
-                    Fail(Rule.Pedestrian);
+            StepCommonSafety(dt);
             if (!Failure.HasValue && z >= StageEnd) Advance();
         }
 
