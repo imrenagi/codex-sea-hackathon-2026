@@ -50,6 +50,7 @@ namespace JalanKita
             root.RegisterCallback<GeometryChangedEvent>(change =>
                 root.EnableInClassList("compact", change.newRect.height < 700 || change.newRect.width < 1000));
             root.pickingMode = PickingMode.Ignore;
+            BindDrivingKeyboard();
             hud = root.Q("hud");
             var mirrors = new VisualElement { name="mirrors", pickingMode=PickingMode.Ignore };
             mirrors.AddToClassList("mirrors");
@@ -104,6 +105,32 @@ namespace JalanKita
             BindLook(root.Q<Button>("lookLeft"),-1);
             BindLook(root.Q<Button>("lookRight"),1);
             ShowMenu();
+        }
+
+        bool DrivingKeyboardActive => page == Page.Drive || page == Page.Jaksa;
+
+        void BindDrivingKeyboard()
+        {
+            // Legacy UI navigation shares W/S/arrows and Submit shares Space with driving.
+            // Capture these before a focused HUD button can turn braking into a click.
+            root.RegisterCallback<NavigationMoveEvent>(e =>
+            {
+                if (DrivingKeyboardActive) ConsumeDrivingKey(e);
+            }, TrickleDown.TrickleDown);
+            root.RegisterCallback<NavigationSubmitEvent>(e =>
+            {
+                if (DrivingKeyboardActive && Input.GetKey(KeyCode.Space)) ConsumeDrivingKey(e);
+            }, TrickleDown.TrickleDown);
+            root.RegisterCallback<KeyDownEvent>(e =>
+            {
+                if (DrivingKeyboardActive && e.keyCode == KeyCode.Space) ConsumeDrivingKey(e);
+            }, TrickleDown.TrickleDown);
+        }
+
+        void ConsumeDrivingKey(EventBase e)
+        {
+            e.StopImmediatePropagation();
+            root.focusController?.IgnoreEvent(e);
         }
 
         void BindLook(Button button,float direction)
@@ -1000,6 +1027,8 @@ namespace JalanKita
 
         void SetPage(Page value)
         {
+            if (value == Page.Drive || value == Page.Jaksa)
+                root.focusController?.focusedElement?.Blur();
             heldLook=0;
             page = value;
             if (page != Page.Drive) Show(root.Q("signalPanel"), false);
