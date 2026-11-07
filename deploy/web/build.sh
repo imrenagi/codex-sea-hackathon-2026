@@ -11,6 +11,7 @@ if ! command -v "$UNITY_CLI" >/dev/null 2>&1; then
 fi
 
 project_dir=$(CDPATH= cd -- "$UNITY_PROJECT_DIR" && pwd)
+source_commit=$(git -C "$project_dir" rev-parse HEAD)
 case "$WEB_BUILD_DIR" in
     /*) output_dir=$WEB_BUILD_DIR ;;
     *) output_dir="$PWD/$WEB_BUILD_DIR" ;;
@@ -23,3 +24,5 @@ echo "Building WebGL from $project_dir into $output_dir"
     --execute-method JalanKita.EditorTools.ProjectSetup.BuildWeb \
     --output-path "$output_dir" --allow-dirty-build --timeout 1800 \
     --no-tail --format json
+
+printf '{"commit":"%s"}\n' "$source_commit" > "$output_dir/build-info.json"

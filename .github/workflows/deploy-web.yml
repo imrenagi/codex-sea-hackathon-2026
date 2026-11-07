@@ -85,14 +85,24 @@ jobs:
           projectPath: Unity
           targetPlatform: WebGL
           buildName: WebGL
-          buildsPath: Unity/Builds
+          buildsPath: .ci-build
           buildMethod: JalanKita.EditorTools.ProjectSetup.BuildWeb
-          customParameters: -buildOutput Builds/WebGL
           versioning: None
       - name: Record source commit
         run: |
-          test -s Unity/Builds/WebGL/index.html
-          printf '{"commit":"%s"}\n' "$GITHUB_SHA" > Unity/Builds/WebGL/build-info.json
+          python3 - <<'PY'
+          import json, os, shutil
+          from pathlib import Path
+          exports = [p.parent for p in Path('.ci-build').rglob('index.html') if (p.parent / 'Build').is_dir()]
+          if len(exports) != 1:
+              raise SystemExit(f'Expected one fresh WebGL export, found {len(exports)}')
+          target = Path('Unity/Builds/WebGL')
+          target.parent.mkdir(parents=True, exist_ok=True)
+          if target.exists():
+              raise SystemExit('Refusing to reuse an existing WebGL export')
+          shutil.move(str(exports[0]), str(target))
+          (target / 'build-info.json').write_text(json.dumps({'commit': os.environ['GITHUB_SHA']}) + '\n')
+          PY
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: webgl-${{ github.sha }}
