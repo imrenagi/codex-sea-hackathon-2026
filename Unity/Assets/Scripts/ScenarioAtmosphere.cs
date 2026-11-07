@@ -32,7 +32,7 @@ namespace JalanKita
             // Village neighbours and a real destination for the short departure journey.
             Platform(village.transform, new Vector3(-7.6f, .065f, 51), new Vector3(4.6f, .13f, 15));
             Stall(village.transform, new Vector3(-8.8f, .13f, 52), "e2ad54", false);
-            Label(village.transform, "WARUNG BU SARI", new Vector3(-7.98f, 1.95f, 52), .055f);
+            Label(village.transform, "BU SARI'S SHOP", new Vector3(-7.98f, 1.95f, 52), .055f);
             Add(village, "Penjual warung", -9.5f, 52, -9.5f, 52, "e1b05d", 1, 90, true);
             Add(village, "Pembeli warung", -6.6f, 51.4f, -6.6f, 51.4f, "3c728b", 1, -90, true);
             Add(village, "Tetangga menyapa", -5.8f, 6, -5.8f, 6, "a35662", 1, 90, true);
@@ -61,8 +61,8 @@ namespace JalanKita
             Platform(market.transform, new Vector3(-9.4f, .065f, 264), new Vector3(3.7f, .13f, 29));
             Stall(market.transform, new Vector3(-10.15f, .13f, 255), "ab594a", true);
             Stall(market.transform, new Vector3(-10.15f, .13f, 273), "477f71", true);
-            Label(market.transform, "BUAH SEGAR", new Vector3(-9.32f, 1.95f, 255), .06f);
-            Label(market.transform, "SAYUR HARI INI", new Vector3(-9.32f, 1.95f, 273), .053f);
+            Label(market.transform, "FRESH FRUIT", new Vector3(-9.32f, 1.95f, 255), .06f);
+            Label(market.transform, "FRESH VEGETABLES", new Vector3(-9.32f, 1.95f, 273), .053f);
             Box(market.transform, "Dinding kios pasar", new Vector3(-12.05f, 1.6f, 264), new Vector3(.25f, 3.2f, 29), "d8c194");
             for (int bay = 0; bay < 6; bay++)
             {
@@ -174,7 +174,7 @@ namespace JalanKita
             }
             Box(parent, "Pintu gerbang sekolah", new Vector3(-8.92f, 1.25f, 321), new Vector3(.18f, 2.5f, 2.35f), "315d63");
             Box(parent, "Nama sekolah", new Vector3(-8.8f, 3.16f, 318), new Vector3(.14f, .65f, 7), "477b80");
-            Label(parent, "SD KENANGA", new Vector3(-8.7f, 3.16f, 318), .09f);
+            Label(parent, "KENANGA PRIMARY SCHOOL", new Vector3(-8.7f, 3.16f, 318), .09f);
             Box(parent, "Tiang bendera", new Vector3(-7.8f, 2.3f, 307.6f), new Vector3(.07f, 4.4f, .07f), "c5c7bd");
             Box(parent, "Bendera merah", new Vector3(-7.8f, 4.08f, 308.15f), new Vector3(.035f, .35f, 1.1f), "b6443b");
             Box(parent, "Bendera putih", new Vector3(-7.8f, 3.73f, 308.15f), new Vector3(.035f, .35f, 1.1f), "f4eee1");

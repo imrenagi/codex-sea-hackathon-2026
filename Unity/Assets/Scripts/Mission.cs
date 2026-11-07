@@ -22,29 +22,29 @@ namespace JalanKita
 
         public static readonly Mission[] Tests =
         {
-            new("preparation", MissionKind.SkillTest, "Sebelum berangkat", "Siapkan perlengkapan pengemudi dan penumpang.",
-                "Perlengkapan sesuai kendaraan", "1 menit", 0, 0, -12),
-            new("signals", MissionKind.SkillTest, "Rambu & lampu", "Lewati rambu STOP dan persimpangan berlampu dengan benar.",
-                "STOP / Hak utama / Lampu", "1–2 menit", 1, 1, 108),
-            new("priority", MissionKind.SkillTest, "Hak utama", "Lewati penyeberangan dan arus jalan utama.",
-                "Pejalan kaki / Arus utama", "1–2 menit", 2, 2, 204),
-            new("lanes", MissionKind.SkillTest, "Arah & lajur", "Pindah ke kanan lalu kembali ke kiri sebelum jalan menyempit.",
-                "Arah jalan / Sein / Celah aman", "1–2 menit", 3, 3, 298),
-            new("focus", MissionKind.SkillTest, "Kecepatan & fokus", "Patuhi rambu 30 dan tanggapi panggilan dengan aman.",
-                "Kecepatan / Konsentrasi", "1–2 menit", 4, 4, 382)
+            new("preparation", MissionKind.SkillTest, "Before you drive", "Prepare safety equipment for the driver and passenger.",
+                "Vehicle safety equipment", "1 minute", 0, 0, -12),
+            new("signals", MissionKind.SkillTest, "Signs & signals", "Navigate a STOP sign and a signal-controlled junction safely.",
+                "STOP / Right of way / Signals", "1–2 minutes", 1, 1, 108),
+            new("priority", MissionKind.SkillTest, "Right of way", "Navigate a pedestrian crossing and main-road traffic.",
+                "Pedestrians / Main-road traffic", "1–2 minutes", 2, 2, 204),
+            new("lanes", MissionKind.SkillTest, "Directions & lanes", "Move right, then return left before the road narrows.",
+                "Road direction / Indicators / Safe gaps", "1–2 minutes", 3, 3, 298),
+            new("focus", MissionKind.SkillTest, "Speed & focus", "Obey the 30 km/h limit and handle a phone call safely.",
+                "Speed / Concentration", "1–2 minutes", 4, 4, 382)
         };
 
         public static readonly Mission[] Scenarios =
         {
-            new("village", MissionKind.Scenario, "Keluar dari Kampung",
-                "Berangkat bersama penumpang menuju warung. Jalan keluar kampung memiliki rambu STOP dan arus silang.",
-                "Persiapan / STOP / Hak utama", "1–2 menit", 0, 1, 56),
-            new("school", MissionKind.Scenario, "Lewat Sekolah",
-                "Lewati sekolah saat jam pulang. Seseorang akan menyeberang, lalu teleponmu berdering.",
-                "Kecepatan / Pejalan kaki / Fokus", "1–2 menit", 4, 4, 382),
-            new("market", MissionKind.Scenario, "Jemput di Pasar",
-                "Penumpang meminta dijemput di area dilarang berhenti. Ikuti jalan satu arah menuju teluk jemput, lalu bergabung kembali.",
-                "Arah jalan / Tempat berhenti / Sein & celah", "2–3 menit", 3, 3, 298)
+            new("village", MissionKind.Scenario, "Leaving the neighborhood",
+                "Drive with a passenger to the local shop. Watch for a STOP sign and crossing traffic as you leave the neighborhood.",
+                "Preparation / STOP / Right of way", "1–2 minutes", 0, 1, 56),
+            new("school", MissionKind.Scenario, "Passing the school",
+                "Drive past a school at dismissal time. Someone will cross, then your phone will ring.",
+                "Speed / Pedestrians / Focus", "1–2 minutes", 4, 4, 382),
+            new("market", MissionKind.Scenario, "Market pickup",
+                "Your passenger requests a pickup in a no-stopping zone. Follow the one-way road to the pickup bay, then merge back safely.",
+                "Road direction / Safe stopping / Indicators & gaps", "2–3 minutes", 3, 3, 298)
         };
 
         public const float SchoolZebra = 324;

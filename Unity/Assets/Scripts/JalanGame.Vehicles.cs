@@ -10,7 +10,7 @@ namespace JalanKita
         {
             var selected = VehicleCatalogue.Selected(mode);
             var picker = Element(parent ?? dialog, "vehicle-picker");
-            AddLabel(picker, "KENDARAAN", "kicker");
+            AddLabel(picker, "VEHICLE", "kicker");
             var choices = Element(picker, "vehicle-choices");
             foreach (var choice in VehicleCatalogue.All.Where(v => v.Mode == mode))
             {
@@ -22,7 +22,7 @@ namespace JalanKita
                 button.tooltip = choice.Description;
             }
             AddLabel(picker, selected.Description, "objective-detail");
-            AddButton(picker, "Lihat kendaraan 3D", () => ShowVehiclePreview(true), "quiet");
+            AddButton(picker, "View vehicle in 3D", () => ShowVehiclePreview(true), "quiet");
         }
 
         VehiclePreview vehiclePreview;
@@ -40,7 +40,7 @@ namespace JalanKita
             vehiclePreview ??= new VehiclePreview(transform);
             vehiclePreview.SetVisible(true);
             panel.Clear();
-            AddLabel(panel, "PILIH KENDARAAN", "kicker");
+            AddLabel(panel, "CHOOSE VEHICLE", "kicker");
             previewName = AddLabel(panel, "", "subhead section");
             var image = new Image { name = "vehiclePreview", image = vehiclePreview.Texture, scaleMode = ScaleMode.ScaleToFit, focusable = true };
             image.AddToClassList("vehicle-preview");
@@ -51,16 +51,16 @@ namespace JalanKita
                 vehiclePreview.Rotate(e.keyCode == KeyCode.LeftArrow ? -15 : 15); e.StopPropagation();
             });
             panel.Add(image);
-            AddLabel(panel, "Geser kendaraan untuk melihat semua sisi", "preview-hint");
-            previewAngle = new Slider("Sudut", 0, 360) { name = "vehicleAngle" };
+            AddLabel(panel, "Drag the vehicle to view every side", "preview-hint");
+            previewAngle = new Slider("Angle", 0, 360) { name = "vehicleAngle" };
             previewAngle.AddToClassList("volume-control preview-angle");
             previewAngle.RegisterValueChangedCallback(e => vehiclePreview.SetAngle(e.newValue));
             panel.Add(previewAngle);
             var controls = Element(panel, "row preview-controls");
-            AddButton(controls, "Putar kiri", () => vehiclePreview.Rotate(-45), "quiet tiny");
+            AddButton(controls, "Rotate left", () => vehiclePreview.Rotate(-45), "quiet tiny");
             previewAuto = AddButton(controls, "", () => vehiclePreview.AutoRotate = !vehiclePreview.AutoRotate, "quiet tiny");
             previewAuto.name = "vehicleAutoRotate";
-            AddButton(controls, "Putar kanan", () => vehiclePreview.Rotate(45), "quiet tiny");
+            AddButton(controls, "Rotate right", () => vehiclePreview.Rotate(45), "quiet tiny");
             var choices = Element(panel, "vehicle-choices");
             foreach (var choice in VehicleCatalogue.All.Where(v => v.Mode == mode))
             {
@@ -83,7 +83,7 @@ namespace JalanKita
             var selected = VehicleCatalogue.Selected(mode);
             previewName.text = selected.Label; previewDescription.text = selected.Description;
             previewAngle.SetValueWithoutNotify(vehiclePreview.Angle);
-            previewAuto.text = vehiclePreview.AutoRotate ? "Jeda putar" : "Putar otomatis";
+            previewAuto.text = vehiclePreview.AutoRotate ? "Pause rotation" : "Auto rotate";
             foreach (var choice in root.Q("vehicleShowroom").Query<Button>(className: "vehicle-choice").ToList())
             {
                 bool active = ReferenceEquals(choice.userData, selected);

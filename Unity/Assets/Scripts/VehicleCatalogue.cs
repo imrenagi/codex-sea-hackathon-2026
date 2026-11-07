@@ -17,13 +17,13 @@ namespace JalanKita
     {
         public static readonly VehicleDefinition[] All =
         {
-            new("hatchback", "Hatchback", VehicleMode.Car, "Traffic/city_hatchback", "Mobil kota dengan bodi, lampu, dan roda terperinci."),
-            new("mpv", "MPV keluarga", VehicleMode.Car, "Traffic/family_mpv", "MPV perkotaan dengan kamera kejar dan lampu aktif."),
-            new("city", "Mobil kota", VehicleMode.Car, "Car_City", "Mobil ringkas untuk jalan perkotaan."),
-            new("sedan", "Sedan", VehicleMode.Car, "Car_Sedan", "Sedan empat pintu dengan kabin tertutup."),
-            new("beat-red", "motor bebek merah-putih", VehicleMode.Motorcycle, "BeatRed", "Skuter dengan bodi merah-putih dan detail lengkap.", true),
-            new("beat-blue", "motor bebek biru", VehicleMode.Motorcycle, "BeatBlue", "Skuter biru dengan tampilan sederhana.", true),
-            new("classic", "Skuter klasik", VehicleMode.Motorcycle, "Motorcycle", "Skuter latihan dengan pengendara dan penumpang.")
+            new("hatchback", "Hatchback", VehicleMode.Car, "Traffic/city_hatchback", "A city car with detailed bodywork, lights, and wheels."),
+            new("mpv", "Family MPV", VehicleMode.Car, "Traffic/family_mpv", "An urban MPV with a chase camera and working lights."),
+            new("city", "City car", VehicleMode.Car, "Car_City", "A compact car for city streets."),
+            new("sedan", "Sedan", VehicleMode.Car, "Car_Sedan", "A four-door sedan with an enclosed cabin."),
+            new("beat-red", "Red-and-white scooter", VehicleMode.Motorcycle, "BeatRed", "A detailed scooter with red-and-white bodywork.", true),
+            new("beat-blue", "Blue scooter", VehicleMode.Motorcycle, "BeatBlue", "A blue scooter with a simple design.", true),
+            new("classic", "Classic scooter", VehicleMode.Motorcycle, "Motorcycle", "A practice scooter with a rider and passenger.")
         };
 
         public static VehicleDefinition Selected(VehicleMode mode)

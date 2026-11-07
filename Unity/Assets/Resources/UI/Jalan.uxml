@@ -11,16 +11,16 @@
                 </ui:VisualElement>
                 <ui:VisualElement class="panel route-panel">
                     <ui:Label name="routeCount" class="label kicker" />
-                    <ui:Button name="progress" text="" tooltip="Jeda / kemajuan [Tab]" class="button quiet hud-icon-button" />
-                    <ui:Button name="toggleMissions" text="Pilih misi" class="button quiet hud-action hidden" />
+                    <ui:Button name="progress" text="" tooltip="Pause / progress [Tab]" class="button quiet hud-icon-button" />
+                    <ui:Button name="toggleMissions" text="Choose mission" class="button quiet hud-action hidden" />
                     <ui:VisualElement name="missionDrawer" class="hidden">
                         <ui:VisualElement name="steps" class="row route-steps" />
-                        <ui:Label name="practiceHint" text="Pilih nomor untuk latihan misi" class="label menu-note" />
+                        <ui:Label name="practiceHint" text="Choose a number to practice a mission" class="label menu-note" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="signalPanel" class="panel signal-panel hidden" picking-mode="Ignore">
-                <ui:Label text="LAMPU PERSIMPANGAN · LIVE" class="label kicker" />
+                <ui:Label text="JUNCTION SIGNALS · LIVE" class="label kicker" />
                 <ui:VisualElement class="row signal-views" picking-mode="Ignore">
                     <ui:Image name="signalZoom" class="signal-zoom" picking-mode="Ignore" />
                     <ui:Image name="signalArrowZoom" class="signal-zoom" picking-mode="Ignore" />
@@ -38,35 +38,35 @@
                 <ui:VisualElement class="driving-controls" picking-mode="Ignore">
                     <ui:Label name="hudHint" class="label hud-hint hidden" picking-mode="Ignore" />
                     <ui:VisualElement name="hudControlBar" class="row look-controls" picking-mode="Ignore">
-                        <ui:Button name="steeringHelp" tooltip="Kemudi A / D · Rem Spasi · Panduan [F1]" class="button quiet hud-icon-button" />
-                        <ui:Button name="throttleHelp" tooltip="Gas: tahan W / ↑. Rem: Spasi / S. [F1 panduan]" class="button quiet hud-icon-button" />
-                        <ui:Button name="cameraControl" tooltip="Ganti kamera [C]" class="button quiet hud-icon-button" />
-                        <ui:Button name="lampControl" tooltip="Lampu utama motor [L]" class="button quiet hud-icon-button" />
-                        <ui:Button name="lookLeft" text="" tooltip="Tahan untuk melihat kiri [Z]" class="button quiet hud-icon-button" />
-                        <ui:Button name="lookRight" text="" tooltip="Tahan untuk melihat kanan [X]" class="button quiet hud-icon-button" />
+                        <ui:Button name="steeringHelp" tooltip="Steer A / D · Brake Space · Controls [F1]" class="button quiet hud-icon-button" />
+                        <ui:Button name="throttleHelp" tooltip="Throttle: hold W / ↑. Brake: Space / S. [F1 controls]" class="button quiet hud-icon-button" />
+                        <ui:Button name="cameraControl" tooltip="Change camera [C]" class="button quiet hud-icon-button" />
+                        <ui:Button name="lampControl" tooltip="Motorcycle headlight [L]" class="button quiet hud-icon-button" />
+                        <ui:Button name="lookLeft" text="" tooltip="Hold to look left [Z]" class="button quiet hud-icon-button" />
+                        <ui:Button name="lookRight" text="" tooltip="Hold to look right [X]" class="button quiet hud-icon-button" />
                     </ui:VisualElement>
-                    <ui:Label text="W gas · Space rem · A / D setir · Q / E sein · Tab jeda" class="label controls hidden" />
+                    <ui:Label text="W throttle · Space brake · A / D steer · Q / E indicators · Tab pause" class="label controls hidden" />
                 </ui:VisualElement>
                 <ui:VisualElement class="panel cluster" picking-mode="Ignore">
                     <ui:Label name="speed" text="0" class="label speed" />
-                    <ui:Label text="km/jam" class="label unit" />
+                    <ui:Label text="km/h" class="label unit" />
                     <ui:VisualElement name="indicators" class="indicators" picking-mode="Ignore" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="phone" class="panel phone hidden">
-                <ui:Label text="PANGGILAN MASUK" class="label kicker" />
-                <ui:Label text="Ibu menelepon" class="label subhead" />
-                <ui:Label text="Abaikan, atau berhenti di teluk kiri sebelum menjawab." class="label copy" />
+                <ui:Label text="INCOMING CALL" class="label kicker" />
+                <ui:Label text="Mom is calling" class="label subhead" />
+                <ui:Label text="Ignore, or stop in the left bay before answering." class="label copy" />
                 <ui:VisualElement class="row actions">
-                    <ui:Button name="ignorePhone" text="Abaikan  [F]" class="button primary" />
-                    <ui:Button name="answerPhone" text="Jawab  [G]" class="button quiet" />
+                    <ui:Button name="ignorePhone" text="Ignore  [F]" class="button primary" />
+                    <ui:Button name="answerPhone" text="Answer  [G]" class="button quiet" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="pickup" class="panel phone hidden">
-                <ui:Label text="JEMPUT DI PASAR" class="label kicker" />
-                <ui:Label text="Penumpang menunggu" class="label subhead" />
-                <ui:Label text="Berhenti di teluk kiri dekat penumpang sebelum menjemput." class="label copy" />
-                <ui:Button name="pickupPassenger" text="Jemput  [F]" class="button primary" />
+                <ui:Label text="MARKET PICKUP" class="label kicker" />
+                <ui:Label text="Passenger waiting" class="label subhead" />
+                <ui:Label text="Stop in the left bay beside the passenger before picking them up." class="label copy" />
+                <ui:Button name="pickupPassenger" text="Pick up  [F]" class="button primary" />
             </ui:VisualElement>
             <ui:VisualElement name="demoTutorialCue" class="tutorial-cue-layer hidden" picking-mode="Ignore">
                 <ui:VisualElement class="panel tutorial-card" picking-mode="Ignore">

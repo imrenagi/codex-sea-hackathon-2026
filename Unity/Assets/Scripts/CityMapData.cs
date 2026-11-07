@@ -17,23 +17,23 @@ namespace JalanKita
         public static CityMapData Load(string id)
         {
             var asset = Resources.Load<TextAsset>("CityMaps/" + id);
-            if (!asset) throw new InvalidOperationException("Data peta belum tersedia: " + id);
+            if (!asset) throw new InvalidOperationException("Map data unavailable: " + id);
             var map = JsonUtility.FromJson<CityMapData>(asset.text);
-            if (map?.buildings == null || map.roads == null) throw new InvalidOperationException("Data peta tidak valid: " + id);
-            if (string.IsNullOrWhiteSpace(map.attribution)) throw new InvalidOperationException("Sumber peta belum tersedia: " + id);
+            if (map?.buildings == null || map.roads == null) throw new InvalidOperationException("Invalid map data: " + id);
+            if (string.IsNullOrWhiteSpace(map.attribution)) throw new InvalidOperationException("Map attribution unavailable: " + id);
             foreach (var building in map.buildings)
             {
                 if (building == null || !Finite(building.height) || building.height <= 0)
-                    throw new InvalidOperationException("Tinggi bangunan tidak valid: " + id);
-                CheckPoints(building.points, 3, id + " / bangunan " + building.osmId);
+                    throw new InvalidOperationException("Invalid building height: " + id);
+                CheckPoints(building.points, 3, id + " / building " + building.osmId);
             }
             foreach (var road in map.roads)
             {
-                if (road == null) throw new InvalidOperationException("Jalan tidak valid: " + id);
-                CheckPoints(road.points, 2, id + " / jalan " + road.osmId);
+                if (road == null) throw new InvalidOperationException("Invalid road: " + id);
+                CheckPoints(road.points, 2, id + " / road " + road.osmId);
                 if (float.TryParse(road.layer, System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out float layer) && (!Finite(layer) || Mathf.Abs(layer) > 1000))
-                    throw new InvalidOperationException("Elevasi jalan tidak valid: " + id + " / " + road.osmId);
+                    throw new InvalidOperationException("Invalid road elevation: " + id + " / " + road.osmId);
             }
             return map;
         }
@@ -41,10 +41,10 @@ namespace JalanKita
         static void CheckPoints(CityPoint[] points, int minimum, string label)
         {
             if (points == null || points.Length < minimum)
-                throw new InvalidOperationException("Geometri peta tidak lengkap: " + label);
+                throw new InvalidOperationException("Incomplete map geometry: " + label);
             foreach (var point in points)
                 if (!Finite(point.x) || !Finite(point.z) || Mathf.Abs(point.x) > 1000000 || Mathf.Abs(point.z) > 1000000)
-                    throw new InvalidOperationException("Koordinat peta tidak valid: " + label);
+                    throw new InvalidOperationException("Invalid map coordinates:" + label);
         }
     }
     public static class CityMapGeometry
