@@ -773,3 +773,14 @@
 .screen.compact .landing .home-tagline { font-size: 15px; margin-top: 4px; }
 .screen.compact .landing .home-actions { width: 300px; margin-top: 18px; }
 .screen.compact .landing .button.home-action { min-height: 40px; font-size: 16px; margin-bottom: 6px; }
+
+
+/* Keep the subtitle legible over bright roads and changing menu camera shots.
+   A small backing belongs to the subtitle only; the wordmark stays transparent. */
+.screen .landing .home-tagline {
+    padding: 7px 14px; border-radius: 5px; background-color: rgba(8,14,18,.88);
+    color: #ffffff; font-size: 18px; -unity-font-style: bold;
+    -unity-text-outline-width: 0; margin-top: 10px;
+    flex-shrink: 0; white-space: normal;
+}
+.screen.compact .landing .home-tagline { font-size: 16px; padding: 6px 12px; margin-top: 6px; }
