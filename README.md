@@ -27,9 +27,11 @@ To run in the editor, open the [Unity project](Unity) in Unity **6000.3.27f1**, 
 
 ## Pitch demo
 
+For the presenting laptop, fetch and check out `codex/demo-ready`. It contains the same consolidated code as PR #1; the individual improvement PRs are superseded by that PR.
+
 Choose **Mobil** or **Motor**, then **Demo singkat · Hak utama**. This opens Pasar Bunga directly. The demo uses a separate session and leaves saved progress unchanged.
 
-1. Hold **W** toward the occupied zebra crossing to show a violation. Release the key when the feedback opens.
+1. Use **F2** on the main menu to enter the demo, or choose its button. Hold **W** toward the occupied zebra crossing to show a violation. Release the key when the feedback opens.
 2. Show the explanation, correct action, and visible legal citation. **Lihat cara benar** plays the existing driving coach. **Tab** returns to the feedback.
 3. Press **R** to retry. Use **Space** to stop before the crossing. Wait for the pedestrian. At the next intersection, stop before the yield line and give way to cross traffic. **Lihat cara benar** is the live backup for this full sequence.
 4. Finish at the green checkpoint. The demo ends with its actual mistake count. **Ulangi demo** starts a fresh session.
@@ -97,8 +99,8 @@ Run `JalanKita.EditorTools.TrafficChecks.Run` for the traffic seed sweep and `Ja
 
 ## Jakarta map previews
 
-From the main menu choose **Jelajahi peta Jakarta**, then Morrissey, Bundaran HI, Sea Labs, Semanggi, Monas, or Bundaran Senayan. Each area covers approximately 1.7 × 1.5 km, three times the original linear extent. Use WASD/arrows to pan, +/- to zoom, R to reset, and Esc to return to the selector. The existing Kampung Kenanga lessons and saved progress remain separate.
+From the main menu choose **Jelajahi peta Jakarta**, then Morrissey, Bundaran HI, Sea Labs, Semanggi, Monas, or Bundaran Senayan. Each area covers approximately 1.7 × 1.5 km. Use WASD/arrows to pan, +/- or the mouse wheel to zoom, R to fit the full map, and Esc to return to the selector. The north marker keeps orientation visible. The existing Kampung Kenanga lessons and saved progress remain separate.
 
 These are OSM-based city previews, not playable lesson routes. Building heights and road widths may be estimated; facade colors and windows are illustrative. Source ways are clipped to the preview area. Tunnels are omitted; positive road layers receive approximate elevation. OSM coverage is incomplete and does not guarantee surveyed geometry. © OpenStreetMap contributors, ODbL: https://www.openstreetmap.org/copyright
 
-Only the selected area is generated. Geometry is batched into meshes under the 16-bit vertex limit rather than creating thousands of building objects. **Jalan Kita → Verify City Maps** checks the six datasets and geometry helpers. Runtime/editor verification must be run once Unity 6000.3.27f1 is available.
+Only the selected area is generated. Decorative windows are limited to 24,000 quads, prioritized near the selected location; road and building geometry remains visible throughout the area. Geometry is batched into meshes under the 16-bit vertex limit rather than creating thousands of building objects. **Jalan Kita → Verify City Maps** checks the six datasets and geometry helpers. Runtime/editor verification must be run once Unity 6000.3.27f1 is available.

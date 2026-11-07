@@ -645,7 +645,7 @@ namespace JalanKita
             Fold(parent, "Kontrol berkendara", help =>
             {
                 AddLabel(help, "W / ↑: gas · S / ↓ / Space: rem · A / D / ← / →: setir", "copy");
-                AddLabel(help, "Q / E: sein kiri / kanan · L: lampu motor · C: kamera", "copy");
+                AddLabel(help, "Q / E: sein kiri / kanan · L: lampu motor · C: kamera · Z / X: lihat kiri / kanan", "copy");
                 AddLabel(help, "F / G: abaikan / jawab telepon · H: klakson · M: suara", "copy");
                 AddLabel(help, "Tab / Esc: jeda · R: ulang dari checkpoint", "copy");
                 AddLabel(help, "Di layar pelanggaran: R untuk coba lagi, D untuk peragaan cara benar.", "copy");
