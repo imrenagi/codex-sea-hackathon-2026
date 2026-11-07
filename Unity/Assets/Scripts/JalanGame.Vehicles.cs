@@ -15,7 +15,7 @@ namespace JalanKita
                 var button = AddButton(choices, choice.Label, () =>
                 {
                     VehicleCatalogue.Select(choice);
-                    ShowMenu();
+                    if (page == Page.PlayChooser) ShowPlayChooser(); else ShowMenu();
                 }, choice == selected ? "vehicle-choice selected" : "vehicle-choice quiet");
                 button.tooltip = choice.Description;
             }

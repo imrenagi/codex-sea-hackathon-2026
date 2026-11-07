@@ -11,9 +11,12 @@
                 </ui:VisualElement>
                 <ui:VisualElement class="panel route-panel">
                     <ui:Label name="routeCount" class="label kicker" />
-                    <ui:Button name="missionPicker" class="button quiet mission-picker" text="Pilih misi" />
-                    <ui:Label name="practiceHint" text="Klik judul untuk memilih misi" class="label kicker" />
-                    <ui:Button name="progress" text="Kemajuan  [Tab]" class="button quiet tiny" />
+                    <ui:Button name="progress" text="" tooltip="Jeda / kemajuan [Tab]" class="button quiet hud-icon-button" />
+                    <ui:Button name="toggleMissions" text="Pilih misi" class="button quiet hud-action hidden" />
+                    <ui:VisualElement name="missionDrawer" class="hidden">
+                        <ui:VisualElement name="steps" class="row route-steps" />
+                        <ui:Label name="practiceHint" text="Pilih nomor untuk latihan misi" class="label menu-note" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="signalPanel" class="panel signal-panel hidden" picking-mode="Ignore">
@@ -29,11 +32,16 @@
             <ui:Label name="toast" class="label toast hidden" picking-mode="Ignore" />
             <ui:VisualElement class="row split bottom-row" picking-mode="Ignore">
                 <ui:VisualElement class="driving-controls" picking-mode="Ignore">
-                    <ui:VisualElement class="row look-controls" picking-mode="Ignore">
-                        <ui:Button name="lookLeft" text="Z · Lihat kiri" class="button quiet look-button" />
-                        <ui:Button name="lookRight" text="X · Lihat kanan" class="button quiet look-button" />
+                    <ui:Label name="hudHint" class="label hud-hint hidden" picking-mode="Ignore" />
+                    <ui:VisualElement name="hudControlBar" class="row look-controls" picking-mode="Ignore">
+                        <ui:Button name="steeringHelp" tooltip="Kemudi A / D · Rem Spasi · Panduan [F1]" class="button quiet hud-icon-button" />
+                        <ui:Button name="throttleHelp" tooltip="Gas: tahan W / ↑. Rem: Spasi / S. [F1 panduan]" class="button quiet hud-icon-button" />
+                        <ui:Button name="cameraControl" tooltip="Ganti kamera [C]" class="button quiet hud-icon-button" />
+                        <ui:Button name="lampControl" tooltip="Lampu utama motor [L]" class="button quiet hud-icon-button" />
+                        <ui:Button name="lookLeft" text="" tooltip="Tahan untuk melihat kiri [Z]" class="button quiet hud-icon-button" />
+                        <ui:Button name="lookRight" text="" tooltip="Tahan untuk melihat kanan [X]" class="button quiet hud-icon-button" />
                     </ui:VisualElement>
-                    <ui:Label text="W / ↑ Gas   S / Spasi Rem   A / D Setir   Q / E Sein   C Kamera   R Ulang   M Suara" class="label controls" />
+                    <ui:Label text="W gas · Space rem · A / D setir · Q / E sein · Tab jeda" class="label controls hidden" />
                 </ui:VisualElement>
                 <ui:VisualElement class="panel cluster" picking-mode="Ignore">
                     <ui:Label name="speed" text="0" class="label speed" />
@@ -55,15 +63,6 @@
                 <ui:Label text="Penumpang menunggu" class="label subhead" />
                 <ui:Label text="Berhenti di teluk kiri dekat penumpang sebelum menjemput." class="label copy" />
                 <ui:Button name="pickupPassenger" text="Jemput  [F]" class="button primary" />
-            </ui:VisualElement>
-            <ui:VisualElement name="missionPickerPopup" class="panel mission-popup hidden">
-                <ui:VisualElement class="row split">
-                    <ui:Label text="LOMPAT KE MISI" class="label kicker" />
-                    <ui:Button name="closeMissionPicker" text="Tutup" class="button quiet tiny" />
-                </ui:VisualElement>
-                <ui:ScrollView name="missionPickerScroll" class="mission-list" mode="Vertical" horizontal-scroller-visibility="Hidden">
-                    <ui:VisualElement name="steps" class="route-steps" />
-                </ui:ScrollView>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="overlay" class="scrim landing">

@@ -6,8 +6,10 @@ namespace JalanKita
 {
     public sealed partial class JalanGame
     {
+        MissionKind catalogueKind;
         void ShowCatalogue(MissionKind kind)
         {
+            catalogueKind = kind;
             SetPage(Page.Catalogue);
             AddLabel(dialog, (mode == VehicleMode.Car ? "MOBIL" : "MOTOR") + "  /  PILIH KEGIATAN", "kicker");
             AddLabel(dialog, kind == MissionKind.Scenario ? "Misi sehari-hari" : "Uji keterampilan", "heading");
@@ -42,6 +44,7 @@ namespace JalanKita
 
         void ShowMissionBrief(Mission activity)
         {
+            catalogueKind = activity.Kind;
             SetPage(Page.Brief);
             var saved = JourneySave.Load(mode, activity);
             bool resume = saved != null && saved.next <= activity.LastStage;
@@ -70,7 +73,7 @@ namespace JalanKita
             hood = false;
             district.Snap();
             if (journey.Stage == 0) ShowPreflight();
-            else SetPage(Page.Drive);
+            else EnterHumanDrive(Page.Drive);
         }
 
         void PickupPassenger()
@@ -104,6 +107,7 @@ namespace JalanKita
                 .OrderByDescending(i => journey.Save.mistakes[i]).Take(2).ToArray();
             foreach (int i in errors) AddLabel(note, journey.Save.mistakes[i] + "×  " + Lesson.All[i].Title, "objective-detail");
             if (journey.Finished && errors.Length == 0) AddLabel(note, "Selesai tanpa kesalahan pada sesi ini.", "objective-detail");
+            AddControlsHelp(dialog);
             var actions = Element(dialog, "row actions");
             if (!journey.Finished) AddButton(actions, "Lanjutkan", () =>
             {
