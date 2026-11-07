@@ -24,6 +24,8 @@ namespace JalanKita
         readonly MaterialPropertyBlock paint = new();
         readonly Camera camera;
         readonly Light headlamp;
+        public readonly DrivingMirrors Mirrors;
+        float headYaw;
         bool snapCamera = true;
 
         public District(Transform parent)
@@ -68,6 +70,7 @@ namespace JalanKita
             camera.nearClipPlane = .08f;
             camera.farClipPlane = 500;
             _ = new Atmosphere(parent, camera);
+            Mirrors = new DrivingMirrors(parent);
         }
 
         void BuildRoad()
@@ -208,7 +211,7 @@ namespace JalanKita
 
         public void Snap() => snapCamera = true;
 
-        public void Present(Journey run, bool hood, float dt, bool driving = true)
+        public void Present(Journey run, bool hood, float dt, bool driving = true, float lookInput = 0)
         {
             PresentBoulevard(run, driving);
             bool onMotorcycle = run.Mode == VehicleMode.Motorcycle;
@@ -238,10 +241,28 @@ namespace JalanKita
             Vector3 eye = hood ? point + rotation * new Vector3(0, onMotorcycle ? 1.39f : 1.28f, .62f)
                 : point + rotation * new Vector3(0, 4.25f, -7.85f);
             Vector3 look = point + rotation * new Vector3(0, hood ? 1.33f : 1.12f, hood ? 24 : 12);
+            headYaw = Mathf.MoveTowards(snapCamera ? 0 : headYaw, (driving ? lookInput : 0) * 80, dt * 320);
             var view = Quaternion.LookRotation(look - eye);
+            if (Mathf.Abs(headYaw) > .1f)
+            {
+                float turn = headYaw / 80;
+                if (hood)
+                {
+                    eye += rotation * new Vector3(turn*.08f,0,Mathf.Abs(turn)*.06f);
+                    view = rotation * Quaternion.Euler(4,headYaw,0);
+                }
+                else
+                {
+                    var head = point + Vector3.up*(onMotorcycle?2:2.3f) - rotation*Vector3.forward*(onMotorcycle?.6f:1.2f);
+                    eye = Vector3.Lerp(eye,head,Mathf.Abs(turn));
+                    view = rotation*Quaternion.Euler(Mathf.Lerp(12,6,Mathf.Abs(turn)),headYaw,0);
+                }
+            }
+            camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, Mathf.Abs(headYaw)>.1f?70:55, Mathf.Min(1,dt*6));
             float blend = snapCamera ? 1 : 1 - Mathf.Exp(-6.5f * dt);
             camera.transform.SetPositionAndRotation(Vector3.Lerp(camera.transform.position, eye, blend),
                 Quaternion.Slerp(camera.transform.rotation, view, blend));
+            Mirrors.Present(run,driving,snapCamera);
             snapCamera = false;
         }
 

@@ -18,6 +18,7 @@ To run in the editor, open the [Unity project](Unity) in Unity **6000.3.27f1**, 
 | Q / E | Left / right indicator |
 | L | Motorcycle headlight |
 | C | Switch camera |
+| Z / X | Hold to look left / right; release to face forward |
 | H | Hold to sound the horn |
 | M | Mute / unmute all sound |
 | F / G | Ignore / answer the call |
@@ -38,6 +39,8 @@ To run in the editor, open the [Unity project](Unity) in Unity **6000.3.27f1**, 
 | 08 | Diponegoro–Ahmad Yani | Moving to the right lane before solid markings; waiting for the separate right arrow and pedestrians |
 | 09 | Railway | Stopping for warning lights/bell and moving only after the train clears and barriers fully rise |
 | 10 | Hospital road | Passing a stopped angkot, then signalling left to give a siren-equipped ambulance room to pass |
+
+The big roads carry mixed cars and motorcycles in both directions through the straight lanes. Traffic uses Ujian SIM’s following/braking behavior, randomized vehicle speeds and spacing, and original vehicle models/colors. It queues at red lights and motorcycle stop boxes, waits for pedestrians and railway barriers, and avoids the player. Traffic keeps moving between checkpoints and resets safely on retry or mission selection.
 
 The new district follows Ujian SIM missions 12, 9, and 8, reusing its original road arrows, signals, pedestrian lights, rail barriers, locomotive/coaches, angkot, and ambulance. It has three lanes each way, a 50 km/h limit, and 8 m red motorcycle waiting boxes. Cars stop at the rear line; motorcycles may use the front line. Every road uses Ujian SIM’s kinematic bicycle steering: keys gradually turn the wheels, steering sensitivity reduces with speed, and releasing the key centers the wheels while preserving the vehicle’s direction. Car and motorcycle wheelbases and steering limits match the source project. Pedal acceleration and speed limits remain tuned to this route. Choose the lane indicated by the road arrows before the solid section.
 
@@ -64,3 +67,7 @@ then exits with the check result. Existing player saves are preserved.
 The extended route checks cover both vehicles, turns, red lights and motorcycle stop boxes, pedestrian priority, protected-right signals, railway warnings, ambulance obstruction, retry headings, and upgrading old saves. The trigger distances and signal/rail timings are simulation choices. [Boulevard.cs](Unity/Assets/Scripts/Boulevard.cs) shares junction geometry with [BoulevardView.cs](Unity/Assets/Scripts/BoulevardView.cs).
 
 Audio reuses Ujian SIM’s synthesized `SoundEngine` and WebGL audio bridge: separate car/motor engines responding to speed and throttle, indicator relay clicks, horn, phone ringtone, success/violation chimes, town ambience, approaching ambulance siren, and railway warning bell. The previous temporary siren/bell loops are removed. Mute is available in the menu/pause screen or with M and is remembered locally.
+
+The driving HUD includes live left, centre and right rear views for both vehicles. Mirror images are horizontally flipped; cameras take turns rendering to limit GPU work. Hold Z/X or the on-screen look buttons to check either side without steering. The ambulance siren is audible as it approaches from 70 m, ducks the engine mix, and still respects M/mute. The siren begins after passing the parked angkot in mission 10.
+
+Run `JalanKita.EditorTools.TrafficChecks.Run` for the traffic seed sweep and `JalanKita.EditorTools.DrivingViewChecks.Run` in a graphical Editor for live mirror/audio validation.

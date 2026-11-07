@@ -23,6 +23,13 @@
 .hidden { display: none; }
 .hud { position: absolute; left: 20px; right: 20px; top: 19px; bottom: 18px; justify-content: space-between; }
 .top-row { align-items: flex-start; }
+.mirrors { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+.mirror { position: absolute; background-color: #15181d; border-width: 3px; border-color: #45474a; border-radius: 10px; overflow: hidden; }
+.mirror-left { left: 0; top: 43%; width: 174px; height: 112px; }
+.mirror-right { right: 0; top: 43%; width: 174px; height: 112px; }
+.mirror-centre { left: 49%; top: 0; width: 248px; height: 86px; translate: -50% 0; }
+.mirror-image { flex-grow: 1; scale: -1 1; }
+.mirror-caption { position: absolute; left: 0; right: 0; bottom: 0; background-color: rgba(16, 19, 24, 0.7); color: #f3f1ec; font-size: 10px; -unity-text-align: middle-center; padding: 2px; }
 .objective { width: 452px; }
 .objective-title { margin-top: 3px; }
 .objective-copy { margin-top: 5px; color: #e9e6df; white-space: normal; font-size: 16px; }
@@ -43,7 +50,11 @@
 .step-current { background-color: #f3f1ec; color: #15181d; }
 .step-done { background-color: #2fae64; color: #ffffff; }
 .bottom-row { align-items: flex-end; }
+.driving-controls { flex-shrink: 1; margin-right: 12px; }
+.look-controls { margin-bottom: 6px; }
+.look-button { width: 145px; margin-right: 6px; }
 .controls {
+    white-space: normal;
     background-color: rgba(16, 19, 24, 0.86);
     color: #e9e6df; padding: 10px 13px; border-radius: 7px;
     font-size: 13px;
