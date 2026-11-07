@@ -288,7 +288,12 @@ namespace JalanKita
                     GameObject building = Model(shop, new Vector3(side * edge, .06f, z), rotation);
                     building.transform.localScale = new Vector3(6.85f / 4.5f, 1, .85f);
                     if ((z + 20) % 35 == 0)
-                        Model("StreetLamp", new Vector3(side * 5.1f, .12f, z + 2.4f), rotation);
+                    {
+                        float lampZ = z + 2.4f;
+                        // The access road widens the right edge to x=9.025.
+                        float lampX = side > 0 && lampZ >= SpurStart - 1 && lampZ <= SpurEnd + 2 ? 9.45f : side * 5.1f;
+                        Model("StreetLamp", new Vector3(lampX, .12f, lampZ), rotation);
+                    }
                 }
             }
             BuildSchoolFrontage();
@@ -597,6 +602,7 @@ namespace JalanKita
             foreach (int side in Side)
             {
                 Vector3? lastPole = null;
+                bool lastPoleInMarket = false;
                 for (int z = -15; z < 388; z += 28)
                 {
                     bool opening = side < 0 && z > PhoneStart && z < PhoneEnd
@@ -604,15 +610,22 @@ namespace JalanKita
                     if (Mathf.Abs(z - Zebra) < 22)
                     { lastPole = null; continue; }
                     if (NearJunction(z, 9) || opening) continue;
-                    Model(z % 3 == 0 ? "Tree_Palm" : "Tree_Shade_1", new Vector3(side * 6.1f, .13f, z), z * 13);
+                    bool InMarketBay(float atZ) => side < 0 && atZ >= Mission.PickupStart - 1 && atZ <= Mission.PickupEnd + 1;
+                    // These props sit on the ordinary sidewalk, which becomes the
+                    // drivable pickup bay in market missions. Follow its visibility.
+                    Model(z % 3 == 0 ? "Tree_Palm" : "Tree_Shade_1", new Vector3(side * 6.1f, .13f, z), z * 13,
+                        InMarketBay(z) ? marketCurb.transform : null);
                     Vector3 pole = new(side * 7.1f, .13f, z + 5);
-                    Model("PowerPole", pole);
+                    bool poleInMarket = InMarketBay(pole.z);
+                    Model("PowerPole", pole, parent: poleInMarket ? marketCurb.transform : null);
                     if (lastPole.HasValue)
                     {
                         for (int wire = 0; wire < 2; wire++)
                         {
                             var cable = new GameObject("Kabel listrik").AddComponent<LineRenderer>();
-                            cable.transform.SetParent(scenery.transform);
+                            // Hide both incoming and outgoing spans with a hidden
+                            // market pole; no cable can terminate in empty space.
+                            cable.transform.SetParent(poleInMarket || lastPoleInMarket ? marketCurb.transform : scenery.transform);
                             cable.sharedMaterial = Material("151515");
                             cable.widthMultiplier = .025f;
                             cable.positionCount = 13;
@@ -626,6 +639,7 @@ namespace JalanKita
                         }
                     }
                     lastPole = pole;
+                    lastPoleInMarket = poleInMarket;
                 }
             }
             Model("Sign_Parking", new Vector3(-7.6f, .13f, PhoneStart + 5));

@@ -751,7 +751,7 @@ namespace JalanKita
             journey = new Journey(mode, new JourneySave { next = stage }, persistent: false);
             progress.tooltip = "Kemajuan  [Tab]";
             district.Snap();
-            toast.text = "LATIHAN MISI " + (stage+1).ToString("00") + " · PROGRES PERJALANAN TETAP TERSIMPAN";
+            toast.text = "LATIHAN MISI " + (stage+1).ToString("00") + " · Progres perjalanan tersimpan";
             toastUntil = Time.unscaledTime + 5;
             if (stage == 0) ShowPreflight();
             else { EnterHumanDrive(Page.Drive); if (page == Page.Drive) RefreshHud(); }
