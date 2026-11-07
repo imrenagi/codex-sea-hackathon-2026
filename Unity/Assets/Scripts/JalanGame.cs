@@ -160,6 +160,7 @@ namespace JalanKita
                 if (Input.GetKeyDown(KeyCode.R) && !journey.Finished) Retry();
                 else if (Input.GetKeyDown(KeyCode.Escape)) BackToMenu();
             }
+            else if (page == Page.Progress && pitchDemo && Input.GetKeyDown(KeyCode.R)) StartPitchDemo();
             else if (page == Page.Progress && !journey.Finished &&
                 (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Escape))) ReturnToJourney();
         }
@@ -631,6 +632,7 @@ namespace JalanKita
 
             var actions = Element(dialog, "row actions");
             if (!journey.Finished) AddButton(actions, "Kembali berkendara", ReturnToJourney, "primary");
+            if (pitchDemo) AddButton(actions, "Ulangi demo [R]", StartPitchDemo, "quiet");
             AddButton(actions, "Menu utama", BackToMenu, journey.Finished ? "primary" : "quiet");
             AddControlsHelp(dialog);
             AddSoundControls(dialog);
