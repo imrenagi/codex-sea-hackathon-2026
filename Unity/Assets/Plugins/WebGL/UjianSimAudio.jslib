@@ -29,6 +29,7 @@ mergeInto(LibraryManager.library, {
     var data = buf.getChannelData(0);
     for (var i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
     var noise = ctx.createBufferSource();
+    a.noise = noise;
     noise.buffer = buf;
     noise.loop = true;
     a.wind = gain(0, a.master);
@@ -45,8 +46,30 @@ mergeInto(LibraryManager.library, {
     a.hornA = osc('square', hornFilter);
     a.hornB = osc('square', hornFilter);
 
-    var resume = function () { if (ctx.state === 'suspended') ctx.resume(); };
-    ['keydown', 'pointerdown', 'touchstart'].forEach(function (e) { window.addEventListener(e, resume, true); });
+    a.resume = function () {
+      if (ctx.state === 'suspended' && !document.hidden) ctx.resume().catch(function () {});
+    };
+    a.visibility = function () {
+      if (document.hidden && ctx.state === 'running') ctx.suspend().catch(function () {});
+      else if (!document.hidden) a.resume();
+    };
+    ['keydown', 'pointerdown', 'touchstart', 'focus'].forEach(function (e) { window.addEventListener(e, a.resume, true); });
+    document.addEventListener('visibilitychange', a.visibility);
+  },
+
+  UjianAudio_Dispose: function () {
+    var a = window.ujianAudio;
+    if (!a) return;
+    ['keydown', 'pointerdown', 'touchstart', 'focus'].forEach(function (e) { window.removeEventListener(e, a.resume, true); });
+    document.removeEventListener('visibilitychange', a.visibility);
+    a.master.gain.cancelScheduledValues(a.ctx.currentTime);
+    a.master.gain.setValueAtTime(0, a.ctx.currentTime);
+    [a.engine, a.sub, a.siren, a.hornA, a.hornB, a.noise].forEach(function (node) {
+      node.stop();
+      node.disconnect();
+    });
+    if (a.ctx.state !== 'closed') a.ctx.close().catch(function () {});
+    delete window.ujianAudio;
   },
 
   UjianAudio_Set: function (master, engineFreq, engineCut, engineGain, sirenFreq, sirenGain, hornA, hornB, hornGain, wind, rain) {
