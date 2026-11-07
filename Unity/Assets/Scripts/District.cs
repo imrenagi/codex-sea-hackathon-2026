@@ -10,9 +10,10 @@ namespace JalanKita
         static readonly int[] Side = { -1, 1 };
         static readonly float[] Junctions = { StopJunction, LightJunction, MainJunction };
         static readonly string[] Shops = { "Ruko_A", "Ruko_B", "Ruko_C", "Ruko_D" };
-        // Ujian SIM TownLayout.Buildings wall palette, unchanged.
-        static readonly string[] WallColors = { "efe2c2", "f3b27a", "ececec", "bfe0de", "f4c9bf",
-            "d9c8e6", "ffd98a", "c9d8b6", "f7efe1", "e8cfa8" };
+        // Weathered plaster, canvas and painted shopfronts keep safety colors distinct.
+        static readonly string[] WallColors = { "c9c7b8", "c8b7a1", "d6d3c8", "b5bcba", "c4afa0",
+            "b8b2b0", "cabc9e", "acb7ad", "d1c9b9", "b8ad98" };
+        static readonly string[] ShopColors = { "626e67", "786a5c", "53656b", "8a7662", "785b51", "687168" };
         readonly Dictionary<string, Material> palette = new();
         readonly Dictionary<string, Material> surfaces = new();
         readonly GameObject scenery;
@@ -550,9 +551,9 @@ namespace JalanKita
                 if (mats.TryGetValue("M_WallPaint", out var wall))
                     wall.SetColor("_BaseColor", ColorOf(WallColors[random.Next(WallColors.Length)]));
                 if (mats.TryGetValue("M_Awning", out var awning))
-                    awning.SetColor("_BaseColor", Color.HSVToRGB((float)random.NextDouble(), .55f, .55f));
+                    awning.SetColor("_BaseColor", ColorOf(ShopColors[(int)(random.NextDouble() * ShopColors.Length)]));
                 if (mats.TryGetValue("M_ShopSign", out var board))
-                    board.SetColor("_BaseColor", Color.HSVToRGB((float)random.NextDouble(), .75f, .6f));
+                    board.SetColor("_BaseColor", ColorOf(ShopColors[(int)(random.NextDouble() * ShopColors.Length)]));
                 var sign = Models.Spawn("ShopSign_" + random.Next(10), model.transform);
                 sign.transform.localPosition = new Vector3(0, 4.35f, .1f);
                 sign.transform.localRotation = Quaternion.identity;
