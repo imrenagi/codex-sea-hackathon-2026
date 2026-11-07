@@ -20,7 +20,7 @@ namespace JalanKita
         readonly Transform actors;
         readonly TrafficVehicleView crossCar, laneCar, spurCar, pickupCar;
         readonly PlayerVehicleView playerVehicle;
-        readonly StreetPerson pedestrian;
+        readonly StreetPerson[] pedestrians = new StreetPerson[Journey.CrossingPedestrianCount];
         readonly ScenarioAtmosphere atmosphere;
         readonly GameObject schoolScenery, marketScenery, marketCurb, finishMarker;
         readonly Renderer[] signal = new Renderer[3];
@@ -67,7 +67,10 @@ namespace JalanKita
             crossCar = new TrafficVehicleView(actors, "Lalu lintas persimpangan");
             laneCar = new TrafficVehicleView(actors, "Kendaraan di lajur kanan");
             spurCar = new TrafficVehicleView(actors, "Lalu lintas satu arah");
-            pedestrian = new StreetPerson(actors, "Pejalan kaki pada penyeberangan", "c9ad71", 1, false, 7);
+            string[] crossingShirts = { "b7bdad", "bd9c8e", "c8bda6" };
+            for (int i = 0; i < pedestrians.Length; i++)
+                pedestrians[i] = new StreetPerson(actors, "Crossing pedestrian " + (i + 1),
+                    crossingShirts[i], 1 - i * .035f, false, 7 + i);
             atmosphere = new ScenarioAtmosphere(actors);
             pickupCar = new TrafficVehicleView(actors, "Arus di belakang teluk jemput");
             headlamp = new GameObject("Lampu utama motor").AddComponent<Light>();
@@ -475,11 +478,17 @@ namespace JalanKita
             headlamp.transform.SetPositionAndRotation(point + rotation * new Vector3(0, .87f, .85f), rotation);
             headlamp.enabled = false; // The selected scooter supplies its own correctly positioned lamps.
             Pose(crossCar, run.Traffic.Cross, run.CrossTraffic, run.CrossDirection * 90, dt);
-            pedestrian.Root.SetActive(run.Pedestrian.HasValue);
-            if (run.Pedestrian.HasValue)
+            for (int i = 0; i < pedestrians.Length; i++)
             {
-                pedestrian.SchoolAppearance(run.IsSchool);
-                pedestrian.Draw(World(run.Pedestrian.Value), run.PedestrianDirection * 90, run.ElapsedTime, 1, false);
+                var position = run.CrossingPedestrian(i);
+                pedestrians[i].Root.SetActive(position.HasValue);
+                if (!position.HasValue) continue;
+                pedestrians[i].SchoolAppearance(run.IsSchool);
+                // Lift the feet onto the pavement, including the waiting side.
+                float pavement = Mathf.Lerp(0, .125f, Mathf.InverseLerp(4.67f, 5.5f, Mathf.Abs(position.Value.x)));
+                pedestrians[i].Draw(World(position.Value) + Vector3.up * pavement,
+                    run.PedestrianDirection * 90, run.ElapsedTime + i * .57f,
+                    run.CrossingPedestrianWalking(i), false);
             }
             Pose(laneCar, run.Traffic.Lane, run.LaneTraffic, 0, dt);
             Pose(spurCar, run.Traffic.Spur, run.SpurTraffic, 180, dt);

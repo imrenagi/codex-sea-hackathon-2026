@@ -306,6 +306,7 @@ namespace JalanKita
             boardingTime = ElapsedTime = 0;
             if (PassengerPickedUp) pickupTime = 0;
             CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = PickupTraffic = null;
+            ClearCrossingPedestrians();
         }
 
         public bool Depart()
@@ -487,8 +488,10 @@ namespace JalanKita
             }
 
             CheckEncounterContacts(oldPosition, oldHeading, oldActors);
-            if(Pedestrian.HasValue && PedestrianClearance.Touches(Pedestrian.Value,Position,Heading,Mode))
-                Fail(Rule.Pedestrian);
+            for (int i = 0; i < CrossingPedestrianCount; i++)
+                if (crossingPedestrians[i].HasValue && PedestrianClearance.Touches(
+                    crossingPedestrians[i].Value, Position, Heading, Mode))
+                    Fail(Rule.Pedestrian);
             if (!Failure.HasValue && z >= StageEnd) Advance();
         }
 
@@ -534,8 +537,7 @@ namespace JalanKita
                 Tick(ref zebraTime, dt, z >= RouteStage.Zebra - 19);
                 Tick(ref priorityTime, dt, z >= RouteStage.YieldLine - 20);
                 PedestrianDirection = Save.mistakes[(int)Rule.Pedestrian] % 2 == 0 ? 1 : -1;
-                float walkX = -5.6f + Mathf.Max(0, zebraTime - .65f) * 1.83f;
-                Pedestrian = walkX < 5.6f ? new Vector2(walkX * PedestrianDirection, RouteStage.Zebra) : null;
+                UpdateCrossingPedestrians(RouteStage.Zebra, 1.65f);
                 CrossDirection = Save.mistakes[(int)Rule.Junction] % 2 == 0 ? -1 : 1;
                 CrossTraffic = CrossingCar(priorityTime, RouteStage.MainJunction, CrossDirection);
             }
@@ -556,11 +558,9 @@ namespace JalanKita
             {
                 Tick(ref zebraTime, dt, z >= 307);
                 PedestrianDirection = Save.variant % 2 == 0 ? 1 : -1;
-                float walkX = -5.6f + Mathf.Max(0, zebraTime - .65f) * 1.5f;
-                Pedestrian = zebraTime >= 0 && walkX < 5.6f
-                    ? new Vector2(walkX * PedestrianDirection, CrossingZebra) : null;
+                UpdateCrossingPedestrians(CrossingZebra, 1.5f);
             }
-            else if (IsSchool) Pedestrian = null;
+            else if (IsSchool) ClearCrossingPedestrians();
             CrossTraffic = FollowEncounter(previousCross, CrossTraffic, Traffic.Cross, Vector2.right * CrossDirection, 6.2f, dt);
             LaneTraffic = FollowEncounter(previousLane, LaneTraffic, Traffic.Lane, Vector2.up, 5.1f, dt);
             SpurTraffic = FollowEncounter(previousSpur, SpurTraffic, Traffic.Spur, Vector2.down, 5, dt);
@@ -603,6 +603,7 @@ namespace JalanKita
             }
             Persist();
             CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = PickupTraffic = null;
+            ClearCrossingPedestrians();
         }
 
         void Checkpoint(int index)

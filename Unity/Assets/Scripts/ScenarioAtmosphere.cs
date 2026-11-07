@@ -254,8 +254,13 @@ namespace JalanKita
         readonly Joint thighL, thighR, shinL, shinR, armL, armR, foreL, foreR;
         readonly Quaternion torsoRest;
         readonly Vector3 torsoUp;
+        static readonly Dictionary<string, Material> clothingPalette = new();
         readonly Dictionary<string, Material> colors;
+        readonly HashSet<Material> ownedColors;
+        readonly Renderer[] renderers;
         readonly float size;
+        readonly string everydayShirt, everydayPants;
+        bool? schoolAppearance;
 
         struct Joint
         {
@@ -278,10 +283,14 @@ namespace JalanKita
             Root = new GameObject(name);
             Root.transform.SetParent(parent, false);
             body = Models.Spawn("Person", Root.transform, out colors).transform;
+            renderers = body.GetComponentsInChildren<Renderer>(true);
+            ownedColors = new HashSet<Material>(colors.Values);
             size = scale;
+            everydayShirt = shirt;
+            everydayPants = variation % 2 == 0 ? "444c52" : "625c53";
             body.localScale = Vector3.one * scale;
             Tint("M_Shirt", shirt);
-            Tint("M_Pants", pupil ? "8e3536" : variation % 2 == 0 ? "3d464f" : "625a50");
+            Tint("M_Pants", pupil ? "855254" : everydayPants);
             Tint("M_Skin", new[] { "b98361", "956242", "bf8e6a", "a46e4d" }[variation % 4]);
             torso = Models.Find(body, "Torso");
             foreach (var side in new[] { "L", "R" })
@@ -311,9 +320,11 @@ namespace JalanKita
 
         public void SchoolAppearance(bool school)
         {
-            body.localScale = Vector3.one * (school ? .83f : size);
-            Tint("M_Shirt", school ? "f2eee4" : "c9ad71");
-            Tint("M_Pants", school ? "8e3536" : "3d464f");
+            if (schoolAppearance == school) return;
+            schoolAppearance = school;
+            body.localScale = Vector3.one * (school ? size * .83f : size);
+            Tint("M_Shirt", school ? "e5dfd3" : everydayShirt);
+            Tint("M_Pants", school ? "855254" : everydayPants);
         }
 
         public void Draw(Vector3 position, float yaw, float time, float walking, bool gesture)
@@ -333,9 +344,38 @@ namespace JalanKita
 
         void Tint(string key, string color)
         {
-            if (!colors.TryGetValue(key, out var material)) return;
-            ColorUtility.TryParseHtmlString("#" + color, out var tint);
-            material.SetColor("_BaseColor", tint);
+            if (!colors.TryGetValue(key, out var previous)) return;
+            string paletteKey = key + "/" + color;
+            if (!clothingPalette.TryGetValue(paletteKey, out var material) || !material)
+            {
+                ColorUtility.TryParseHtmlString("#" + color, out var tint);
+                bool fabric = key == "M_Shirt" || key == "M_Pants";
+                if (fabric)
+                    tint = Color.Lerp(tint, new Color(tint.grayscale, tint.grayscale, tint.grayscale), .18f);
+                // Existing URP lighting supplies soft volume and shadows. Matte shared
+                // surfaces avoid plastic glare without adding a rendering pass or light.
+                material = MaterialLibrary.Create("Pedestrian " + paletteKey, tint, 0, fabric ? .12f : .28f);
+                material.enableInstancing = true;
+                if (fabric)
+                {
+                    material.SetFloat("_SpecularHighlights", 0);
+                    material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                    material.SetFloat("_EnvironmentReflections", 0);
+                    material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+                }
+                clothingPalette[paletteKey] = material;
+            }
+            if (previous == material) return;
+            foreach (var renderer in renderers)
+            {
+                var surfaces = renderer.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < surfaces.Length; i++)
+                    if (surfaces[i] == previous) { surfaces[i] = material; changed = true; }
+                if (changed) renderer.sharedMaterials = surfaces;
+            }
+            colors[key] = material;
+            if (ownedColors.Remove(previous)) Models.Kill(previous);
         }
     }
 }

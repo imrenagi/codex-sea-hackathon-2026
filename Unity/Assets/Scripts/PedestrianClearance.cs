@@ -26,8 +26,56 @@ namespace JalanKita
 
     public sealed partial class Journey
     {
-        public bool PedestrianBlocksPath => Pedestrian.HasValue && PedestrianClearance.Blocks(
-            Pedestrian.Value,Vector2.right*PedestrianDirection,new Vector2(Position.x,Pedestrian.Value.y),Vector2.right,4.3f);
+        public const int CrossingPedestrianCount = 3;
+        const float CrossingStartX = -5.9f, CrossingEndX = 5.9f;
+        readonly Vector2?[] crossingPedestrians = new Vector2?[CrossingPedestrianCount];
+        readonly float[] crossingWalking = new float[CrossingPedestrianCount];
+
+        // Rendered people outlive the crossing hazard: they wait on the far sidewalk
+        // instead of vanishing the moment their centre clears the road.
+        public Vector2? CrossingPedestrian(int index) => crossingPedestrians[index];
+        public float CrossingPedestrianWalking(int index) => crossingWalking[index];
+        public bool PedestriansHaveCleared => zebraTime >= 0 && !Pedestrian.HasValue;
+
+        void UpdateCrossingPedestrians(float crossingZ, float pace)
+        {
+            Pedestrian = null;
+            for (int i = 0; i < CrossingPedestrianCount; i++)
+            {
+                float walkingTime = Mathf.Max(0, zebraTime - .65f - i * .85f);
+                float x = Mathf.Min(CrossingEndX, CrossingStartX + walkingTime * pace);
+                var position = new Vector2(x * PedestrianDirection, crossingZ + (i - 1) * .8f);
+                crossingPedestrians[i] = position;
+                // Ease into an idle pose at the curb; no walking-in-place after arrival.
+                crossingWalking[i] = walkingTime > 0 ? Mathf.Clamp01((CrossingEndX - x) / .45f) : 0;
+                if (x < CrossingEndX && !Pedestrian.HasValue) Pedestrian = position;
+            }
+        }
+
+        void ClearCrossingPedestrians()
+        {
+            Pedestrian = null;
+            for (int i = 0; i < CrossingPedestrianCount; i++)
+            {
+                crossingPedestrians[i] = null;
+                crossingWalking[i] = 0;
+            }
+        }
+
+        public bool PedestrianBlocksPath
+        {
+            get
+            {
+                for (int i = 0; i < CrossingPedestrianCount; i++)
+                {
+                    var person = crossingPedestrians[i];
+                    if (person.HasValue && PedestrianClearance.Blocks(person.Value,
+                        Vector2.right * PedestrianDirection, new Vector2(Position.x, person.Value.y), Vector2.right, 4.3f))
+                        return true;
+                }
+                return false;
+            }
+        }
 
         static readonly Vector2?[] boulevardCrossingPoints=new Vector2?[3];
         public Vector2 BoulevardCrossingPoint

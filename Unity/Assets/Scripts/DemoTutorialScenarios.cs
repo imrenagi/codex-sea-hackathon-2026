@@ -21,7 +21,7 @@ namespace JalanKita
                 headingKey: "tutorial.pedestrian.heading", actionInstructionKey: "tutorial.action.brake",
                 brakingInstructionKey: "tutorial.pedestrian.wait",
                 waitInstructionKey: "tutorial.pedestrian.wait",
-                completeWhen: run => !run.Pedestrian.HasValue,
+                completeWhen: run => run.PedestriansHaveCleared,
                 successMessageKey: "tutorial.pedestrian.success"),
             new TutorialStep(
                 id: "main-road-junction", zone: new Rect(-50, RouteStage.YieldLine - 20, 100, 20),
