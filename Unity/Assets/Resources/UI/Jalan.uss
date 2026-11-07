@@ -71,9 +71,11 @@
 .indicators .icon.on { color: #52e07f; }
 .indicators .icon.lamp.on { color: #8fd0ff; }
 .toast {
-    position: absolute; top: 90px; align-self: center; max-width: 38%;
-    background-color: #f3f1ec; color: #15181d; padding: 9px 14px;
-    -unity-font-style: bold; border-radius: 6px; white-space: normal; font-size: 14px;
+    position: absolute; top: 90px; align-self: center; width: 420px; max-width: 74%;
+    height: auto; min-height: 44px; flex-shrink: 0;
+    background-color: rgba(16,19,24,.88); color: #ffffff; padding: 10px 16px;
+    -unity-font-style: bold; border-radius: 6px; white-space: normal; font-size: 18px;
+    -unity-text-align: middle-left;
 }
 .phone {
     position: absolute; right: 0; bottom: 141px; width: 338px;
@@ -330,7 +332,7 @@
 .compact .controls { font-size: 13px; padding: 8px 10px; }
 .compact .cluster { width: 140px; padding: 8px 10px; }
 .compact .speed { font-size: 44px; }
-.compact .toast { top: 82px; max-width: 34%; font-size: 13px; }
+.compact .toast { top: 82px; max-width: 78%; font-size: 16px; padding: 10px 14px; }
 .compact #missionDrawer { right: 222px; top: 126px; }
 .compact .menu-intro { font-size: 18px; margin-bottom: 12px; }
 .compact .button.demo-action { min-height: 54px; font-size: 20px; }
@@ -395,24 +397,29 @@
 .progressive-cue .keycap { width: 126px; min-width: 126px; max-width: 126px; min-height: 40px; font-size: 18px; margin-right: 12px; }
 .cue-copy { font-size: 17px; color: #f3f1ec; white-space: normal; flex-shrink: 1; }
 
-/* Guided demo: one centered instruction, clear of contextual HUD copy. */
+/* Demo messages stay in the upper-left corner, clear of the crossing. */
 .tutorial-cue-layer {
-    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
-    align-items: center; justify-content: center;
+    position: absolute; left: 0; right: 0; top: 0;
+    align-items: flex-start; justify-content: flex-start;
+}
+.scrim.tutorial-overlay {
+    align-items: flex-start; justify-content: flex-start; background-color: rgba(0,0,0,0);
 }
 .tutorial-card {
-    width: 600px; max-width: 90%; padding: 22px 28px;
-    background-color: rgba(16,19,24,.96); border-color: #e3c899;
+    width: 420px; max-width: 78%; height: auto; padding: 10px 16px;
+    background-color: rgba(16,19,24,.88); border-color: #555b63; border-radius: 6px;
 }
-.tutorial-card .kicker { -unity-text-align: middle-center; margin-bottom: 12px; }
+.tutorial-card .kicker { -unity-text-align: middle-left; margin-bottom: 4px; }
 .tutorial-instruction {
-    font-size: 28px; -unity-font-style: bold; -unity-text-align: middle-center;
+    font-size: 20px; -unity-font-style: bold; -unity-text-align: middle-left;
     white-space: normal; color: #ffffff;
 }
 .demo-guided .objective, .demo-guided .toast, .demo-guided .hud-hint,
 .demo-guided .progressive-cue, .demo-guided .controls { display: none; }
-.compact .tutorial-instruction { font-size: 23px; }
-.compact .tutorial-card { padding: 18px 22px; }
+.demo-feedback .objective { display: none; }
+.demo-feedback .toast { top: 0; left: 0; align-self: flex-start; }
+.compact .tutorial-instruction { font-size: 18px; }
+.compact .tutorial-card { padding: 10px 14px; }
 
 /* Vehicle chooser: one journey action, optional activities disclosed below. */
 .chooser-vehicles { align-items: stretch; margin-top: 18px; margin-bottom: 4px; }

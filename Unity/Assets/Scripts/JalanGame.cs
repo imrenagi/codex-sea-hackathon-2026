@@ -268,7 +268,7 @@ namespace JalanKita
                         {
                             demoBrakeLatched = demoCrossingReady = demoActionReleased = false;
                             journey.LearningControls = false;
-                            toast.text = "Bagus! Lanjut berkendara. Aturan normal sekarang aktif.";
+                            toast.text = "Well done! Continue driving. Normal road rules now apply.";
                             toastUntil = Time.unscaledTime + 5;
                         }
                     }
@@ -1234,6 +1234,8 @@ namespace JalanKita
             overlay.EnableInClassList("landing", page == Page.Menu);
             dialog.EnableInClassList("landing-card", page == Page.Menu);
             overlay.EnableInClassList("city-preview", page == Page.CityPreview);
+            overlay.EnableInClassList("tutorial-overlay", page == Page.TutorialBrake);
+            overlay.pickingMode = page == Page.TutorialBrake ? PickingMode.Ignore : PickingMode.Position;
             dialog.EnableInClassList("catalogue-card", page == Page.Catalogue);
             dialog.EnableInClassList("controls-card", page == Page.Controls);
             dialog.EnableInClassList("play-card", page == Page.PlayChooser);

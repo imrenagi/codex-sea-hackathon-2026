@@ -47,8 +47,8 @@ namespace JalanKita
             demoActionReleased = false;
             journey.LearningControls = true;
             SetPage(Page.TutorialBrake);
-            AddLabel(dialog, "Ada orang menyeberang", "kicker");
-            AddLabel(dialog, "Tekan [S] untuk mengerem", "tutorial-instruction");
+            AddLabel(dialog, "Pedestrian crossing ahead", "kicker");
+            AddLabel(dialog, "Press [S] to brake", "tutorial-instruction");
             return true;
         }
 
@@ -58,7 +58,7 @@ namespace JalanKita
             demoCrossingReady = demoActionReleased = false;
             inputReleaseRequired = false;
             SetPage(Page.Drive);
-            toast.text = "Mengerem. Tunggu sampai orang selesai menyeberang.";
+            toast.text = "Braking. Wait for the pedestrian to finish crossing.";
             toastUntil = Time.unscaledTime + 6;
         }
 
@@ -200,15 +200,17 @@ namespace JalanKita
             Show(cue, false);
             bool guidedDemo = page == Page.Drive && pitchDemo && journey.LearningControls && learner == null;
             hud.EnableInClassList("demo-guided", guidedDemo);
+            hud.EnableInClassList("demo-feedback", page == Page.Drive && pitchDemo
+                && !guidedDemo && Time.unscaledTime < toastUntil);
             Show(root.Q("demoTutorialCue"), guidedDemo);
             if (guidedDemo)
             {
                 root.Q<Label>("demoTutorialInstruction").text = inputReleaseRequired
-                    ? "Lepaskan tombol untuk melanjutkan"
+                    ? "Release the controls to continue"
                     : demoBrakeLatched
-                        ? demoCrossingReady ? "Tekan [W] untuk melanjutkan"
-                            : "Tunggu sampai pejalan kaki selesai menyeberang"
-                        : "Tekan [W] untuk mulai berkendara";
+                        ? demoCrossingReady ? "Press [W] to continue"
+                            : "Wait for the pedestrian to finish crossing"
+                        : "Press [W] to start driving";
                 return;
             }
             if ((page != Page.Drive && page != Page.Jaksa) || learner != null
