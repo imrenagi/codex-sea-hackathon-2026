@@ -439,7 +439,16 @@ namespace JalanKita
         {
             PrepareMenuScene();
             SetPage(Page.Menu);
-            AddLabel(dialog, GameText.Get("brand.name"), "hero home-wordmark");
+            var wordmark = Resources.Load<Texture2D>("UI/Brand/RoadSenseWordmark");
+            if (wordmark != null)
+            {
+                var logo = new Image { image = wordmark, scaleMode = ScaleMode.ScaleToFit,
+                    tooltip = GameText.Get("brand.name"), pickingMode = PickingMode.Ignore };
+                logo.AddToClassList("home-logo");
+                dialog.Add(logo);
+            }
+            else
+                AddLabel(dialog, GameText.Get("brand.name"), "hero home-wordmark");
             AddLabel(dialog, GameText.Get("home.subtitle"), "home-tagline");
             var actions = Element(dialog, "home-actions");
             AddButton(actions, GameText.Get("home.play"), PlayFromHome, "primary home-action");
