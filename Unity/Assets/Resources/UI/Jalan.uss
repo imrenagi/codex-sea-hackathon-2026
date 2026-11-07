@@ -510,3 +510,13 @@
 .compact .vehicle-showroom { padding: 12px; margin-left: 8px; }
 .compact .vehicle-showroom .subhead { font-size: 18px; }
 .compact .vehicle-showroom .vehicle-choice { font-size: 12px; padding: 4px 6px; min-height: 27px; }
+
+/* Home-only contrast panel keeps scenery from competing with menu text. */
+.landing .dialog.landing-card {
+    background-color: rgba(0,0,0,.84); padding: 24px 28px;
+    border-width: 1px; border-color: rgba(255,255,255,.12); border-radius: 6px;
+}
+.landing .home-wordmark, .landing .home-tagline { color: #ffffff; }
+.landing .home-tagline { opacity: 1; }
+.landing .team-credit { color: #e6d3af; }
+.compact .landing .dialog.landing-card { padding: 20px 24px; }
