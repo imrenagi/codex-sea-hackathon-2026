@@ -55,6 +55,8 @@ namespace JalanKita.EditorTools
                 IntegrationChecks.VerifyUI(game);
                 VerifyMirrorsAndLook(game);
                 SignalChecks.Verify(game);
+                VerifySignalTransitions(game);
+                VerifyDrivingKeyboard(game);
                 Debug.Log("Result flow checks passed: both vehicles, all ten completion cards, mission selection, saved progress, arrow directions, continuous resume, final quiz and checkpoint retry.");
                 EditorApplication.Exit(0);
             }
@@ -202,6 +204,53 @@ namespace JalanKita.EditorTools
             Require(checkedCount >= 36, "All junction arrow models inspected");
         }
 
+        static void VerifyDrivingKeyboard(JalanGame game)
+        {
+            var root = game.GetComponent<UIDocument>().rootVisualElement;
+            var progress = root.Q<Button>("progress");
+            var pageType = typeof(JalanGame).GetNestedType("Page", BindingFlags.NonPublic);
+            Set(game, "learner", null);
+            Set(game, "pitchDemo", false);
+            Set(game, "journey", new Journey(VehicleMode.Car, new JourneySave { next = 1 }, persistent: false));
+            foreach (string active in new[] { "Drive", "Jaksa" })
+            {
+                progress.Focus();
+                Call(game, "SetPage", Enum.Parse(pageType, active));
+                Require(root.focusController.focusedElement == null, "Entering driving clears old UI focus");
+                progress.Focus(); // Reproduce retained HUD focus even if another UI path reintroduces it.
+                using (var move = NavigationMoveEvent.GetPooled(Vector2.up))
+                {
+                    move.target = progress;
+                    progress.SendEvent(move);
+                    Require(move.isImmediatePropagationStopped && root.focusController.focusedElement == progress, "Driving W/S/arrows cannot navigate HUD");
+                }
+                using (var key = KeyDownEvent.GetPooled(new Event { type = EventType.KeyDown, keyCode = KeyCode.Space, character = ' ' }))
+                {
+                    key.target = progress;
+                    progress.SendEvent(key);
+                    Require(key.isImmediatePropagationStopped && Page(game) == active,
+                        "Driving Space key cannot activate focused pause button");
+                }
+            }
+            Call(game, "SetPage", Enum.Parse(pageType, "Drive"));
+            Call(game, "ShowProgress");
+            var resume = root.Q("dialog").Query<Button>().ToList().Find(b => b.text == "Kembali berkendara");
+            Require(resume != null, "Paused journey exposes resume button");
+            resume.Focus();
+            using (var move = NavigationMoveEvent.GetPooled(Vector2.up))
+            {
+                move.target = resume;
+                resume.SendEvent(move);
+                Require(!move.isPropagationStopped, "Paused keyboard navigation is available");
+            }
+            using (var submit = NavigationSubmitEvent.GetPooled())
+            {
+                submit.target = resume;
+                resume.SendEvent(submit);
+            }
+            Require(Page(game) == "Drive", "Paused Enter submission resumes driving");
+        }
+
         static void VerifyMirrorsAndLook(JalanGame game)
         {
             var district=(District)Field(game,"district");
@@ -224,6 +273,25 @@ namespace JalanKita.EditorTools
                 foreach(var mirror in district.Mirrors.Cameras) Require(!mirror.enabled,"Paused mirrors stop rendering");
             }
             Require(UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length==1,"Only the driving camera has an audio listener");
+        }
+
+        static void VerifySignalTransitions(JalanGame game)
+        {
+            var root = game.GetComponent<UIDocument>().rootVisualElement;
+            var district = (District)Field(game, "district");
+            var run = new Journey(VehicleMode.Car, new JourneySave { next = 1 }, persistent: false, trafficSeed: 1);
+            typeof(Journey).GetProperty("Position").SetValue(run, new Vector2(-2, 72));
+            Set(game, "journey", run);
+            Call(game, "SetPage", Enum.Parse(typeof(JalanGame).GetNestedType("Page", BindingFlags.NonPublic), "Drive"));
+            district.Present(run, false, .02f, true);
+            Call(game, "RefreshHud");
+            Require(!root.Q("signalPanel").ClassListContains("hidden"), "Training signal appears near intersection");
+            Call(game, "ShowMenu");
+            Require(root.Q("signalPanel").ClassListContains("hidden"), "Leaving training hides signal panel");
+            Call(game, "StartJaksa");
+            Call(game, "RefreshJaksaHud");
+            Require(root.Q("signalPanel").ClassListContains("hidden"), "Exploration does not show stale training signal");
+            Call(game, "ShowMenu");
         }
 
         static object Field(JalanGame game, string name) => typeof(JalanGame).GetField(name, Private).GetValue(game);
