@@ -180,3 +180,6 @@
 .sheet .unity-scroller__low-button, .sheet .unity-scroller__high-button { display: none; }
 .sheet .unity-base-slider__tracker { background-color: rgba(255,255,255,0.07); border-radius: 4px; }
 .sheet .unity-base-slider__dragger { background-color: rgba(255,255,255,0.32); border-radius: 4px; }
+
+.city-preview { align-items: flex-start; justify-content: flex-end; background-color: transparent; }
+.city-preview .dialog { width: 570px; padding: 15px 19px; }
