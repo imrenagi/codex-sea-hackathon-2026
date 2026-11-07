@@ -20,7 +20,7 @@ namespace JalanKita.EditorTools
         }
         static object Field(JalanGame g, string n) => typeof(JalanGame).GetField(n, Private).GetValue(g);
         static void Set(JalanGame g, string n, object v) => typeof(JalanGame).GetField(n, Private).SetValue(g,v);
-        static void Call(JalanGame g, string n, params object[] a) => typeof(JalanGame).GetMethod(n,Private).Invoke(g,a);
+        static void Call(JalanGame g, string n, params object[] a) => typeof(JalanGame).GetMethods(Private).Single(m=>m.Name==n && m.GetParameters().Length==a.Length).Invoke(g,a);
         static void Require(bool ok,string why) { if(!ok) throw new Exception("HI_FLOW: "+why); }
         static void Submit(Button b)
         {
@@ -52,8 +52,8 @@ namespace JalanKita.EditorTools
                     string fullKey=JourneySave.Key(mode), fullSave=PlayerPrefs.GetString(fullKey);
                     string[] missions=Mission.Scenarios.Select(m=>PlayerPrefs.GetString(JourneySave.Key(mode,m))).ToArray();
                     Call(game,"ShowCatalogue",MissionKind.Scenario);
-                    var card=root.Query<VisualElement>(className:"mission-card").ToList().Single(c=>c.Query<Label>().ToList().Any(l=>l.text==GameText.Get("hi.title")));
-                    Submit(Button(card,GameText.Get("text.select_2a7802"))); Require(Field(game,"page").ToString()=="Brief","Catalogue opens existing briefing");
+                    var card=root.Query<Button>(className:"selection-card").ToList().Single(c=>c.tooltip==GameText.Get("hi.title"));
+                    Submit(card);Submit(root.Q<Button>(className:"selection-start")); Require(Field(game,"page").ToString()=="Brief","Catalogue opens existing briefing");
                     Submit(Button(root,GameText.Get("text.start"))); Require(Field(game,"page").ToString()=="Jaksa"&&(bool)Field(game,"hiActive"),"Brief starts HI mission");
                     var drive=(LandmarkDrive)Field(game,"hi"); var objective=(HiRoundaboutObjective)Field(game,"hiObjective");
                     Require(UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Count(a=>a.isActiveAndEnabled)==1,"One active listener in HI");

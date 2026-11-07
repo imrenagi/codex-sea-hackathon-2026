@@ -194,6 +194,10 @@ namespace JalanKita
                     Notice = GameText.Get("rating.criteria") + (resume ? " · "+GameText.Get("missions.in_progress",saved.attempts):""),
                     ActionLabel = GameText.Get(resume ? "text.continue" : "text.start"), Action = () => StartMission(activity, saved) });
             }
+            if(kind==MissionKind.Scenario)
+                items.Add(new SelectionItem { Id="mission-hi", Title=HiTitle, Asset="city_bundaran_hi", Meta=HiFocus,
+                    Description=GameText.Get("hi.brief"), Notice=GameText.Get("hi.save_note"),
+                    Rules=new[]{Rule.Junction}, ActionLabel=GameText.Get("text.start"), Action=ShowHiBrief });
             return items;
         }
         List<ISelectionItem> PlaySelections()
