@@ -53,7 +53,7 @@ namespace JalanKita.EditorTools
                     string[] missions=Mission.Scenarios.Select(m=>PlayerPrefs.GetString(JourneySave.Key(mode,m))).ToArray();
                     Call(game,"ShowCatalogue",MissionKind.Scenario);
                     var card=root.Query<Button>(className:"selection-card").ToList().Single(c=>c.tooltip==GameText.Get("hi.title"));
-                    Submit(card);Submit(root.Q<Button>(className:"selection-start")); Require(Field(game,"page").ToString()=="Brief","Catalogue opens existing briefing");
+                    Submit(card);Submit(root.Q<Button>("selectionContinue"));Submit(root.Q<Button>("selectionStart")); Require(Field(game,"page").ToString()=="Brief","Catalogue opens existing briefing");
                     Submit(Button(root,GameText.Get("text.start"))); Require(Field(game,"page").ToString()=="Jaksa"&&(bool)Field(game,"hiActive"),"Brief starts HI mission");
                     var drive=(LandmarkDrive)Field(game,"hi"); var objective=(HiRoundaboutObjective)Field(game,"hiObjective");
                     Require(UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Count(a=>a.isActiveAndEnabled)==1,"One active listener in HI");

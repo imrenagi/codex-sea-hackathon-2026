@@ -10,7 +10,7 @@ namespace JalanKita
     [RequireComponent(typeof(UIDocument))]
     public sealed partial class JalanGame : MonoBehaviour
     {
-        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, Controls, PlayChooser, Options, TutorialBrake, Credits }
+        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, Controls, PlayChooser, Options, TutorialBrake, Credits, VehicleSelect }
 
         District district;
         GameObject trainingRoot;
@@ -222,8 +222,10 @@ namespace JalanKita
                 }
                 return;
             }
-            if ((page == Page.PlayChooser || page == Page.Options || page == Page.Credits) && Input.GetKeyDown(KeyCode.Escape)) { ShowMenu(); return; }
-            if (page == Page.Catalogue && Input.GetKeyDown(KeyCode.Escape)) { ShowPlayChooser(); return; }
+            if (page == Page.VehicleSelect && Input.GetKeyDown(KeyCode.Escape)) { vehicleSelectionBack?.Invoke(); return; }
+            if (page == Page.PlayChooser && Input.GetKeyDown(KeyCode.Escape)) { BackFromJourneyChooser(); return; }
+            if ((page == Page.Options || page == Page.Credits) && Input.GetKeyDown(KeyCode.Escape)) { ShowMenu(); return; }
+            if (page == Page.Catalogue && Input.GetKeyDown(KeyCode.Escape)) { BackFromCatalogue(); return; }
             if (page == Page.Brief && Input.GetKeyDown(KeyCode.Escape)) { ShowCatalogue(catalogueKind); return; }
             if (page == Page.Jaksa)
             {
@@ -246,7 +248,7 @@ namespace JalanKita
                 else cityPreview?.Step(Time.unscaledDeltaTime);
                 return;
             }
-            if (page == Page.CityMaps && Input.GetKeyDown(KeyCode.Escape)) { ShowMenu(); return; }
+            if (page == Page.CityMaps && Input.GetKeyDown(KeyCode.Escape)) { ShowJourneyChooser(practiceChooser); return; }
             if (learner != null)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.R))
@@ -348,6 +350,11 @@ namespace JalanKita
         void LateUpdate()
         {
             if (journey == null) return;
+            if (page == Page.Menu)
+            {
+                PresentHomeShowcase(Time.unscaledDeltaTime);
+                return;
+            }
             RefreshProgressiveCue();
             float presentationDt = page == Page.Controls || page == Page.TutorialBrake || inputReleaseRequired ? 0 : Time.unscaledDeltaTime;
             RefreshVehiclePreview(Time.unscaledDeltaTime);
@@ -460,6 +467,9 @@ namespace JalanKita
                 AddButton(actions, GameText.Get("home.exit"), Application.Quit, "quiet home-action");
         }
 
+        System.Action journeyChooserBack;
+        void BackFromJourneyChooser() => (journeyChooserBack ?? ShowMenu)();
+
         bool practiceChooser;
         void ShowPlayChooser() => ShowJourneyChooser(false);
         void ShowPlayChooser(bool expandModes) => ShowJourneyChooser(false);
@@ -471,14 +481,27 @@ namespace JalanKita
 
         void ShowJourneyChooser(bool practice)
         {
+            // Rebuilding for a vehicle change must retain the original return destination.
+            if (page == Page.Menu || journeyChooserBack == null) journeyChooserBack = ShowMenu;
+            if (page == Page.Checkpoint && pitchDemo && demoTutorial != null)
+            {
+                var previousJourney = journey;
+                var previousTutorial = demoTutorial;
+                bool previousEntry = entryTutorial;
+                journeyChooserBack = () =>
+                {
+                    journey = previousJourney;
+                    demoTutorial = previousTutorial;
+                    pitchDemo = true;
+                    entryTutorial = previousEntry;
+                    ShowPitchComplete();
+                };
+            }
             practiceChooser = practice;
             PrepareMenuScene();
             SetPage(Page.PlayChooser);
             AddLabel(dialog, GameText.Get(practice ? "home.practice" : "text.choose_your_journey"), "heading");
-            var modes = Element(dialog, "row chooser-vehicles");
-            AddChooserVehicle(modes, VehicleMode.Car, GameText.Get("text.car_a5cdf0"), DrivingGlyph.Kind.Steering);
-            AddChooserVehicle(modes, VehicleMode.Motorcycle, GameText.Get("text.motorcycle_965701"), DrivingGlyph.Kind.Motorcycle);
-            BuildSelectionBrowser(practice ? PracticeSelections() : PlaySelections(), ShowMenu);
+            BuildSelectionBrowser(practice ? PracticeSelections() : PlaySelections(), BackFromJourneyChooser);
         }
 
         void AddChooserVehicle(VisualElement parent, VehicleMode choice, string title, DrivingGlyph.Kind glyph)
@@ -501,7 +524,6 @@ namespace JalanKita
             AddLabel(content, GameText.Get("text.sound_controls"), "menu-section-title");
             AddSoundControlsBody(content);
             AddControlsHelp(content);
-            AddButton(content, GameText.Get("credits.title"), () => ShowCreditsPage(), "quiet exit-action");
             AddButton(content, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
         }
 
@@ -579,7 +601,6 @@ namespace JalanKita
             if(!jaksa.Safety.Failure.HasValue)AddButton(actions,GameText.Get("text.continue"),()=>EnterHumanDrive(Page.Jaksa),"primary");
             AddButton(actions,GameText.Get("text.restart_road_section"),()=>{jaksa.Reset(mode);EnterHumanDrive(Page.Jaksa);},"quiet");
             AddButton(actions,GameText.Get("text.main_menu"),ShowMenu,"quiet");
-            AddLabel(dialog,GameText.Get("text.map_data_openstreetmap_contributors_odbl_surface_materials_poly_haven"),"rule-source");
         }
 
 
@@ -598,7 +619,7 @@ namespace JalanKita
             CloseCityPreview();
             SetPage(Page.CityMaps);
             AddLabel(dialog, GameText.Get("text.choose_map"), "heading");
-            BuildSelectionBrowser(CitySelections(), ShowPlayChooser);
+            BuildSelectionBrowser(CitySelections(), () => ShowJourneyChooser(practiceChooser));
         }
 
         void OpenCityMap(int index)
@@ -614,7 +635,6 @@ namespace JalanKita
                 AddLabel(dialog, GameText.Get("text.map_preview_not_a_practice_route"), "kicker");
                 AddLabel(dialog, GameText.Get("text.wasd_arrows_pan_zoom_r_reset"), "copy");
                 AddLabel(dialog, GameText.Get("text.buildings_and_roads_from_osm_some_heights_and_widths"), "copy");
-                AddLabel(dialog, "© OpenStreetMap contributors · ODbL", "rule-source");
                 var actions = Element(dialog, "row actions");
                 AddButton(actions, "+", () => cityPreview.Zoom(-.2f), "quiet");
                 AddButton(actions, "−", () => cityPreview.Zoom(.2f), "quiet");
@@ -671,8 +691,6 @@ namespace JalanKita
             SetPage(Page.Checkpoint);
             var sheet = Result(GameText.Get("tutorial.complete"), "good", GameText.Get(demoTutorial.Scenario.TitleKey));
             var content = ResultBody(sheet);
-            AddLabel(content, GameText.Get(demoTutorial.Scenario.CompletionSummaryKey), "copy");
-            AddLabel(content, GameText.Get("demo.session_summary", DemoDuration(), journey.MistakeCount), "copy");
             ShowTutorialScore(content);
             var actions = Element(sheet, "sheet-actions");
             AddButton(actions, GameText.Get(practiceChooser ? "home.practice" : "navigation.explore_modes"),
@@ -682,7 +700,7 @@ namespace JalanKita
         }
 
         void OnDestroy()
-        { CloseHi(); vehiclePreview?.Dispose(); cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
+        { StopHomeShowcase(Page.Menu, tearingDown: true); CloseHi(); vehiclePreview?.Dispose(); cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
 
         void SelectMode(VehicleMode value)
         {
@@ -751,6 +769,8 @@ namespace JalanKita
             Equipment(checklist, motor ? GameText.Get("text.passenger_s_sni_helmet") : GameText.Get("text.front_passenger_s_seat_belt"), journey.PassengerGear, () => journey.PassengerGear = !journey.PassengerGear);
             if (motor) Equipment(checklist, GameText.Get("text.headlight"), journey.Headlight, journey.ToggleHeadlight);
             var actions = Element(dialog, "row actions");
+            actions.style.justifyContent = Justify.FlexEnd;
+            AddButton(actions, GameText.Get("text.menu"), BackToMenu, "quiet");
             AddButton(actions, GameText.Get("text.start_driving"), () =>
             {
                 if (journey.Depart())
@@ -760,7 +780,6 @@ namespace JalanKita
                 }
                 else if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
             }, "primary");
-            AddButton(actions, GameText.Get("text.menu"), BackToMenu, "quiet");
         }
 
         void Equipment(VisualElement group, string label, bool ready, Action change)
@@ -1229,6 +1248,7 @@ namespace JalanKita
 
         void SetPage(Page value)
         {
+            if (page == Page.Menu && value != Page.Menu) StopHomeShowcase(value);
             heldLook=0;
             root.focusController?.focusedElement?.Blur();
             Show(root.Q("missionDrawer"), false);
@@ -1257,7 +1277,7 @@ namespace JalanKita
             dialog.RemoveFromClassList("result-layout");
             dialog.RemoveFromClassList("selection-browser-card");
             dialog.Clear();
-            ShowVehiclePreview(page == Page.PlayChooser || page == Page.Brief || page == Page.Preflight);
+            ShowVehiclePreview(page == Page.Brief);
             if (value != Page.Drive && value != Page.Jaksa)
                 dialog.schedule.Execute(() => FocusPage(value)).StartingIn(value == Page.Lesson || value == Page.Checkpoint ? 320 : 60);
         }

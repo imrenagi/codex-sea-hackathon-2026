@@ -42,7 +42,10 @@ namespace JalanKita.EditorTools
                     var card=root.Query<Button>(className:"selection-card").ToList().Single(c=>c.tooltip==GameText.Get("hi.title"));
                     Require(card.focusable&&card.enabledSelf,"HI card participates in new keyboard selector");Submit(card);
                     Require(root.Q<Label>(className:"selection-detail-title").text==GameText.Get("hi.title"),"Selection detail names playable HI mission");
-                    Submit(root.Q<Button>(className:"selection-start"));Require(Field(game,"page").ToString()=="Brief","Selection opens existing briefing");
+                    Submit(root.Q<Button>("selectionContinue"));
+                    Require(Field(game,"page").ToString()=="VehicleSelect","Map-first selection opens vehicle chooser");
+                    Submit(root.Q<Button>("selectionVehicle-"+mode));Submit(root.Q<Button>("selectionStart"));
+                    Require(Field(game,"page").ToString()=="Brief","Vehicle selection opens existing briefing");
                     Submit(root.Q("dialog").Query<Button>().ToList().Single(b=>b.text==GameText.Get("text.start")));
                     Require((bool)Field(game,"hiActive")&&Field(game,"page").ToString()=="Jaksa","Brief starts actual HI controller");
                     Call(game,"StepHi",.02f,true,false,0f,false);

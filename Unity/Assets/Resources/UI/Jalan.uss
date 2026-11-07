@@ -768,3 +768,6 @@
 
 .posted-limit { font-size: 11px; color: #ffffff; -unity-text-align: middle-center; white-space: normal; flex-shrink: 0; }
 .posted-warning { color: #ffb45c; -unity-font-style: bold; }
+
+/* Soften moving home scenery without flattening the transparent wordmark. */
+.screen .landing { background-color: rgba(18,25,30,.54); }

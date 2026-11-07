@@ -48,3 +48,5 @@ Final UI gate SHA-256 values:
   "roadsense-shared-safety-result.log": "648bd4179582222942b6dc1899c3aecee98a554b3ed6e91cec1e7ec8cca9baff"
 }
 ```
+
+Main advanced during publication to `8a2c37f`; its map-first selection, vehicle showroom, stars and return navigation were retained. The adapted actual HI map→vehicle→brief→drive→failure banner→retry→catalogue gate passed for both classes, including saves/listener isolation. Final selector log SHA-256: `4b8f082b5b0d6ee9b57b1ac65bd091c5bdf6d111af2aab925e3324ab2847db6b`. Motion/safety code is unchanged from the preceding green gates.

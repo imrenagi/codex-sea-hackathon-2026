@@ -337,6 +337,8 @@ namespace JalanKita
 
         void AddControlsHelp(VisualElement parent)
         {
+            // Keep driving help in Options and F1/HUD, not in pause/progress popups.
+            if (page != Page.Options) return;
             AddButton(parent, GameText.Get("controls.open"), () => ShowControls(page,
                 page == Page.Jaksa || page == Page.JaksaPause ? Page.Jaksa : Page.Drive, false), "quiet help-action");
             if (page == Page.Options)

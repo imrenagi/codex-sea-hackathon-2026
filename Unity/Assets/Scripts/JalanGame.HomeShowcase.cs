@@ -18,7 +18,7 @@ namespace JalanKita
             dt = Mathf.Clamp(dt, 0, .1f);
             homeSceneTime += dt;
             homeOrbitTime += dt;
-            if (homeScene < 0 || homeSceneTime >= 5f)
+            if (homeScene < 0 || homeSceneTime >= 4f)
             {
                 homeSceneTime = 0;
                 homeScene = homeScene < 0 ? 1 : (homeScene + 1) % 3;
@@ -65,7 +65,7 @@ namespace JalanKita
                 catch (Exception error) { homeSopoFailed = true; Debug.LogWarning("Home Sopo Del preview unavailable: " + error.Message); }
             }
             if (homeScene == 1 && homeCity != null && !homeCityFailed)
-                caption = "Bundaran HI · OSM preview · © OpenStreetMap contributors";
+                caption = "Bundaran HI";
             else if (homeScene == 2 && jaksa != null && !homeSopoFailed)
                 caption = "Sopo Del · Mega Kuningan";
             else
@@ -79,12 +79,14 @@ namespace JalanKita
             else homeSceneCaption.text = caption;
         }
 
-        void StopHomeShowcase(Page destination)
+        void StopHomeShowcase(Page destination, bool tearingDown = false)
         {
             if (homeScene < 0 && homeCity == null) return;
             homeCity?.Dispose(); homeCity = null;
-            if (jaksa != null && destination != Page.Jaksa) jaksa.Street.Root.SetActive(false);
+            if (jaksa != null && jaksa.Street.Root && destination != Page.Jaksa) jaksa.Street.Root.SetActive(false);
             homeScene = -1; homeSceneTime = 0; homeSceneCaption = null;
+            // Scene objects may already be destroyed during domain reload/OnDestroy.
+            if (tearingDown) return;
             // Some callers already created their own scene before SetPage: don't override it.
             if (destination == Page.CityPreview) cityPreview?.SetShowcaseVisible(true);
             else if (destination == Page.Jaksa && jaksa != null) jaksa.Street.Activate();
