@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/KampungKenanga.unity
+    path: Assets/Scenes/RoadSense.unity
     guid: 8c8a83fd5984a4e51b0727d88a5fcf5f
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

@@ -1,0 +1,25 @@
+# RoadSense · Presenter cheat sheet
+
+**Tim We Will Handle · Total 6 menit**
+
+Narator menjaga waktu. Operator menjalankan game. Latih alur sebelum tampil. Ketersediaan rekaman belum dikonfirmasi. Lihat [handoff macOS](ROAD_SENSE_HANDOFF.md) untuk revisi paket dan batas verifikasi.
+
+| Waktu | Narasi dan aksi |
+|---|---|
+| 00:00–00:40 | Perkenalkan RoadSense: simulasi keselamatan berkendara di Indonesia. Fokus pada pejalan kaki dan arus silang. |
+| 00:40–01:10 | Jelaskan alur: mencoba, menerima feedback, melihat contoh, mencoba kembali. |
+| 01:10–01:25 | Home **Play** → kartu **Mobil** → **Mode lainnya** → **Coba demo · Hak utama [F2]**. Latihan WASD lalu tahan **S** sampai berhenti, tanpa penalti. Sesi asli kembali setelah latihan. |
+| 01:25–01:45 | Di Pasar Bunga, tekan **W** menuju zebra cross yang sedang digunakan. Lepas W saat feedback tampil. |
+| 01:45–02:15 | Tunjuk tindakan berikutnya, penjelasan, dan rujukan aturan pada kartu feedback. Hindari browser. |
+| 02:15–02:40 | Pilih **Lihat contoh [D]**. Tunjuk pengereman. **Tab** kembali ke feedback. |
+| 02:40–03:40 | **R** retry. Berhenti sebelum zebra cross, tunggu pejalan kaki. Di persimpangan, berhenti sebelum garis beri jalan dan tunggu arus silang aman. Lanjut ke checkpoint hijau. |
+| 03:40–04:20 | Jika selesai, tunjuk kartu hasil. Baca catatan sesuai layar. Durasi mencakup jeda dan penjelasan. Demo memakai sesi terpisah. |
+| 04:20–05:00 | Jelaskan pilihan mobil/motor, tes, misi, dan perjalanan lengkap. Lima lokasi awal: Garasi Kenanga, Jalan Kenanga, Pasar Bunga, Jalan Mawar, Zona Sekolah. Ada tahap tambahan. |
+| 05:00–05:40 | Sampaikan rencana pengujian pengguna untuk memahami kejelasan petunjuk dan kenyamanan kontrol. Dampak pembelajaran masih perlu diukur. |
+| 05:40–06:00 | Tutup: RoadSense menyediakan ruang latihan keputusan berkendara. “Kami tim We Will Handle. Terima kasih.” |
+
+**Kontrol:** W gas; Space/S rem; A/D kemudi; F1 panduan; Tab/Esc jeda; D contoh pada feedback; R retry. **Ulangi demo** pada hasil membuat sesi baru.
+
+**Fallback:** fokuskan game sekali jika input macet. Pada 03:40, jika runtime tersendat dan rekaman build yang sama memang tersedia, tampilkan rekaman dan sebutkan asalnya. Jika tidak tersedia, jelaskan bagian yang belum berhasil ditampilkan. Tetap selesai 06:00.
+
+Label dan alur mengacu pada source build `bb638069b168b64770b3c0396d4f213bba2b8236`. Latihan awal berjalan langsung: W untuk bergerak, lalu S sampai berhenti. Tidak ada modal kontrol otomatis; F1 membuka panduan manual yang menjeda game. Compile/build dan pembukaan aplikasi sudah dilakukan. Gameplay, input, perilaku grace dan audio terbaru masih perlu dicoba pengguna. Jangan mengklaim statistik pengguna, peningkatan kemampuan, atau penyelesaian yang belum terlihat.

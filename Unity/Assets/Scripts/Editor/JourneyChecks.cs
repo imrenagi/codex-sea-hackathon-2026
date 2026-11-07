@@ -6,7 +6,7 @@ namespace JalanKita.EditorTools
 {
     public static class JourneyChecks
     {
-        [MenuItem("Jalan Kita/Verify Checkpoints")]
+        [MenuItem("RoadSense/Verify Checkpoints")]
         public static void Run()
         {
             NpcRuleChecks.Run();

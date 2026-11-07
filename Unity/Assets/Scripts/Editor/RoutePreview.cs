@@ -13,17 +13,17 @@ namespace JalanKita.EditorTools
         const string StageKey="JalanKita.PreviewStage";
         const BindingFlags Private=BindingFlags.NonPublic|BindingFlags.Instance;
         static RoutePreview() => EditorApplication.update += AwaitGame;
-        [MenuItem("Jalan Kita/Preview/06 - Lurus jalan besar")]
+        [MenuItem("RoadSense/Preview/06 - Lurus jalan besar")]
         static void Straight() => Open(5);
-        [MenuItem("Jalan Kita/Preview/07 - Belok kiri dan pejalan kaki")]
+        [MenuItem("RoadSense/Preview/07 - Belok kiri dan pejalan kaki")]
         static void Left() => Open(6);
-        [MenuItem("Jalan Kita/Preview/08 - Panah belok kanan")]
+        [MenuItem("RoadSense/Preview/08 - Panah belok kanan")]
         static void Right() => Open(7);
-        [MenuItem("Jalan Kita/Preview/09 - Perlintasan kereta")]
+        [MenuItem("RoadSense/Preview/09 - Perlintasan kereta")]
         static void Rail() => Open(8);
-        [MenuItem("Jalan Kita/Preview/10 - Ambulans")]
+        [MenuItem("RoadSense/Preview/10 - Ambulans")]
         static void Emergency() => Open(9);
-        [MenuItem("Jalan Kita/Preview/Maju ke titik tantangan")]
+        [MenuItem("RoadSense/Preview/Maju ke titik tantangan")]
         static void Approach()
         {
             if (!EditorApplication.isPlaying) return;

@@ -40,7 +40,7 @@ namespace JalanKita.EditorTools
             }
         }
 
-        [MenuItem("Jalan Kita/Verify combined simulation")]
+        [MenuItem("RoadSense/Verify combined simulation")]
         public static void RunSimulation()
         {
             using var preferences = new SavedPreferences();
@@ -101,7 +101,11 @@ namespace JalanKita.EditorTools
                 foreach (var ramp in ramps)
                 {
                     Require(ramp.GetComponent<Renderer>().sharedMaterial != null, "Landing material exists with local StreetLook paving");
-                    var vertices = ramp.sharedMesh.vertices.Select(ramp.transform.TransformPoint).ToArray();
+                    // Static batching can share unrelated vertices; inspect only this renderer's submesh.
+                    var mesh = ramp.sharedMesh;
+                    var points = mesh.vertices;
+                    int submesh = ramp.GetComponent<MeshRenderer>().subMeshStartIndex;
+                    var vertices = mesh.GetIndices(submesh).Distinct().Select(i => ramp.transform.TransformPoint(points[i])).ToArray();
                     Require(vertices.All(v => Mathf.Abs(v.x) >= 4.66f && Mathf.Abs(v.x) <= 5.51f), "Ramp uses retained sidewalk width");
                     Require(vertices.Min(v => v.y) < .01f && vertices.Max(v => v.y) >= .12f, "Ramp joins street to sidewalk");
                 }

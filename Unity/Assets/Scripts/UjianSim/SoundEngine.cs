@@ -22,6 +22,7 @@ namespace UjianSim.Game
         /// <summary>Metres to the nearest level crossing whose bell is ringing (infinity when none).</summary>
         public float BellDist;
         public bool Rain;
+        public bool DecorativeAmbienceSuppressed;
     }
 
     /// <summary>
@@ -74,6 +75,7 @@ namespace UjianSim.Game
         float lpEngine1, lpEngine2, bpWindLow, bpWindBand, lpHorn, lpRain, hpRain;
 
         float ringTimer, sirenPhase, bellTimer, ambienceTimer = 2f;
+        float ambienceStartupQuiet = 8f;
 
         public bool Muted { get; private set; }
         public float Volume { get; private set; } = 1f;
@@ -253,8 +255,11 @@ namespace UjianSim.Game
             tWind = !AmbienceEnabled ? 0f : f.Motorcycle.HasValue ? 0.018f + Mathf.Clamp01(Mathf.Abs(f.Speed) / 18f) * 0.025f : 0.006f;
             tRain = AmbienceEnabled && f.Rain ? 0.05f : 0f;
 
-            // Keep menus and feedback quiet for the instructor or presenter.
-            if (AmbienceEnabled && f.Motorcycle.HasValue) ambienceTimer -= dt;
+            // Decorative chirps/drones wait until the driver has spent eight seconds moving.
+            // Menu, pause and onboarding restart this grace without muting safety cues.
+            if (!f.Motorcycle.HasValue || f.DecorativeAmbienceSuppressed) ambienceStartupQuiet = 8f;
+            else if (Mathf.Abs(f.Speed) > 0.5f) ambienceStartupQuiet = Mathf.Max(0f, ambienceStartupQuiet - dt);
+            if (AmbienceEnabled && f.Motorcycle.HasValue && ambienceStartupQuiet <= 0f) ambienceTimer -= dt;
             else ambienceTimer = 2f;
             if (ambienceTimer <= 0f)
             {

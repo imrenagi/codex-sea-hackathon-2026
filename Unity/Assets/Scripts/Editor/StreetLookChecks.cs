@@ -12,7 +12,7 @@ namespace JalanKita.EditorTools
 {
     public static class StreetLookChecks
     {
-        [MenuItem("Jalan Kita/Verify grounded street and capture")]
+        [MenuItem("RoadSense/Verify grounded street and capture")]
         public static void Run()
         {
             Prepare();

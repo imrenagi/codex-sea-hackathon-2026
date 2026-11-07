@@ -15,7 +15,7 @@ namespace JalanKita.EditorTools
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
             Verify(new JaksaDrive(new GameObject("Exploration verification").transform));
         }
-        [MenuItem("Jalan Kita/Build Sea office preview macOS")]
+        [MenuItem("RoadSense/Build Sea office preview macOS")]
         public static void BuildMac()
         {
             const string destination="Builds/SeaOffice/Jalan Kita.app";
@@ -38,7 +38,7 @@ namespace JalanKita.EditorTools
             Debug.Log("Sea office preview build ready: "+Path.GetFullPath(destination));
         }
 
-        [MenuItem("Jalan Kita/Prepare and verify Sea office")]
+        [MenuItem("RoadSense/Prepare and verify Sea office")]
         public static void Prepare()
         {
             if(!Application.isBatchMode&&!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())return;

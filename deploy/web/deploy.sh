@@ -13,7 +13,7 @@ if ! command -v gcloud >/dev/null 2>&1; then
 fi
 
 if [ ! -s "$WEB_BUILD_DIR/index.html" ] || [ ! -d "$WEB_BUILD_DIR/Build" ]; then
-    echo "No WebGL export at $WEB_BUILD_DIR. Use Jalan Kita > Build WebGL in Unity first." >&2
+    echo "No WebGL export at $WEB_BUILD_DIR. Use RoadSense > Build WebGL in Unity first." >&2
     exit 1
 fi
 for pattern in '*.loader.js' '*.data*' '*.wasm*' '*.framework.js*'; do
