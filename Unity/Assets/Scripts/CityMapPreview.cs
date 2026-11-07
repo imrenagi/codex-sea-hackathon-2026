@@ -247,8 +247,22 @@ namespace JalanKita
             {
                 this.owner=owner; this.name=name;
                 this.parent = parent ? parent : owner.root.transform;
-                material=new Material(Shader.Find("Universal Render Pipeline/Lit")); material.color=color;
-                material.SetFloat("_Cull",0); material.SetFloat("_Smoothness",.15f); owner.materials.Add(material);
+                var template = Resources.Load<Material>("UI/LitMetallic");
+                if (template && template.shader && template.shader.isSupported)
+                    material = new Material(template);
+                else
+                {
+                    var shader = Shader.Find("Universal Render Pipeline/Lit");
+                    if (!shader || !shader.isSupported) shader = Shader.Find("Universal Render Pipeline/Unlit");
+                    if (!shader || !shader.isSupported)
+                        throw new InvalidOperationException("Material peta tidak didukung pada perangkat ini.");
+                    material = new Material(shader);
+                }
+                owner.materials.Add(material);
+                material.color = color;
+                if (material.HasProperty("_Cull")) material.SetFloat("_Cull", 0);
+                if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", 0);
+                if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", .15f);
             }
             public void Polygon(Vector3[] points)
             {
