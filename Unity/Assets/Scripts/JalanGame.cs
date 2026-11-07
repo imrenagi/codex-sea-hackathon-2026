@@ -47,6 +47,8 @@ namespace JalanKita
             sound = SoundEngine.Create(transform);
             root = GetComponent<UIDocument>().rootVisualElement;
             root.AddToClassList("jalan-root");
+            root.RegisterCallback<GeometryChangedEvent>(change =>
+                root.EnableInClassList("compact", change.newRect.height < 700 || change.newRect.width < 1000));
             root.pickingMode = PickingMode.Ignore;
             hud = root.Q("hud");
             var mirrors = new VisualElement { name="mirrors", pickingMode=PickingMode.Ignore };
@@ -122,11 +124,7 @@ namespace JalanKita
 
         void Update()
         {
-            if (page == Page.Menu && Input.GetKeyDown(KeyCode.F2))
-            {
-                StartPitchDemo();
-                return;
-            }
+            if (page == Page.Menu && Input.GetKeyDown(KeyCode.F2)) { StartPitchDemo(); return; }
             if (Input.GetKeyDown(KeyCode.M)) ToggleSound();
             if (page == Page.Jaksa)
             {
@@ -179,6 +177,7 @@ namespace JalanKita
                 if (Input.GetKeyDown(KeyCode.R) && (PitchComplete || !journey.Finished)) Retry();
                 else if (Input.GetKeyDown(KeyCode.Escape)) BackToMenu();
             }
+            else if (page == Page.Progress && pitchDemo && Input.GetKeyDown(KeyCode.R)) StartPitchDemo();
             else if (page == Page.Progress && !journey.Finished &&
                 Input.GetKeyDown(KeyCode.Escape)) ReturnToJourney();
         }
@@ -259,7 +258,23 @@ namespace JalanKita
         }
 
         static bool Pressed(KeyCode a, KeyCode b) => Input.GetKey(a) || Input.GetKey(b);
-        void OnApplicationFocus(bool focus) { if(!focus) heldLook=0; }
+        void OnApplicationFocus(bool focus)
+        {
+            if (focus) return;
+            heldLook = 0;
+            if (root == null || journey == null) return;
+            if (page == Page.Jaksa) ShowJaksaPause();
+            else if (page == Page.Drive)
+            {
+                if (learner != null) EndDemonstration();
+                else ShowProgress();
+            }
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            if (paused) OnApplicationFocus(false);
+        }
 
         void ShowMenu()
         {
@@ -286,11 +301,13 @@ namespace JalanKita
             var modes = Element(content, "row section");
             AddButton(modes, "Mobil", () => SelectMode(VehicleMode.Car), mode == VehicleMode.Car ? "selected" : "quiet");
             AddButton(modes, "Motor", () => SelectMode(VehicleMode.Motorcycle), mode == VehicleMode.Motorcycle ? "selected" : "quiet");
+            AddButton(content, "Demo singkat · Hak utama [F2]", StartPitchDemo, "option primary");
+            AddLabel(content, "Coba satu situasi, pahami aturannya, lalu ulangi. Progres latihan tetap aman.", "copy");
             AddVehiclePicker(content);
             var activities = Element(content, "section");
             AddButton(activities, "Uji keterampilan  ·  5 tes singkat", () => ShowCatalogue(MissionKind.SkillTest), "option primary");
             AddButton(activities, "Misi sehari-hari  ·  3 perjalanan", () => ShowCatalogue(MissionKind.Scenario), "option primary");
-            AddButton(activities, "Demo singkat · Hak utama [F2]", StartPitchDemo, "option quiet");
+
             AddLabel(content, "JELAJAH & PERJALANAN LENGKAP", "kicker section");
             var actions = Element(content, "row actions");
             AddButton(actions, "Jelajahi kantor Sea · Sopo Del", StartJaksa, "primary");
@@ -356,6 +373,7 @@ namespace JalanKita
             signalRight.On = jaksa.Indicator > 0 && blink;
             headlight.On = mode == VehicleMode.Motorcycle && jaksa.Headlight;
             Show(root.Q("practiceHint"), false);
+            Show(toast, Time.unscaledTime < toastUntil);
         }
 
         void ShowJaksaPause()
@@ -704,45 +722,33 @@ namespace JalanKita
             if (PitchComplete) { ShowPitchComplete(); return; }
             if (journey.Activity != null) { ShowMissionProgress(); return; }
             SetPage(Page.Progress);
-            AddLabel(dialog, journey.Finished ? "PERJALANAN SELESAI" : "JURNAL PERJALANAN", "kicker");
-            AddLabel(dialog, journey.Finished ? "Tiba dengan selamat" : "Kemajuan latihan", "heading");
-            AddLabel(dialog, pitchDemo ? "DEMO · Hak utama · Progres latihan tidak diubah" : (practiceStart >= 0 ? "Latihan dari misi " + (practiceStart+1) + " · Progres perjalanan tetap tersimpan  ·  "
+            var content = ScrollDialog();
+            AddLabel(content, journey.Finished ? "PERJALANAN SELESAI" : "JURNAL PERJALANAN", "kicker");
+            AddLabel(content, journey.Finished ? "Tiba dengan selamat" : "Kemajuan latihan", "heading");
+            AddLabel(content, pitchDemo ? "DEMO · Hak utama · Progres latihan tidak diubah" : (practiceStart >= 0 ? "Latihan dari misi " + (practiceStart+1) + " · Progres perjalanan tetap tersimpan  ·  "
                 : journey.Stage + " dari " + All.Length + " checkpoint tersimpan  ·  ")
                 + (mode == VehicleMode.Car ? "Mobil" : "Motor"), "copy");
-            if (pitchDemo) AddLabel(dialog, "Durasi sesi: " + DemoDuration() + " · termasuk jeda dan penjelasan", "copy");
+            if (pitchDemo) AddLabel(content, "Durasi sesi: " + DemoDuration() + " · termasuk jeda dan penjelasan", "copy");
             if (journey.Save.before >= 0)
-                AddLabel(dialog, "Kuis awal  " + journey.Save.before + "/3"
+                AddLabel(content, "Kuis awal  " + journey.Save.before + "/3"
                     + (journey.Save.after >= 0 ? "     Kuis akhir  " + journey.Save.after + "/3" : ""), "copy");
 
             var frequent = Enumerable.Range(0, Lesson.All.Length)
                 .Where(i => journey.Save.mistakes[i] > 0)
                 .OrderByDescending(i => journey.Save.mistakes[i]).Take(3).ToArray();
-            var box = Element(dialog, "note");
+            var box = Element(content, "note");
             AddLabel(box, frequent.Length > 0 ? "PALING SERING DIULANG" : "CATATAN LATIHAN", "kicker");
             if (frequent.Length == 0) AddLabel(box, "Belum ada aturan yang perlu diulang.", "copy");
             foreach (int i in frequent)
                 AddLabel(box, journey.Save.mistakes[i] + "×   " + Lesson.All[i].Title, "copy");
-            if (frequent.Length > 0) AddLabel(dialog, "Saran latihan berikutnya · " + Lesson.All[frequent[0]].Action, "copy");
+            if (frequent.Length > 0) AddLabel(content, "Saran latihan berikutnya · " + Lesson.All[frequent[0]].Action, "copy");
 
-            var actions = Element(dialog, "row actions");
+            var actions = Element(content, "row actions");
             if (!journey.Finished) AddButton(actions, "Kembali berkendara", ReturnToJourney, "primary");
+            if (pitchDemo) AddButton(actions, "Ulangi demo [R]", StartPitchDemo, "quiet");
             AddButton(actions, "Menu utama", BackToMenu, journey.Finished ? "primary" : "quiet");
-            AddControlsHelp(dialog);
-            AddSoundControls(dialog);
-            MakeDialogScrollable();
-        }
-
-        void MakeDialogScrollable()
-        {
-            var scroll = new ScrollView(ScrollViewMode.Vertical)
-            {
-                horizontalScrollerVisibility = ScrollerVisibility.Hidden,
-                verticalScrollerVisibility = ScrollerVisibility.Auto
-            };
-            scroll.AddToClassList("dialog-scroll");
-            scroll.contentContainer.AddToClassList("dialog-content");
-            foreach (var child in dialog.Children().ToArray()) scroll.Add(child);
-            dialog.Add(scroll);
+            AddControlsHelp(content);
+            AddSoundControls(content);
         }
 
         static void AddControlsHelp(VisualElement parent)
@@ -957,6 +963,17 @@ namespace JalanKita
             Show(toast, Time.unscaledTime < toastUntil);
         }
 
+        ScrollView ScrollDialog()
+        {
+            var scroll = new ScrollView(ScrollViewMode.Vertical)
+            {
+                horizontalScrollerVisibility = ScrollerVisibility.Hidden
+            };
+            scroll.AddToClassList("dialog-scroll");
+            dialog.Add(scroll);
+            return scroll;
+        }
+
         void SetPage(Page value)
         {
             heldLook=0;
@@ -968,7 +985,6 @@ namespace JalanKita
             Show(overlay, page != Page.Drive && page != Page.Jaksa);
             overlay.EnableInClassList("landing", page == Page.Menu);
             dialog.EnableInClassList("landing-card", page == Page.Menu);
-            dialog.EnableInClassList("scroll-dialog", page == Page.Progress);
             overlay.EnableInClassList("city-preview", page == Page.CityPreview);
             dialog.EnableInClassList("catalogue-card", page == Page.Catalogue);
             dialog.RemoveFromClassList("rule-card");

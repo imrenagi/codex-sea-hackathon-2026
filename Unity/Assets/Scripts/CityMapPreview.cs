@@ -9,6 +9,7 @@ namespace JalanKita
     {
         readonly GameObject root;
         readonly Camera camera;
+        readonly Transform compass;
         readonly VisualElement controls;
         readonly List<Mesh> meshes = new();
         readonly List<Material> materials = new();
@@ -37,6 +38,9 @@ namespace JalanKita
             camera.transform.SetParent(root.transform,false); camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(.12f,.20f,.24f);
             camera.nearClipPlane = 1; camera.farClipPlane = 12000; camera.fieldOfView = 50;
+            compass = new GameObject("North marker").transform;
+            compass.SetParent(camera.transform, false);
+            BuildCompass();
             var sun = new GameObject("City sunlight").AddComponent<Light>();
             sun.transform.SetParent(root.transform,false); sun.type = LightType.Directional;
             sun.transform.rotation = Quaternion.Euler(48,-35,0); sun.intensity = 1.05f;
@@ -80,8 +84,25 @@ namespace JalanKita
             var tallRoofs = new Batch(this,"Tower roofs",new Color(.37f,.43f,.45f));
             var roofTrim = new Batch(this,"Roof edge trim",new Color(.89f,.85f,.73f));
             var windows = new Batch(this,"Windows and shopfronts",new Color(.13f,.29f,.34f));
-            foreach (var building in map.buildings)
+            // Spend illustrative facade detail near the selected location before distant blocks.
+            var ordered = new (CityBuilding building, float distance)[map.buildings.Length];
+            for (int i = 0; i < map.buildings.Length; i++)
             {
+                var building = map.buildings[i];
+                Vector2 center = Vector2.zero;
+                if (building.points != null && building.points.Length > 0)
+                {
+                    foreach (var point in building.points) center += new Vector2(point.x, point.z);
+                    center /= building.points.Length;
+                }
+                ordered[i] = (building, center.sqrMagnitude);
+            }
+            Array.Sort(ordered, (a, b) => a.distance != b.distance
+                ? a.distance.CompareTo(b.distance) : string.CompareOrdinal(a.building.osmId, b.building.osmId));
+            int windowsRemaining = 24000;
+            foreach (var item in ordered)
+            {
+                var building = item.building;
                 if (building.points == null || building.points.Length < 3) continue;
                 var outline=new List<Vector3>();
                 foreach (var p in building.points) outline.Add(p.At(0));
@@ -117,13 +138,14 @@ namespace JalanKita
                     roofTrim.Quad(a+top-band+offset,a+top+offset,b+top+offset,b+top-band+offset);
                     int columns=Mathf.Min(24,Mathf.FloorToInt(length/3));
                     int floors=Mathf.Min(18,Mathf.FloorToInt(height/3));
-                    for (int floor=0;floor<floors;floor++)
-                        for (int col=0;col<columns;col++)
+                    for (int floor=0;floor<floors && windowsRemaining>0;floor++)
+                        for (int col=0;col<columns && windowsRemaining>0;col++)
                         {
                             Vector3 center=a+along*(length*(col+.5f)/columns)+Vector3.up*((floor+.5f)*height/floors);
                             Vector3 half=along*Mathf.Min(.7f,length/columns*.3f);
                             Vector3 up=Vector3.up*.65f;
                             windows.Quad(center-half-up+offset,center-half+up+offset,center+half+up+offset,center+half-up+offset);
+                            windowsRemaining--;
                         }
                 }
                 (height>18 ? tallRoofs : roofs).Polygon(roof);
@@ -154,6 +176,21 @@ namespace JalanKita
             for (int i=polygon.Count-1;i>=0 && polygon.Count>1;i--)
                 if ((polygon[i]-polygon[(i+polygon.Count-1)%polygon.Count]).sqrMagnitude<.0001f) polygon.RemoveAt(i);
             return polygon.ToArray();
+        }
+        void BuildCompass()
+        {
+            var plate = new Batch(this, "Compass plate", new Color(.12f, .20f, .24f), compass);
+            plate.Quad(new(-.23f, -.3f, 0), new(-.23f, .31f, 0), new(.23f, .31f, 0), new(.23f, -.3f, 0));
+            plate.Flush();
+            var arrow = new Batch(this, "North arrow", new Color(.91f, .39f, .29f), compass);
+            arrow.Quad(new(0, .25f, -.005f), new(-.15f, -.04f, -.005f),
+                new(0, .03f, -.005f), new(.15f, -.04f, -.005f));
+            arrow.Flush();
+            var letter = new Batch(this, "North label", new Color(.96f, .94f, .88f), compass);
+            letter.Quad(new(-.09f, -.24f, -.005f), new(-.09f, -.10f, -.005f), new(-.06f, -.10f, -.005f), new(-.06f, -.24f, -.005f));
+            letter.Quad(new(.06f, -.24f, -.005f), new(.06f, -.10f, -.005f), new(.09f, -.10f, -.005f), new(.09f, -.24f, -.005f));
+            letter.Quad(new(-.06f, -.10f, -.005f), new(-.06f, -.15f, -.005f), new(.06f, -.24f, -.005f), new(.06f, -.19f, -.005f));
+            letter.Flush();
         }
         public void Step(float dt)
         {
@@ -203,6 +240,8 @@ namespace JalanKita
             camera.farClipPlane = Mathf.Max(12000, distance * ViewOffset.magnitude + 3000);
             camera.transform.position = focus + ViewOffset * distance;
             camera.transform.LookAt(focus);
+            float halfViewHeight = 4 * Mathf.Tan(camera.fieldOfView * .5f * Mathf.Deg2Rad);
+            compass.localPosition = new Vector3(halfViewHeight * camera.aspect - .3f, halfViewHeight - .4f, 4);
         }
         public void Dispose()
         {
@@ -219,13 +258,29 @@ namespace JalanKita
             readonly CityMapPreview owner;
             readonly string name;
             readonly Material material;
+            readonly Transform parent;
             readonly List<Vector3> vertices=new();
             readonly List<int> indices=new();
-            public Batch(CityMapPreview owner,string name,Color color)
+            public Batch(CityMapPreview owner,string name,Color color,Transform parent = null)
             {
                 this.owner=owner; this.name=name;
-                material=new Material(Shader.Find("Universal Render Pipeline/Lit")); material.color=color;
-                material.SetFloat("_Cull",0); material.SetFloat("_Smoothness",.15f); owner.materials.Add(material);
+                this.parent = parent ? parent : owner.root.transform;
+                var template = Resources.Load<Material>("UI/LitMetallic");
+                if (template && template.shader && template.shader.isSupported)
+                    material = new Material(template);
+                else
+                {
+                    var shader = Shader.Find("Universal Render Pipeline/Lit");
+                    if (!shader || !shader.isSupported) shader = Shader.Find("Universal Render Pipeline/Unlit");
+                    if (!shader || !shader.isSupported)
+                        throw new InvalidOperationException("Material peta tidak didukung pada perangkat ini.");
+                    material = new Material(shader);
+                }
+                owner.materials.Add(material);
+                material.color = color;
+                if (material.HasProperty("_Cull")) material.SetFloat("_Cull", 0);
+                if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", 0);
+                if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", .15f);
             }
             public void Polygon(Vector3[] points)
             {
@@ -247,7 +302,7 @@ namespace JalanKita
                 var mesh=new Mesh { name=name };
                 owner.meshes.Add(mesh);
                 mesh.SetVertices(vertices); mesh.SetTriangles(indices,0); mesh.RecalculateNormals(); mesh.RecalculateBounds();
-                var go=new GameObject(name); go.transform.SetParent(owner.root.transform,false);
+                var go=new GameObject(name); go.transform.SetParent(parent,false);
                 go.AddComponent<MeshFilter>().sharedMesh=mesh;
                 var renderer=go.AddComponent<MeshRenderer>(); renderer.sharedMaterial=material; renderer.shadowCastingMode=ShadowCastingMode.Off;
                 vertices.Clear(); indices.Clear();
