@@ -77,7 +77,10 @@ namespace JalanKita
                     if (badge != null) badge.style.display = pair.Key == item ? DisplayStyle.Flex : DisplayStyle.None;
                 }
                 detail.Clear(); actions.Clear(); detail.scrollOffset = Vector2.zero;
-                AddBrowserImage(detail, item.Asset, "selection-detail-image", item.Stars);
+                // Practice details prioritize rules; keep artwork on the list cards.
+                bool isLevel = item.Id == "tutorial" || item.Id.StartsWith("checkpoint-")
+                    || (origin == Page.Catalogue && kind == MissionKind.SkillTest);
+                if (!isLevel) AddBrowserImage(detail, item.Asset, "selection-detail-image", item.Stars);
                 AddLabel(detail, item.Meta, "selection-detail-meta kicker");
                 AddLabel(detail, item.Title, "selection-detail-title heading");
                 AddLabel(detail, item.Description, "selection-detail-copy copy");
