@@ -9,6 +9,8 @@ namespace JalanKita.EditorTools
         [MenuItem("Jalan Kita/Verify Checkpoints")]
         public static void Run()
         {
+            SteeringChecks.Run();
+            SoundChecks.Run();
             foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
             {
                 VerifyContinuousRoute(mode, 0);
@@ -107,10 +109,10 @@ namespace JalanKita.EditorTools
             for (int i = 0; i < 700 && run.Position.y < RouteStage.PhoneStart + 4.2f; i++)
                 Cruise(run, 0);
             for (int i = 0; i < 200 && run.Position.x > -5.3f; i++)
-                Cruise(run, -1);
+                Cruise(run, VehicleSteering.Pursue(run, new Vector2(-6, run.Position.y + 6)));
             for (int i = 0; i < 150 && run.Speed > 0; i++)
-                run.Step(.02f, false, true, 0);
-            Require(run.PhoneRinging && !run.Failure.HasValue, "Stopped in the bay with phone ringing");
+                run.Step(.02f, false, true, VehicleSteering.Pursue(run, new Vector2(-6, run.Position.y + 4)));
+            Require(run.PhoneRinging && !run.Failure.HasValue, $"Stopped in the bay with phone ringing: {run.Mode}, {run.Position}, {run.Failure}");
             run.ResolvePhone(true);
             Require(!run.PhoneRinging && !run.Failure.HasValue, "Answering while stopped in the bay should pass");
         }

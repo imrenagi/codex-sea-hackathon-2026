@@ -50,7 +50,7 @@ namespace JalanKita
 
             float remaining = Mathf.Max(0, stopAt - 1.15f - run.Front);
             float desired = Mathf.Min(cruise, Mathf.Sqrt(2 * 5.1f * remaining));
-            float steer = Mathf.Clamp((targetX - run.Position.x) * .48f, -1, 1);
+            float steer = VehicleSteering.Pursue(run, new Vector2(targetX, run.Position.y + Mathf.Max(4, 3 + .6f * run.Speed)));
             run.Step(dt, run.Speed < desired - .14f, run.Speed > desired + .12f, steer);
         }
 
@@ -83,9 +83,7 @@ namespace JalanKita
             }
             float desired = Mathf.Min(cruise, Mathf.Sqrt(2 * 5.1f * Mathf.Max(0, remaining)));
             var target = Boulevard.LookAhead(path, run.Position, 4);
-            var delta = target - run.Position;
-            float heading = Mathf.Atan2(delta.x, delta.y) * Mathf.Rad2Deg;
-            float steer = Mathf.Clamp(Mathf.DeltaAngle(run.Heading, heading) / 24, -1, 1);
+            float steer = VehicleSteering.Pursue(run, target);
             run.Step(dt, run.Speed < desired - .14f, run.Speed > desired + .12f, steer);
         }
 

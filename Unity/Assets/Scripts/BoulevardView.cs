@@ -12,7 +12,6 @@ namespace JalanKita
         readonly List<GameObject> train = new();
         GameObject boulevardWalker, ambulance, angkot;
         Renderer[] ambulanceRenderers;
-        AudioSource siren, crossingBell;
 
         void BuildBoulevard()
         {
@@ -39,9 +38,6 @@ namespace JalanKita
             ambulance = Model("Ambulance", Vector3.zero, 180, actors);
             ambulanceRenderers = ambulance.GetComponentsInChildren<Renderer>();
             angkot = Model("Angkot", new Vector3(-189, 0, 914), 180, actors);
-            siren = Sound(ambulance.transform, "Sirene ambulans", true);
-            crossingBell = Sound(actors, "Bel perlintasan", false);
-            crossingBell.transform.position = new Vector3(-190, 1, 800);
         }
 
         void BigRoad(Vector2 start, Vector2 end, float[] junctions)
@@ -195,29 +191,6 @@ namespace JalanKita
                     if (name=="M_Siren_Red" || name=="M_Siren_Blue")
                         MaterialLibrary.SetGlow(mat,(name=="M_Siren_Red"?flash:!flash)?2.5f:0);
                 }
-            siren.volume = driving && run.Ambulance.HasValue && !run.Failure.HasValue ? .35f : 0;
-            crossingBell.volume = driving && run.RailWarning && !run.Failure.HasValue ? .25f : 0;
-        }
-
-        static AudioSource Sound(Transform parent,string name,bool emergency)
-        {
-            var source=new GameObject(name).AddComponent<AudioSource>();
-            source.transform.SetParent(parent,false);
-            const int rate=22050;
-            var data=new float[rate*3];
-            float phase=0;
-            for(int i=0;i<data.Length;i++)
-            {
-                float t=i/(float)rate;
-                float frequency=emergency?700+350*Mathf.Sin(t*Mathf.PI*2/3):1000;
-                phase+=frequency*2*Mathf.PI/rate;
-                data[i]=Mathf.Sin(phase)*(emergency?.3f:Mathf.Exp(-(t%.5f)*12)*.35f);
-            }
-            source.clip=AudioClip.Create(name,data.Length,1,rate,false);
-            source.clip.SetData(data,0);
-            source.loop=true; source.spatialBlend=.75f; source.minDistance=15; source.maxDistance=130;
-            source.rolloffMode=AudioRolloffMode.Linear; source.volume=0; source.Play();
-            return source;
         }
     }
 }

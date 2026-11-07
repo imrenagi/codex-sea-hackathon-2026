@@ -106,8 +106,7 @@ namespace JalanKita
         {
             var oldNose = Nose;
             Speed = Mathf.MoveTowards(Speed, brake ? 0 : throttle ? 16.1f : 0, dt * (brake ? 10.5f : throttle ? 2.85f : 1.7f));
-            // Release steering to hold the current direction; turns can now reach 90 degrees.
-            Heading = Mathf.Repeat(Heading + Mathf.Clamp(steer, -1, 1) * Mathf.Min(Speed * 8, 65) * dt, 360);
+            Heading = steering.Step(Mode, Speed, Heading, steer, dt);
             Position += new Vector2(Mathf.Sin(Heading*Mathf.Deg2Rad), Mathf.Cos(Heading*Mathf.Deg2Rad)) * Speed * dt;
             rightSignalAge = Indicator == 1 ? rightSignalAge + dt : 0;
             leftSignalAge = Indicator == -1 ? leftSignalAge + dt : 0;

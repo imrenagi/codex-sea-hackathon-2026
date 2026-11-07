@@ -18,6 +18,8 @@ To run in the editor, open the [Unity project](Unity) in Unity **6000.3.27f1**, 
 | Q / E | Left / right indicator |
 | L | Motorcycle headlight |
 | C | Switch camera |
+| H | Hold to sound the horn |
+| M | Mute / unmute all sound |
 | F / G | Ignore / answer the call |
 | Tab or Esc | Progress and pause |
 | R | Retry from the current checkpoint |
@@ -37,7 +39,7 @@ To run in the editor, open the [Unity project](Unity) in Unity **6000.3.27f1**, 
 | 09 | Railway | Stopping for warning lights/bell and moving only after the train clears and barriers fully rise |
 | 10 | Hospital road | Passing a stopped angkot, then signalling left to give a siren-equipped ambulance room to pass |
 
-The new district follows Ujian SIM missions 12, 9, and 8, reusing its original road arrows, signals, pedestrian lights, rail barriers, locomotive/coaches, angkot, and ambulance. It has three lanes each way, a 50 km/h limit, and 8 m red motorcycle waiting boxes. Cars stop at the rear line; motorcycles may use the front line. On the large roads, holding A/D turns the vehicle; releasing steering holds its heading, allowing full left and right turns. Choose the lane indicated by the road arrows before the solid section.
+The new district follows Ujian SIM missions 12, 9, and 8, reusing its original road arrows, signals, pedestrian lights, rail barriers, locomotive/coaches, angkot, and ambulance. It has three lanes each way, a 50 km/h limit, and 8 m red motorcycle waiting boxes. Cars stop at the rear line; motorcycles may use the front line. Every road uses Ujian SIM’s kinematic bicycle steering: keys gradually turn the wheels, steering sensitivity reduces with speed, and releasing the key centers the wheels while preserving the vehicle’s direction. Car and motorcycle wheelbases and steering limits match the source project. Pedal acceleration and speed limits remain tuned to this route. Choose the lane indicated by the road arrows before the solid section.
 
 Existing five-checkpoint saves retain their progress and mistake history and unlock the added sections. The final quiz now comes after checkpoint 10.
 
@@ -58,3 +60,5 @@ ten completion cards, pause/resume, the final quiz, and violation retry,
 then exits with the check result. Existing player saves are preserved.
 
 The extended route checks cover both vehicles, turns, red lights and motorcycle stop boxes, pedestrian priority, protected-right signals, railway warnings, ambulance obstruction, retry headings, and upgrading old saves. The trigger distances and signal/rail timings are simulation choices. [Boulevard.cs](Unity/Assets/Scripts/Boulevard.cs) shares junction geometry with [BoulevardView.cs](Unity/Assets/Scripts/BoulevardView.cs).
+
+Audio reuses Ujian SIM’s synthesized `SoundEngine` and WebGL audio bridge: separate car/motor engines responding to speed and throttle, indicator relay clicks, horn, phone ringtone, success/violation chimes, town ambience, approaching ambulance siren, and railway warning bell. The previous temporary siren/bell loops are removed. Mute is available in the menu/pause screen or with M and is remembered locally.

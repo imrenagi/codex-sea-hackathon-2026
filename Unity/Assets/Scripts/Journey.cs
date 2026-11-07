@@ -150,6 +150,9 @@ namespace JalanKita
 
     public sealed partial class Journey
     {
+        readonly VehicleSteering steering = new();
+        public float SteerAngle => steering.Angle;
+        public float Throttle { get; private set; }
         public VehicleMode Mode { get; }
         public JourneySave Save { get; }
         public Vector2 Position { get; private set; }
@@ -195,6 +198,8 @@ namespace JalanKita
             var checkpoint = RouteStage.All[Mathf.Max(0, Stage - 1)];
             Position = checkpoint.Checkpoint;
             Heading = checkpoint.Heading;
+            steering.Reset();
+            Throttle = 0;
             Speed = wrongWay = overSpeed = 0;
             ResetBoulevard();
             Indicator = lane = 0;
@@ -247,6 +252,7 @@ namespace JalanKita
         public void Step(float dt, bool throttle, bool brake, float steer)
         {
             if (Stage == 0 || Finished || Failure.HasValue) return;
+            Throttle = throttle ? 1 : 0;
 
             if (Stage >= 5) { StepBoulevard(dt, throttle, brake, steer); return; }
 
@@ -255,8 +261,7 @@ namespace JalanKita
             float acceleration = Mode == VehicleMode.Car ? 2.85f : 3.3f;
             Speed = brake ? Mathf.MoveTowards(Speed, 0, 10.5f * dt)
                 : Mathf.MoveTowards(Speed, throttle ? targetSpeed : 0, dt * (throttle ? acceleration : 1.7f));
-            float steerLimit = Speed > .15f ? Mathf.Lerp(37, 20, Speed / targetSpeed) : 0;
-            Heading = Mathf.MoveTowards(Heading, steer * steerLimit, (steer == 0 ? 110 : 84) * dt);
+            Heading = steering.Step(Mode, Speed, Heading, steer, dt);
             Position += new Vector2(Mathf.Sin(Heading * Mathf.Deg2Rad), Mathf.Cos(Heading * Mathf.Deg2Rad)) * (Speed * dt);
             rightSignalAge = Indicator == 1 ? rightSignalAge + dt : 0;
             leftSignalAge = Indicator == -1 ? leftSignalAge + dt : 0;

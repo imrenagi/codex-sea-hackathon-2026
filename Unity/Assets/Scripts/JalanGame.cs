@@ -13,6 +13,8 @@ namespace JalanKita
         enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After }
 
         District district;
+        SoundEngine sound;
+        bool blinkWas;
         Journey journey;
         Journey learner;
         JourneySave stored;
@@ -32,6 +34,7 @@ namespace JalanKita
             Application.targetFrameRate = 60;
             Application.runInBackground = true;
             district = new District(transform);
+            sound = SoundEngine.Create(transform);
             root = GetComponent<UIDocument>().rootVisualElement;
             root.AddToClassList("jalan-root");
             root.pickingMode = PickingMode.Ignore;
@@ -65,6 +68,12 @@ namespace JalanKita
 
         void Update()
         {
+            if (Input.GetKeyDown(KeyCode.M))
+            {
+                sound.SetMuted(!sound.Muted);
+                var toggle = root.Q<Button>("soundToggle");
+                if (toggle != null) toggle.text = sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)";
+            }
             if (learner != null)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.R))
@@ -124,7 +133,28 @@ namespace JalanKita
         {
             if (journey == null) return;
             district.Present(journey, hood, Time.unscaledDeltaTime, page == Page.Drive);
+            UpdateSound(Time.unscaledDeltaTime);
             if (page == Page.Drive) RefreshHud();
+        }
+
+        void UpdateSound(float dt)
+        {
+            bool driving = page == Page.Drive && !journey.Failure.HasValue;
+            var frame = new SoundFrame { SirenDist = float.PositiveInfinity, BellDist = float.PositiveInfinity };
+            if (driving)
+            {
+                frame.Speed = journey.Speed;
+                frame.Throttle = journey.Throttle;
+                frame.Motorcycle = journey.Mode == VehicleMode.Motorcycle;
+                frame.Ringing = journey.PhoneRinging;
+                frame.Horn = learner == null && Input.GetKey(KeyCode.H);
+                if (journey.Ambulance.HasValue) frame.SirenDist = Vector2.Distance(journey.Position, journey.Ambulance.Value);
+                if (journey.RailWarning) frame.BellDist = Vector2.Distance(journey.Position, new Vector2(-180, Boulevard.RailwayZ));
+            }
+            sound.UpdateFrame(dt, frame);
+            bool blink = Time.unscaledTime % .7f < .42f;
+            if (blink != blinkWas && driving && journey.Indicator != 0) sound.Tick(blink);
+            blinkWas = blink;
         }
 
         static bool Pressed(KeyCode a, KeyCode b) => Input.GetKey(a) || Input.GetKey(b);
@@ -167,6 +197,7 @@ namespace JalanKita
             }
             if (Application.platform != RuntimePlatform.WebGLPlayer)
                 AddButton(actions, "Keluar", Application.Quit, "quiet");
+            AddSoundControls(dialog);
         }
 
         void SelectMode(VehicleMode value)
@@ -233,6 +264,7 @@ namespace JalanKita
 
         void ShowLesson(Rule rule)
         {
+            sound.Chime(true);
             SetPage(Page.Lesson);
             var lesson = Lesson.All[(int)rule];
             var sheet = Result(lesson.HasSource ? "PELANGGARAN!" : "AWAS!",
@@ -390,12 +422,26 @@ namespace JalanKita
             var actions = Element(dialog, "row actions");
             if (!journey.Finished) AddButton(actions, "Kembali berkendara", ReturnToJourney, "primary");
             AddButton(actions, "Menu utama", BackToMenu, journey.Finished ? "primary" : "quiet");
+            AddSoundControls(dialog);
+        }
+
+        void AddSoundControls(VisualElement parent)
+        {
+            var button = AddButton(parent, sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)", null, "quiet tiny");
+            button.name = "soundToggle";
+            button.clicked += () =>
+            {
+                sound.SetMuted(!sound.Muted);
+                button.text = sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)";
+            };
+            AddLabel(parent, "H: klakson · M: aktif/nonaktif suara", "copy");
         }
 
         void ReturnToJourney() => SetPage(Page.Drive);
 
         void AnnounceCheckpoint()
         {
+            sound.Chime(false);
             SetPage(Page.Checkpoint);
             int completed = journey.Stage - 1;
             var sheet = Result("MISI SELESAI!", "good",
