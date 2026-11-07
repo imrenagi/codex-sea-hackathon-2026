@@ -63,6 +63,17 @@ namespace JalanKita
             }
         }
 
+        void AddChooserModeCard(VisualElement parent, string asset, string titleText, string description,
+            string actionText, System.Action action)
+        {
+            var card = Element(parent, "mission-card selection-mission-card");
+            AddSelectionThumbnail(card, asset, titleText);
+            var body = Element(card, "selection-mission-body");
+            AddLabel(body, titleText, "subhead mission-title");
+            AddLabel(body, description, "copy");
+            AddButton(body, actionText, action, "primary");
+        }
+
         void AddActivityChoices(VisualElement parent, MissionKind kind)
         {
             if (kind == MissionKind.SkillTest)

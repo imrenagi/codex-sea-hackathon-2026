@@ -34,6 +34,7 @@ namespace JalanKita
 
         void PlayFromHome()
         {
+            practiceChooser = false;
             bool completed = PlayerPrefs.GetInt(EntryTutorialCompleteKey, 0) == 1;
             // The old demo stored whole-scenario success only for the current session.
             // Its finish timestamp survives the menu; the movement/braking flag does not

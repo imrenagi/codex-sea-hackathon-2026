@@ -2884,6 +2884,22 @@
     {
       "key": "level.checkpoint.start",
       "value": "Practice this level"
+    },
+    {
+      "key": "chooser.free_drive.description",
+      "value": "Explore Sopo Del freely with your selected vehicle. This is separate from checkpoint practice."
+    },
+    {
+      "key": "chooser.full_journey.description",
+      "value": "Take the complete 10-stage journey, including preparation and progress saved for this vehicle."
+    },
+    {
+      "key": "chooser.saved_journey.description",
+      "value": "Return to your saved journey or review its completed results. Separate level practice does not replace this progress."
+    },
+    {
+      "key": "home.practice",
+      "value": "Practice"
     }
   ]
 }

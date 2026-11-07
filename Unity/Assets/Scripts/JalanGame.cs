@@ -443,51 +443,67 @@ namespace JalanKita
             AddLabel(dialog, GameText.Get("home.subtitle"), "home-tagline");
             var actions = Element(dialog, "home-actions");
             AddButton(actions, GameText.Get("home.play"), PlayFromHome, "primary home-action");
+            AddButton(actions, GameText.Get("home.practice"), ShowPracticeChooser, "quiet home-action");
             AddButton(actions, GameText.Get("home.options"), ShowOptions, "quiet home-action");
+            AddButton(actions, GameText.Get("credits.title"), ShowCreditsPage, "quiet home-action");
             if (Application.platform != RuntimePlatform.WebGLPlayer)
                 AddButton(actions, GameText.Get("home.exit"), Application.Quit, "quiet home-action");
         }
 
-        void ShowPlayChooser() => ShowPlayChooser(false);
-
-        void ShowPlayChooser(bool expandModes)
+        bool practiceChooser;
+        void ShowPlayChooser() => ShowJourneyChooser(false);
+        void ShowPlayChooser(bool expandModes) => ShowJourneyChooser(false);
+        void ShowPracticeChooser()
         {
+            confirmNew = false;
+            ShowJourneyChooser(true);
+        }
+
+        void ShowJourneyChooser(bool practice)
+        {
+            practiceChooser = practice;
             PrepareMenuScene();
             SetPage(Page.PlayChooser);
             var content = MenuBody();
-            AddLabel(content, GameText.Get("text.choose_your_journey"), "heading");
+            AddLabel(content, GameText.Get(practice ? "home.practice" : "text.choose_your_journey"), "heading");
             var modes = Element(content, "row chooser-vehicles");
             AddChooserVehicle(modes, VehicleMode.Car, GameText.Get("text.car_a5cdf0"), DrivingGlyph.Kind.Steering);
             AddChooserVehicle(modes, VehicleMode.Motorcycle, GameText.Get("text.motorcycle_965701"), DrivingGlyph.Kind.Motorcycle);
-            AddLabel(content, GameText.Get("level.choose.title"), "subhead chooser-summary");
             var levels = Element(content, "chooser-levels");
-            AddJourneyLevelChoices(levels);
-            Fold(content, GameText.Get("text.more_modes"), other =>
+            if (practice)
             {
-                AddButton(other, GameText.Get("text.everyday_missions_3_journeys"), () => ShowCatalogue(MissionKind.Scenario), "quiet option");
-                AddLabel(other, GameText.Get("text.results_are_saved_for_each_test_and_mission"), "menu-note");
-                AddLabel(other, stored == null ? GameText.Get("text.explore_full_journey") : GameText.Get("text.explore_saved_journey"), "menu-section-title");
-                var explore = Element(other, "explore-actions");
-                {
-                    AddButton(explore, GameText.Get("text.sopo_del_free_drive"), StartJaksa, "option quiet");
-                    AddButton(explore, GameText.Get("text.map_previews_not_playable_yet"), ShowCityMaps, "option quiet");
-                    AddLabel(explore, GameText.Get("text.pan_and_zoom_around_6_jakarta_areas_choose_sopo"), "menu-note");
-                    if (stored == null)
-                        AddButton(explore, GameText.Get("text.full_journey_10_stages"), StartNew, "option quiet");
-                    else
+                AddLabel(levels, GameText.Get("level.choose.title"), "subhead chooser-summary");
+                AddJourneyLevelChoices(levels);
+                AddButton(content, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
+                return;
+            }
+            // Keep every choice in the same card list instead of hiding modes in nested dropdowns.
+            AddLabel(levels, GameText.Get("text.everyday_missions"), "subhead chooser-summary");
+            AddActivityChoices(levels, MissionKind.Scenario);
+            AddLabel(levels, stored == null ? GameText.Get("text.explore_full_journey")
+                : GameText.Get("text.explore_saved_journey"), "subhead chooser-summary");
+            AddChooserModeCard(levels, "city_sea_labs", GameText.Get("text.sopo_del_free_drive"),
+                GameText.Get("chooser.free_drive.description"), GameText.Get("text.start"), StartJaksa);
+            AddChooserModeCard(levels, "city_bundaran_hi", GameText.Get("text.map_previews_not_playable_yet"),
+                GameText.Get("text.pan_and_zoom_around_6_jakarta_areas_choose_sopo"),
+                GameText.Get("maps.view_preview"), ShowCityMaps);
+            if (stored == null)
+                AddChooserModeCard(levels, "mission_lanes", GameText.Get("text.full_journey_10_stages"),
+                    GameText.Get("chooser.full_journey.description"), GameText.Get("text.start"), StartNew);
+            else
+            {
+                string resume = stored.next == All.Length && stored.after >= 0 ? GameText.Get("text.view_journey_results")
+                    : stored.next > 0 ? GameText.Get("text.continue_journey") : GameText.Get("text.continue_preparation");
+                AddChooserModeCard(levels, "mission_lanes", resume,
+                    GameText.Get("chooser.saved_journey.description"), resume, Resume);
+                AddChooserModeCard(levels, "mission_preparation", GameText.Get("text.restart_journey"),
+                    GameText.Get("text.this_replaces_the_journey_progress_for_this_vehicle"),
+                    confirmNew ? GameText.Get("text.yes_restart_journey") : GameText.Get("text.restart_journey"), () =>
                     {
-                        string resume = stored.next == All.Length && stored.after >= 0 ? GameText.Get("text.view_journey_results")
-                            : stored.next > 0 ? GameText.Get("text.continue_journey") : GameText.Get("text.continue_preparation");
-                        AddButton(explore, resume, Resume, "option quiet");
-                        AddButton(explore, confirmNew ? GameText.Get("text.yes_restart_journey") : GameText.Get("text.restart_journey"), () =>
-                        {
-                            if (confirmNew) StartNew();
-                            else { confirmNew = true; ShowPlayChooser(); }
-                        }, "option quiet");
-                        if (confirmNew) AddLabel(explore, GameText.Get("text.this_replaces_the_journey_progress_for_this_vehicle"), "copy");
-                    }
-                }
-            }, confirmNew || expandModes);
+                        if (confirmNew) StartNew();
+                        else { confirmNew = true; ShowPlayChooser(); }
+                    });
+            }
             AddButton(content, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
         }
 
@@ -687,7 +703,8 @@ namespace JalanKita
             AddLabel(content, GameText.Get(demoTutorial.Scenario.CompletionSummaryKey), "copy");
             AddLabel(content, GameText.Get("demo.session_summary", DemoDuration(), journey.MistakeCount), "copy");
             var actions = Element(content, "row actions");
-            AddButton(actions, GameText.Get("navigation.explore_modes"), () => ShowPlayChooser(true), "primary");
+            AddButton(actions, GameText.Get(practiceChooser ? "home.practice" : "navigation.explore_modes"),
+                () => { if (practiceChooser) ShowPracticeChooser(); else ShowPlayChooser(true); }, "primary");
             AddButton(actions, GameText.Get("demo.replay"), RestartDemoTutorial, "quiet");
             AddButton(actions, GameText.Get("navigation.return_menu"), BackToMenu, "quiet");
         }
@@ -700,7 +717,7 @@ namespace JalanKita
             bool choosing = page == Page.PlayChooser;
             mode = value;
             confirmNew = false;
-            if (choosing) ShowPlayChooser(); else ShowMenu();
+            if (choosing) ShowJourneyChooser(practiceChooser); else ShowMenu();
         }
 
         void StartNew()

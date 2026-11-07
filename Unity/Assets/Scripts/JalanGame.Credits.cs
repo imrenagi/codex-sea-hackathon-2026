@@ -17,7 +17,6 @@ namespace JalanKita
             AddLabel(team, "Imre Nagi", "credits-person");
 
             var actions = Element(content, "credits-actions");
-            AddButton(actions, GameText.Get("navigation.explore_modes"), () => ShowPlayChooser(true), "primary credits-explore");
             AddButton(actions, GameText.Get("navigation.return_menu"), ShowMenu, "quiet");
         }
     }
