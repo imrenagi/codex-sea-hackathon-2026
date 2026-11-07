@@ -8,7 +8,7 @@ namespace JalanKita
     {
         VehiclePreview vehiclePreview;
         Slider previewAngle;
-        Label previewName, previewDescription;
+        Label previewDescription;
 
         void ShowVehiclePreview(bool visible)
         {
@@ -21,7 +21,6 @@ namespace JalanKita
             vehiclePreview.SetVisible(true);
             panel.Clear();
             AddLabel(panel, GameText.Get("vehicles.preview.title"), "kicker");
-            previewName = AddLabel(panel, "", "subhead section");
             var image = new Image { name = "vehiclePreview", image = vehiclePreview.Texture, scaleMode = ScaleMode.ScaleToFit, focusable = true };
             image.AddToClassList("vehicle-preview");
             image.AddManipulator(new VehicleRotationDrag(vehiclePreview));
@@ -46,9 +45,25 @@ namespace JalanKita
                 {
                     VehicleCatalogue.Select(choice);
                     RefreshVehiclePreview(0);
-                }, "vehicle-choice quiet");
+                }, "vehicle-choice vehicle-thumbnail-choice quiet");
+                // Keep the native button's text/tooltip as its accessible name, while showing only art.
+                button.style.fontSize = 0;
                 button.name = "vehicle-" + choice.Id; button.userData = choice;
-                button.tooltip = choice.Description;
+                button.tooltip = choice.Label + " · " + choice.Description;
+                var thumbnail = Resources.Load<Texture2D>("UI/VehicleThumbnails/" + choice.Id);
+                if (thumbnail)
+                {
+                    var sideView = new Image { image = thumbnail, scaleMode = ScaleMode.ScaleToFit,
+                        pickingMode = PickingMode.Ignore };
+                    sideView.AddToClassList("vehicle-choice-image");
+                    button.Add(sideView);
+                }
+                else
+                {
+                    // Never display an empty target if an optional image is not installed yet.
+                    button.Add(new DrivingGlyph(choice.Mode == VehicleMode.Car
+                        ? DrivingGlyph.Kind.Steering : DrivingGlyph.Kind.Motorcycle));
+                }
             }
             previewDescription = AddLabel(panel, "", "objective-detail");
             AddLabel(panel, GameText.Get("vehicles.preview.drag"), "preview-hint");
@@ -64,7 +79,8 @@ namespace JalanKita
             if (vehiclePreview == null || !vehiclePreview.Visible) return;
             vehiclePreview.Present(mode, dt);
             var selected = VehicleCatalogue.Selected(mode);
-            previewName.text = selected.Label; previewDescription.text = selected.Description;
+            previewDescription.text = selected.Description;
+            root.Q<Image>("vehiclePreview").tooltip = selected.Label + " · " + selected.Description;
             previewAngle.SetValueWithoutNotify(vehiclePreview.Angle);
             foreach (var choice in root.Q("vehicleShowroom").Query<Button>(className: "vehicle-choice").ToList())
             {
