@@ -9,6 +9,7 @@ namespace JalanKita.EditorTools
         [MenuItem("Jalan Kita/Verify Checkpoints")]
         public static void Run()
         {
+            NpcRuleChecks.Run();
             PedestrianChecks.Run();
             SteeringChecks.Run();
             SoundChecks.Run();

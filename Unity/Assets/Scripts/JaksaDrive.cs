@@ -19,6 +19,8 @@ namespace JalanKita
         public bool Headlight { get; private set; } = true;
         public int Indicator { get; private set; }
         public bool TrafficContact { get; private set; }
+        float collisionRemaining;
+        public bool VehicleCollision => collisionRemaining > 0;
         public readonly TrafficSimulation Traffic;
         readonly PlayerVehicleView player;
         readonly Transform actors;
@@ -68,7 +70,7 @@ namespace JalanKita
             Position=RoadBoundary.Fit(roadFrame,mode,new Vector2(Street.RoadX(8)-1.48f/frame.Forward.y,8),Heading);
             Speed=0;
             motion.Reset();
-            Traffic.Reset(trafficSeed++);TrafficContact=false;
+            Traffic.Reset(trafficSeed++);TrafficContact=false;collisionRemaining=0;
             Hood=false;CurbContact=false;Headlight=true;Indicator=0;snap=true;Street.Activate();Present(0);
         }
         public void ToggleCamera(){Hood=!Hood;snap=true;}
@@ -88,6 +90,7 @@ namespace JalanKita
         {
             if(dt<=0)return;
             dt=Mathf.Min(dt,.05f);
+            collisionRemaining=Mathf.Max(0,collisionRemaining-dt);
             Traffic.Step(dt,Position,Heading,Mode);
             float safeSpeed=Traffic.SafePlayerSpeed(Position,Heading+(Speed<0||reverse&&Speed<=0?180:0),Mode);
             TrafficContact=(throttle||reverse)&&!brake&&safeSpeed<2;
@@ -107,8 +110,14 @@ namespace JalanKita
                 Heading=Mathf.LerpAngle(previousHeading,Heading,fraction);Speed=0;CurbContact=true;
             }
             next=RoadBoundary.Fit(roadFrame,Mode,next,Heading);
-            if(!RoadBoundary.Contains(roadFrame,Mode,next,Heading)||Traffic.BlocksPlayer(Position,next,Heading,Mode,previousHeading))
-            {next=Position;Heading=previousHeading;Speed=0;TrafficContact=true;}
+            bool contained=RoadBoundary.Contains(roadFrame,Mode,next,Heading);
+            bool vehicleContact=Traffic.BlocksPlayer(Position,next,Heading,Mode,previousHeading);
+            if(!contained || vehicleContact)
+            {
+                next=Position;Heading=previousHeading;Speed=0;
+                CurbContact|=!contained;TrafficContact|=vehicleContact;
+                if(vehicleContact)collisionRemaining=.8f;
+            }
             Position=next;
         }
 

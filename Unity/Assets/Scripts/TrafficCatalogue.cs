@@ -65,8 +65,31 @@ namespace JalanKita
                     obstacle,obstacleYaw,obstacleWidth,obstacleLength,margin))return true;
             return false;
         }
+        public static bool Sweeps(Vector2 fromA, Vector2 toA, float yawFromA, float yawToA, float widthA, float lengthA,
+            Vector2 fromB, Vector2 toB, float yawFromB, float yawToB, float widthB, float lengthB, float margin = .03f)
+        {
+            float reach = new Vector2(widthA,lengthA).magnitude + new Vector2(widthB,lengthB).magnitude + margin;
+            if (Mathf.Min(fromA.x,toA.x) - Mathf.Max(fromB.x,toB.x) > reach
+                || Mathf.Min(fromB.x,toB.x) - Mathf.Max(fromA.x,toA.x) > reach
+                || Mathf.Min(fromA.y,toA.y) - Mathf.Max(fromB.y,toB.y) > reach
+                || Mathf.Min(fromB.y,toB.y) - Mathf.Max(fromA.y,toA.y) > reach) return false;
+            float turnA = Mathf.DeltaAngle(yawFromA, yawToA), turnB = Mathf.DeltaAngle(yawFromB, yawToB);
+            float distance = ((toA - fromA) - (toB - fromB)).magnitude
+                + Mathf.Abs(turnA) * Mathf.Deg2Rad * new Vector2(widthA, lengthA).magnitude
+                + Mathf.Abs(turnB) * Mathf.Deg2Rad * new Vector2(widthB, lengthB).magnitude;
+            int steps = Mathf.Max(1, Mathf.CeilToInt(distance / .15f));
+            for (int i = 0; i <= steps; i++)
+            {
+                float t = (float)i / steps;
+                if (Overlaps(Vector2.Lerp(fromA, toA, t), yawFromA + turnA * t, widthA, lengthA,
+                    Vector2.Lerp(fromB, toB, t), yawFromB + turnB * t, widthB, lengthB, margin)) return true;
+            }
+            return false;
+        }
         public static bool Overlaps(Vector2 a,float yawA,float widthA,float lengthA,Vector2 b,float yawB,float widthB,float lengthB,float margin=.03f)
         {
+            float reach=widthA+lengthA+widthB+lengthB+margin;
+            if (Mathf.Abs(a.x-b.x)>reach || Mathf.Abs(a.y-b.y)>reach) return false;
             float aa=yawA*Mathf.Deg2Rad,bb=yawB*Mathf.Deg2Rad;
             Vector2 af=new(Mathf.Sin(aa),Mathf.Cos(aa)),ar=new(af.y,-af.x);
             Vector2 bf=new(Mathf.Sin(bb),Mathf.Cos(bb)),br=new(bf.y,-bf.x),d=b-a;

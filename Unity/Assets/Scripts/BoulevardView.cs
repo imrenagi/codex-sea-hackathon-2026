@@ -13,9 +13,7 @@ namespace JalanKita
         GameObject boulevardWalker, ambulance, angkot;
         Renderer[] ambulanceRenderers;
         BoulevardTraffic visibleTraffic;
-        readonly List<GameObject> trafficModels = new();
-        readonly List<bool> trafficKinds = new();
-        readonly Stack<GameObject> parkedCars = new(), parkedMotorcycles = new();
+        readonly List<TrafficVehicleView> trafficModels = new();
 
         void BuildBoulevard()
         {
@@ -209,30 +207,23 @@ namespace JalanKita
         {
             if (!ReferenceEquals(visibleTraffic,traffic))
             {
-                for(int i=0;i<trafficModels.Count;i++)
-                {
-                    trafficModels[i].SetActive(false);
-                    (trafficKinds[i]?parkedMotorcycles:parkedCars).Push(trafficModels[i]);
-                }
-                trafficModels.Clear();
-                trafficKinds.Clear();
+                foreach (var view in trafficModels) view.Hide();
                 visibleTraffic=traffic;
                 if (traffic != null) foreach (var vehicle in traffic.Vehicles)
                 {
-                    var pool=vehicle.Motorcycle?parkedMotorcycles:parkedCars;
-                    var model=pool.Count>0?pool.Pop():Model(vehicle.Motorcycle?"Motorcycle":"Car_City",Vector3.zero,0,actors);
-                    model.name="Lalu lintas jalan besar "+vehicle.Id;
-                    foreach (var renderer in model.GetComponentsInChildren<Renderer>())
-                        foreach (var material in renderer.sharedMaterials)
-                            if (MaterialLibrary.BaseName(material.name)==(vehicle.Motorcycle?"M_MotoPaint":"M_CarPaint"))
-                                material.SetColor("_BaseColor",ColorOf(vehicle.Color));
-                    trafficModels.Add(model);
-                    trafficKinds.Add(vehicle.Motorcycle);
+                    if (vehicle.Id >= trafficModels.Count) trafficModels.Add(new TrafficVehicleView(actors,"Lalu lintas jalan besar "+vehicle.Id));
+                    int model = (vehicle.Motorcycle ? 0 : 3) + vehicle.Id % 3;
+                    trafficModels[vehicle.Id].Select(new TrafficChoice(TrafficCatalogue.All[model],vehicle.Id%2));
                 }
             }
             if (traffic == null) return;
             foreach (var vehicle in traffic.Vehicles)
-                Pose(trafficModels[vehicle.Id],vehicle.Active?vehicle.Position:null,vehicle.Heading);
+            {
+                var view=trafficModels[vehicle.Id];
+                if (!vehicle.Active) { view.Hide(); continue; }
+                view.Present(new Vector3(vehicle.Position.x,.035f,vehicle.Position.y),vehicle.Heading,vehicle.Speed,
+                    Time.unscaledDeltaTime,true,vehicle.Indicator,vehicle.Speed<.1f);
+            }
         }
     }
 }

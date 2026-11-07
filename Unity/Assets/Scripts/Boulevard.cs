@@ -104,6 +104,8 @@ namespace JalanKita
 
         void StepBoulevard(float dt, bool throttle, bool brake, float steer, bool reverse = false)
         {
+            trafficMotionStart = Position;
+            trafficHeadingStart = Heading;
             var oldNose = Nose;
             Speed = reverse || Speed < 0 ? RoadVehicleMotion.AdvanceSpeed(dt, Mode, throttle, brake, reverse, 16.1f, Speed)
                 : Mathf.MoveTowards(Speed, brake ? 0 : throttle ? 16.1f : 0, dt * (brake ? 10.5f : throttle ? 2.85f : 1.7f));
@@ -193,11 +195,15 @@ namespace JalanKita
                 return;
             }
             StepCityTraffic(dt);
-            if (Mathf.Abs(Position.x + 189) < 1.8f && Mathf.Abs(Position.y - 914) < 4.6f) Fail(Rule.Collision);
+            if (TrafficFootprint.Sweeps(trafficMotionStart, Position, trafficHeadingStart, Heading,
+                TrafficFootprint.PlayerHalfWidth(Mode), TrafficFootprint.PlayerHalfLength(Mode),
+                new Vector2(-189, 914), new Vector2(-189, 914), 0, 0, .95f, 2.3f)) Fail(Rule.Collision);
             if (emergencyTime < 0 && Position.y >= 924)
             {
                 emergencyTime = 0;
-                Ambulance = new Vector2(-185.4f, Position.y - 70);
+                var spawn = new Vector2(-185.4f, Position.y - 70);
+                for (int i=0;i<20 && !CityTraffic.ClearFor(spawn,0,.95f,2.2f);i++) spawn.y-=8;
+                Ambulance = spawn;
             }
             if (Ambulance.HasValue)
             {
@@ -210,7 +216,9 @@ namespace JalanKita
                 next = Mathf.Min(next, ambulance.y + Mathf.Max(0, CityTraffic.GapAhead(ambulance,Vector2.up,2.2f)-2));
                 if (blocked) next = Mathf.Min(next, Position.y - 6);
                 Ambulance = new Vector2(ambulance.x, next);
-                if (Mathf.Abs(Position.x - ambulance.x) < 1.8f && Mathf.Abs(Position.y - ambulance.y) < 4) Fail(Rule.Collision);
+                if (TrafficFootprint.Sweeps(trafficMotionStart, Position, trafficHeadingStart, Heading,
+                    TrafficFootprint.PlayerHalfWidth(Mode), TrafficFootprint.PlayerHalfLength(Mode),
+                    ambulance, Ambulance.Value, 0, 0, .95f, 2.2f)) Fail(Rule.Collision);
                 if (ambulance.y > Position.y + 8) AmbulancePassed = true;
             }
             if (Position.y >= 1040 && AmbulancePassed && !Failure.HasValue) Advance();

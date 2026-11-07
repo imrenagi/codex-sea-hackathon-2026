@@ -15,6 +15,10 @@ namespace JalanKita
             public string Color;
             public Vector2 Position, Direction;
             public float Speed, Cruise, Along;
+            public Vector2 PreviousPosition;
+            public float Offset = -5.4f, SignalAge;
+            public int Indicator;
+            public float HalfWidth => Motorcycle ? .4f : .95f;
             public float Radius => Motorcycle ? .8f : 1.3f;
             public float HalfLength => Motorcycle ? 1 : 2.1f;
             public float Heading => Mathf.Atan2(Direction.x,Direction.y)*Mathf.Rad2Deg;
@@ -57,9 +61,11 @@ namespace JalanKita
             }
         }
 
-        public void Step(float dt, Journey run)
+        public void Step(float dt, Journey run, Vector2? playerFrom = null, float? playerHeadingFrom = null)
         {
+            if (dt <= 0) return;
             Clock+=dt;
+            foreach (var vehicle in vehicles) vehicle.PreviousPosition = vehicle.Position;
             foreach(var n in vehicles)
             {
                 var road=Roads[n.Road];
@@ -68,7 +74,7 @@ namespace JalanKita
                     float entry=Vector2.Dot(n.Direction,road.Direction)>0?0:road.Length;
                     Vector2 pos=road.Start+road.Direction*entry+new Vector2(n.Direction.y,-n.Direction.x)*-5.4f;
                     if(Vector2.Distance(pos,run.Position)<35 || Occupied(pos,n)) continue;
-                    n.Position=pos; n.Along=entry; n.Speed=0; n.Active=true;
+                    n.Position=pos; n.PreviousPosition=pos; n.Offset=-5.4f; n.Along=entry; n.Speed=0; n.Active=true;
                 }
                 float gap=GapAhead(n.Position,n.Direction,n.HalfLength,n);
                 gap=ObstacleGap(n.Position,n.Direction,n.HalfLength,run.Position,run.Mode==VehicleMode.Car?2.1f:1,gap);
@@ -81,28 +87,69 @@ namespace JalanKita
                     float front=Vector2.Dot(n.Position-center,n.Direction)+n.HalfLength;
                     float line=n.Motorcycle?-18:-26;
                     float toLine=line-front;
+                    if (toLine < 0 || toLine > 60) continue;
                     int arm=Arm(stage,n.Direction), phase=run.CitySignal(stage,arm);
                     bool stop=phase==0 || phase==1 && toLine>=n.Speed*n.Speed/12;
                     if(toLine>=0) foreach(var other in vehicles)
                         if(other!=n && other.Active && Mathf.Abs(Vector2.Dot(n.Direction,other.Direction))<.5f
                             && Mathf.Abs(other.Position.x-center.x)<18 && Mathf.Abs(other.Position.y-center.y)<18) stop=true;
-                    if(toLine>=0 && stop) gap=Mathf.Min(gap,toLine+2);
+                    if (toLine >= 0)
+                    {
+                        var playerDelta = run.Position - center;
+                        var playerForward = new Vector2(Mathf.Sin(run.Heading*Mathf.Deg2Rad), Mathf.Cos(run.Heading*Mathf.Deg2Rad));
+                        if (Mathf.Abs(playerDelta.x) < 18 && Mathf.Abs(playerDelta.y) < 18
+                            && Mathf.Abs(Vector2.Dot(n.Direction, playerForward)) < .8f) stop = true;
+                        // Do not enter a box junction unless there is room beyond it.
+                        var exit = center + n.Direction * (19 + n.HalfLength)
+                            + new Vector2(n.Direction.y, -n.Direction.x) * n.Offset;
+                        if (!ClearFor(exit,n.Heading,n.HalfWidth,n.HalfLength)
+                            || GapAhead(exit, n.Direction, n.HalfLength, n) < n.HalfLength * 2 + 2
+                            || TrafficFootprint.Overlaps(exit,n.Heading,n.HalfWidth,n.HalfLength,run.Position,run.Heading,
+                                TrafficFootprint.PlayerHalfWidth(run.Mode),TrafficFootprint.PlayerHalfLength(run.Mode),2)) stop = true;
+                    }
+                    if(toLine>=0 && stop) gap=Mathf.Min(gap,toLine+1.85f);
                 }
                 if(run.BoulevardPedestrian.HasValue)
-                    gap=ObstacleGap(n.Position,n.Direction,n.HalfLength,run.BoulevardPedestrian.Value,1,gap);
+                {
+                    var pedestrian = run.BoulevardPedestrian.Value;
+                    var walking = run.Stage == 5 ? Boulevard.Right(run.Stage) : Boulevard.Forward(run.Stage);
+                    var laneCrossing = n.Position + n.Direction * Vector2.Dot(pedestrian - n.Position, n.Direction);
+                    float ahead = Vector2.Dot(pedestrian - n.Position, n.Direction) - n.HalfLength;
+                    if (ahead >= 0 && Mathf.Abs(Vector2.Dot(walking, n.Direction)) < .5f
+                        && PedestrianClearance.Blocks(pedestrian, walking, laneCrossing, walking, Boulevard.LaneWidth))
+                        gap = Mathf.Min(gap, ahead); // Includes the normal two metre stopping margin.
+                }
                 if(n.Road==3 && run.RailWarning)
                 {
                     float line=n.Direction.y>0?790:810;
                     float toLine=(line-n.Position.y)*n.Direction.y-n.HalfLength;
-                    if(toLine>=0) gap=Mathf.Min(gap,toLine+2);
+                    if(toLine>=0) gap=Mathf.Min(gap,toLine+1.85f);
                 }
                 float safe=Mathf.Sqrt(Mathf.Max(0,2*5*(gap-2)));
-                float target=Mathf.Min(n.Cruise,safe);
+                float target=Mathf.Min(Mathf.Min(n.Cruise, 50 / 3.6f),safe);
+                float desiredOffset = -5.4f;
+                if (n.Road == 3 && n.Direction.y > 0 && run.Ambulance.HasValue && n.Position.y > 845)
+                {
+                    float ambulanceBehind = n.Position.y - run.Ambulance.Value.y;
+                    if (ambulanceBehind > -22 && ambulanceBehind < 65) desiredOffset = -9;
+                }
+                int signal = Mathf.Abs(n.Offset - desiredOffset) > .05f ? desiredOffset < n.Offset ? -1 : 1 : 0;
+                n.SignalAge = signal == n.Indicator ? n.SignalAge + dt : 0;
+                n.Indicator = signal;
+                float offset = n.SignalAge > .6f ? Mathf.MoveTowards(n.Offset, desiredOffset, dt * 1.2f) : n.Offset;
+                if (desiredOffset == -9) target = Mathf.Min(target, 3);
                 n.Speed=Mathf.MoveTowards(n.Speed,target,dt*(target<n.Speed?8:2.5f));
                 // Never overlap a stopped vehicle, even if the player cuts in late.
                 float travel=Mathf.Min(n.Speed*dt,Mathf.Max(0,gap-2));
                 if(travel<n.Speed*dt) n.Speed=travel/dt;
-                n.Position+=n.Direction*travel;
+                var next = n.Position + n.Direction*travel + new Vector2(n.Direction.y,-n.Direction.x)*(offset-n.Offset);
+                if (Blocked(n, next, run, playerFrom, playerHeadingFrom))
+                {
+                    // Wait for room to change lanes while continuing safely in the current lane.
+                    offset=n.Offset; next=n.Position+n.Direction*travel;
+                    if (Blocked(n,next,run,playerFrom,playerHeadingFrom)) { n.Speed=0; continue; }
+                }
+                n.Position=next; n.Offset=offset;
                 n.Along+=Vector2.Dot(n.Direction,road.Direction)*travel;
                 if(n.Along<0 || n.Along>road.Length) n.Active=false;
             }
@@ -120,7 +167,8 @@ namespace JalanKita
         {
             Vector2 delta=other-position;
             float ahead=Vector2.Dot(delta,direction);
-            if(ahead>0 && ahead<60 && Mathf.Abs(Vector2.Dot(delta,new Vector2(direction.y,-direction.x)))<1.8f)
+            float side=(half>1.5f?.95f:.4f)+(otherHalf>1.5f?.95f:.4f)+.05f;
+            if(ahead>0 && ahead<60 && Mathf.Abs(Vector2.Dot(delta,new Vector2(direction.y,-direction.x)))<side)
                 return Mathf.Min(gap,ahead-half-otherHalf);
             return gap;
         }
@@ -131,43 +179,56 @@ namespace JalanKita
                 gap=ObstacleGap(position,direction,half,n.Position,n.HalfLength,gap);
             return gap;
         }
-        public bool Collides(Journey run)
+        public bool ClearFor(Vector2 position, float heading, float width, float length)
         {
-            Vector2 forward=new(Mathf.Sin(run.Heading*Mathf.Deg2Rad),Mathf.Cos(run.Heading*Mathf.Deg2Rad));
-            Vector2 right=new(forward.y,-forward.x);
-            float half=run.Mode==VehicleMode.Car?1.95f:.95f, width=run.Mode==VehicleMode.Car?.82f:.35f;
+            foreach (var n in vehicles)
+                if (n.Active && TrafficFootprint.Overlaps(position,heading,width,length,n.Position,n.Heading,n.HalfWidth,n.HalfLength,2)) return false;
+            return true;
+        }
+
+        bool Blocked(Vehicle n, Vector2 next, Journey run, Vector2? playerFrom, float? playerHeadingFrom)
+        {
+            bool Touch(Vector2 point, float heading, float width, float length) =>
+                TrafficFootprint.Sweeps(n.Position,next,n.Heading,n.Heading,n.HalfWidth,n.HalfLength,
+                    point,point,heading,heading,width,length,.12f);
+            if (TrafficFootprint.Sweeps(n.Position,next,n.Heading,n.Heading,n.HalfWidth,n.HalfLength,
+                playerFrom ?? run.Position,run.Position,playerHeadingFrom ?? run.Heading,run.Heading,
+                TrafficFootprint.PlayerHalfWidth(run.Mode),TrafficFootprint.PlayerHalfLength(run.Mode),.12f)) return true;
+            foreach (var other in vehicles)
+                if (other != n && other.Active && (other.Position-next).sqrMagnitude < 100
+                    && Touch(other.Position,other.Heading,other.HalfWidth,other.HalfLength)) return true;
+            if (Touch(new Vector2(-189,914),0,.95f,2.3f)) return true;
+            return run.Ambulance.HasValue && Touch(run.Ambulance.Value,0,.95f,2.2f);
+        }
+        public bool Collides(Journey run) => Collides(run,run.Position,run.Heading,false);
+        public bool Collides(Journey run,Vector2 from,float fromHeading,bool moved)
+        {
             foreach(var n in vehicles)
             {
-                if(!n.Active || (n.Position-run.Position).sqrMagnitude>36) continue;
-                var nr=new Vector2(n.Direction.y,-n.Direction.x);
-                bool separate=false;
-                foreach(var axis in new[] { forward,right,n.Direction,nr })
-                {
-                    float a=Mathf.Abs(Vector2.Dot(axis,forward))*half+Mathf.Abs(Vector2.Dot(axis,right))*width;
-                    float b=Mathf.Abs(Vector2.Dot(axis,n.Direction))*n.HalfLength+Mathf.Abs(Vector2.Dot(axis,nr))*(n.Motorcycle?.35f:.82f);
-                    if(Mathf.Abs(Vector2.Dot(n.Position-run.Position,axis))>=a+b) { separate=true; break; }
-                }
-                if(!separate) return true;
+                if(!n.Active) continue;
+                if (TrafficFootprint.Sweeps(from,run.Position,fromHeading,run.Heading,
+                    TrafficFootprint.PlayerHalfWidth(run.Mode),TrafficFootprint.PlayerHalfLength(run.Mode),
+                    moved?n.PreviousPosition:n.Position,n.Position,n.Heading,n.Heading,n.HalfWidth,n.HalfLength)) return true;
             }
             return false;
         }
+
     }
 
     public sealed partial class Journey
     {
         public BoulevardTraffic CityTraffic { get; private set; }
         int trafficAttempt;
+        Vector2 trafficMotionStart;
+        float trafficHeadingStart;
         void ResetCityTraffic() => CityTraffic=Stage>=5 && !Finished?new BoulevardTraffic(trafficSeed+trafficAttempt++,Position):null;
         void StepCityTraffic(float dt)
         {
             CityTraffic ??= new BoulevardTraffic(trafficSeed+trafficAttempt++,Position);
-            CityTraffic.Step(dt,this);
-            bool collision=CityTraffic.Collides(this);
-            if(reverseSweep)foreach(var actor in CityTraffic.Vehicles)
-                if(actor.Active&&TrafficFootprint.SweptOverlaps(motionFrom,motionHeading,Position,Heading,
-                    TrafficFootprint.PlayerHalfWidth(Mode),TrafficFootprint.PlayerHalfLength(Mode),
-                    actor.Position,actor.Heading,actor.Motorcycle?.35f:.82f,actor.HalfLength))collision=true;
-            if(collision) Fail(Rule.Collision);
+            CityTraffic.Step(dt,this,dt > 0 ? trafficMotionStart : Position,dt > 0 ? trafficHeadingStart : Heading);
+            // Compare both trajectories over the same interval, including reverse.
+            // Freezing the NPC at its old pose falsely penalizes safe parallel travel.
+            if(CityTraffic.Collides(this,dt > 0 ? trafficMotionStart : Position,dt > 0 ? trafficHeadingStart : Heading,dt > 0)) Fail(Rule.Collision);
         }
         public int CitySignal(int stage,int arm)
         {

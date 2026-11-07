@@ -278,6 +278,7 @@ namespace JalanKita
         void LateUpdate()
         {
             if (journey == null) return;
+            RefreshVehiclePreview(Time.unscaledDeltaTime);
             float look = Mathf.Clamp(heldLook + (Input.GetKey(KeyCode.X) ? 1 : 0) - (Input.GetKey(KeyCode.Z) ? 1 : 0), -1, 1);
             UpdateSound(Time.unscaledDeltaTime);
             if (page == Page.CityPreview) return;
@@ -364,7 +365,6 @@ namespace JalanKita
             AddButton(modes, "Motor", () => SelectMode(VehicleMode.Motorcycle), mode == VehicleMode.Motorcycle ? "selected" : "quiet");
             AddButton(content, "Demo singkat · Hak utama [F2]", StartPitchDemo, "option primary");
             AddLabel(content, "Coba satu situasi, pahami aturannya, lalu ulangi. Progres latihan tetap aman.", "copy");
-            AddVehiclePicker(content);
             var activities = Element(content, "section");
             AddButton(activities, "Uji keterampilan  ·  5 tes singkat", () => ShowCatalogue(MissionKind.SkillTest), "option primary");
             AddButton(activities, "Misi sehari-hari  ·  3 perjalanan", () => ShowCatalogue(MissionKind.Scenario), "option primary");
@@ -437,6 +437,7 @@ namespace JalanKita
             location.text = "MEGA KUNINGAN  /  JAKARTA SELATAN";
             title.text = jaksa.AtEnd ? "Selesai menjelajahi Sopo Del" : "Sea Labs Indonesia · Sopo Del";
             instruction.text = jaksa.AtEnd ? "Tekan R untuk mengulang, atau Esc untuk kembali ke menu."
+                : jaksa.VehicleCollision ? "Benturan kendaraan. Berhenti dan beri ruang sebelum melanjutkan."
                 : jaksa.CurbContact ? "Tepi trotoar. Arahkan kendaraan kembali ke jalan."
                 : jaksa.TrafficContact ? "Jaga jarak. Tunggu ruang aman di depan kendaraan."
                 : "W / ↑ gas · S / ↓ rem lalu mundur · Spasi rem · A / D kemudi · C kamera";
@@ -565,7 +566,7 @@ namespace JalanKita
         }
 
         void OnDestroy()
-        { cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
+        { vehiclePreview?.Dispose(); cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
 
         void SelectMode(VehicleMode value)
         {
@@ -1097,6 +1098,7 @@ namespace JalanKita
             dialog.RemoveFromClassList("rule-card");
             dialog.RemoveFromClassList("result-layout");
             dialog.Clear();
+            ShowVehiclePreview(page == Page.Menu || page == Page.Brief || page == Page.Preflight);
         }
 
         static void Show(VisualElement e, bool visible) => e.EnableInClassList("hidden", !visible);

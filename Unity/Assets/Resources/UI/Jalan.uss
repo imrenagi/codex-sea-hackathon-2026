@@ -258,3 +258,17 @@
 .mission-list .unity-scroller__low-button, .mission-list .unity-scroller__high-button { display: none; }
 
 .mission-list .unity-scroller__slider { flex-grow: 1; }
+
+.showroom { flex-direction: row; align-items: center; justify-content: center; }
+.showroom > .dialog { flex-grow: 1; flex-basis: 0; min-width: 0; max-width: 620px; }
+.vehicle-showroom { flex-grow: 1; flex-basis: 0; min-width: 0; max-width: 520px; height: 94%; max-height: 680px; margin-left: 16px; background-color: #13171c; }
+.vehicle-showroom > .label, .vehicle-showroom > .row, .vehicle-showroom > .vehicle-choices, .preview-angle { flex-shrink: 0; }
+.vehicle-preview { flex-grow: 1; flex-shrink: 1; min-height: 80px; margin: 8px 0; }
+.vehicle-preview:focus { border-width: 1px; border-color: #85dcc5; }
+.preview-hint { font-size: 12px; white-space: normal; color: #c9c6be; }
+.preview-controls { flex-wrap: wrap; margin-top: 6px; margin-bottom: 8px; }
+.preview-controls > .button { flex-grow: 1; }
+.preview-angle .unity-base-field__label { min-width: 44px; }
+.compact .vehicle-showroom { padding: 12px; margin-left: 8px; }
+.compact .vehicle-showroom .subhead { font-size: 18px; }
+.compact .vehicle-showroom .vehicle-choice { font-size: 12px; padding: 4px 6px; min-height: 27px; }

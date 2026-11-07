@@ -373,6 +373,9 @@ namespace JalanKita
 
             if (Stage >= 5) { StepBoulevard(dt, throttle, brake, steer, reverse); return; }
 
+            var oldPosition = Position;
+            float oldHeading = Heading;
+            var oldActors = (CrossTraffic, LaneTraffic, SpurTraffic, PickupTraffic);
             float oldFront = Front;
             float oldX = Position.x;
             float targetSpeed = Mode == VehicleMode.Car ? 16.1f : 16.7f;
@@ -390,7 +393,7 @@ namespace JalanKita
             if (RejectReverseOffRoad()) return;
             rightSignalAge = Indicator == 1 ? rightSignalAge + dt : 0;
             leftSignalAge = Indicator == -1 ? leftSignalAge + dt : 0;
-            UpdateActors(dt);
+            UpdateActors(dt, oldPosition, oldHeading);
 
             float z = Position.y;
             float x = Position.x;
@@ -481,6 +484,7 @@ namespace JalanKita
                 if (z >= RouteStage.PhoneEnd && PhoneRinging) ResolvePhone(false);
             }
 
+            CheckEncounterContacts(oldPosition, oldHeading, oldActors);
             if(Pedestrian.HasValue && TouchesPedestrian(Pedestrian.Value))
                 Fail(Rule.Pedestrian);
             if (!Failure.HasValue && z >= StageEnd) Advance();
@@ -550,8 +554,12 @@ namespace JalanKita
             return false;
         }
 
-        void UpdateActors(float dt)
+        void UpdateActors(float dt, Vector2? playerFrom = null, float? playerHeadingFrom = null)
         {
+            var previousCross = CrossTraffic;
+            var previousLane = LaneTraffic;
+            var previousSpur = SpurTraffic;
+            var previousPickup = PickupTraffic;
             float z = Position.y;
             if (Stage == 1)
             {
@@ -598,6 +606,10 @@ namespace JalanKita
                     ? new Vector2(walkX * PedestrianDirection, CrossingZebra) : null;
             }
             else if (IsSchool) Pedestrian = null;
+            CrossTraffic = FollowEncounter(previousCross, CrossTraffic, Traffic.Cross, Vector2.right * CrossDirection, 6.2f, dt, playerFrom, playerHeadingFrom);
+            LaneTraffic = FollowEncounter(previousLane, LaneTraffic, Traffic.Lane, Vector2.up, 5.1f, dt, playerFrom, playerHeadingFrom);
+            SpurTraffic = FollowEncounter(previousSpur, SpurTraffic, Traffic.Spur, Vector2.down, 5, dt, playerFrom, playerHeadingFrom);
+            PickupTraffic = FollowEncounter(previousPickup, PickupTraffic, Traffic.Pickup, Vector2.up, Save.variant % 2 == 0 ? 5.1f : 4.6f, dt, playerFrom, playerHeadingFrom);
         }
 
         static Vector2? CrossingCar(float timer, float center, int direction)
