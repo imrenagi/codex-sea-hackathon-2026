@@ -98,7 +98,7 @@ namespace JalanKita.EditorTools
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var root = new GameObject("Grounded street review"); var district = new District(root.transform);
-            var camera = root.GetComponentInChildren<Camera>();
+            var camera = root.GetComponentsInChildren<Camera>().Single(c => c.CompareTag("MainCamera"));
             string output = Path.GetFullPath("Builds/GroundedPreview"); Directory.CreateDirectory(output);
             var car = VehicleCatalogue.Selected(VehicleMode.Car); var motor = VehicleCatalogue.Selected(VehicleMode.Motorcycle);
             try

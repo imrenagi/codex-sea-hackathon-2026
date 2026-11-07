@@ -11,7 +11,7 @@ namespace UjianSim.Game
     public class Atmosphere
     {
         public enum TimeOfDay { Siang, Sore, Malam }
-        public TimeOfDay Time { get; private set; } = TimeOfDay.Sore;
+        public TimeOfDay Time { get; private set; } = TimeOfDay.Siang;
         public bool Rain { get; private set; }
         /// <summary>0 by day, 1 at night: how strongly street lamps and shop signs glow.</summary>
         public float Night => Time == TimeOfDay.Malam ? 1f : Time == TimeOfDay.Sore ? 0.25f : 0f;
@@ -59,11 +59,11 @@ namespace UjianSim.Game
             bloom.intensity.Override(0.45f);
             bloom.scatter.Override(0.6f);
             color = profile.Add<ColorAdjustments>(true);
-            color.postExposure.Override(0.15f);
-            color.contrast.Override(8f);
+            color.postExposure.Override(0.35f);
+            color.contrast.Override(2f);
             color.saturation.Override(6f);
             var vig = profile.Add<Vignette>(true);
-            vig.intensity.Override(0.18f);
+            vig.intensity.Override(0.06f);
             var ao = profile.Add<WhiteBalance>(true);
             ao.temperature.Override(6f);
 
@@ -95,7 +95,7 @@ namespace UjianSim.Game
             pr.sharedMaterial.SetColor("_BaseColor", new Color(0.8f, 0.85f, 0.9f, 0.35f));
             rain.Stop();
 
-            Apply(TimeOfDay.Sore, false);
+            Apply(Time, false);
         }
 
         public void Activate()
@@ -118,6 +118,7 @@ namespace UjianSim.Game
                     sun.transform.rotation = Quaternion.Euler(62f, -35f, 0f);
                     sun.color = new Color(1f, 0.96f, 0.9f);
                     sun.intensity = 1.6f;
+                    JalanKita.FidelityLighting.ConfigureSun(sun);
                     sky.SetFloat("_AtmosphereThickness", 1.0f);
                     sky.SetColor("_SkyTint", new Color(0.55f, 0.62f, 0.72f));
                     sky.SetFloat("_Exposure", 1.25f);
@@ -156,6 +157,10 @@ namespace UjianSim.Game
             color.saturation.Override(rainOn ? -12f : 6f);
             RenderSettings.ambientIntensity = time == TimeOfDay.Malam ? 0.8f : 1f;
             DynamicGI.UpdateEnvironment();
+            // Preserve afternoon/night/rain choices while giving daytime the
+            // same single-sun exposure and sky fill as the local scenarios.
+            if (time == TimeOfDay.Siang)
+                JalanKita.FidelityLighting.ApplyAmbient(rainOn ? .65f : 1);
         }
     }
 }

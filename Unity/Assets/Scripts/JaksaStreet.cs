@@ -43,7 +43,7 @@ namespace JalanKita
             IsSopoDel=sopoDel;
             Data = JsonUtility.FromJson<Layout>(Resources.Load<TextAsset>(sopoDel?"SopoDel/layout":"Jaksa/layout").text);
             Root = new GameObject(sopoDel?"Sopo Del · Mega Kuningan":"Jl. Jaksa · 250 m"); Root.transform.SetParent(parent, false);
-            asphalt = Mat("Asphalt", "asphalt_02", "b9b6b1");
+            asphalt = Mat("Asphalt", "StreetLook/Surfaces/asphalt", "dededb");
             concrete = Mat("Concrete", "concrete_floor_02", "b0b1ad");
             paving = Mat("Sidewalk paving", "brick_pavement", "b0aba1");
             roof = Mat("Terracotta roofs", "clay_roof_tiles", "a18973");
@@ -86,8 +86,8 @@ namespace JalanKita
             volume.transform.SetParent(Root.transform,false); volume.isGlobal=true; volume.priority=2;
             volume.profile=ScriptableObject.CreateInstance<VolumeProfile>();
             var tone=volume.profile.Add<Tonemapping>(); tone.mode.Override(TonemappingMode.ACES);
-            var color=volume.profile.Add<ColorAdjustments>(); color.postExposure.Override(.15f); color.saturation.Override(-8);
-            var vignette=volume.profile.Add<Vignette>(); vignette.intensity.Override(.12f); vignette.smoothness.Override(.45f);
+            var color=volume.profile.Add<ColorAdjustments>(); color.postExposure.Override(.35f); color.saturation.Override(-5);
+            var vignette=volume.profile.Add<Vignette>(); vignette.intensity.Override(.06f); vignette.smoothness.Override(.45f);
             Activate();
         }
 
@@ -102,6 +102,7 @@ namespace JalanKita
             RenderSettings.fog=true; RenderSettings.fogMode=FogMode.Linear;
             RenderSettings.fogColor=new Color(.72f,.78f,.79f);
             RenderSettings.fogStartDistance=IsSopoDel?160:80; RenderSettings.fogEndDistance=IsSopoDel?420:280;
+            FidelityLighting.Activate(sun);
         }
 
         Material Mat(string name,string texture,string hex,float smooth=.1f,float metallic=0)
@@ -413,20 +414,9 @@ namespace JalanKita
         }
         void Tree(Vector3 p,float h)
         {
-            mesh.Tube(bark,p,p+new Vector3(.25f,h*.7f,.15f),.19f,.1f,9);
-            for(int k=0;k<9;k++)
-            {
-                float a=k*Mathf.PI*2/9; Vector3 end=p+new Vector3(Mathf.Cos(a)*2.7f,h*.8f+Rand(-.9f,.9f),Mathf.Sin(a)*2.7f);
-                mesh.Tube(bark,p+new Vector3(.15f,h*.48f,0),end,.095f,.015f);
-                Vector3 twig=end+new Vector3(Mathf.Cos(a+.5f)*.8f,.4f,Mathf.Sin(a+.5f)*.8f);
-                mesh.Tube(bark,end-Vector3.up*.3f,twig,.032f,.009f,5);
-            }
-            for(int k=0;k<165;k++)
-            {
-                float a=Rand(0,Mathf.PI*2),radius=Mathf.Sqrt(Rand(0,1))*3.9f;
-                LeafCard(p+new Vector3(Mathf.Cos(a)*radius,h*.8f+Rand(-1.6f,1.6f)*(1-radius/5),Mathf.Sin(a)*radius),Rand(1.1f,2.15f));
-            }
+            NaturalTree.Create(Root.transform, p, h, rng.Next(), bark, leaf);
         }
+
         void LeafCard(Vector3 p,float size)
         {
             Quaternion rot=Quaternion.Euler(Rand(25,150),Rand(0,360),Rand(0,360));

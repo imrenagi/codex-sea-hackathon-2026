@@ -73,6 +73,7 @@ namespace JalanKita
                             mesh.Quad(foliage, c - u - v, c + u - v, c + u + v, c - u + v, atlas: new Rect(0, 0, 1, 1));
                         }
                     }
+                    ArchitectureDetail.House(mesh, look, side, z, y);
                     index++;
                 }
                 // Cables terminate at poles and service connections rather than floating ends.

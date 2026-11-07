@@ -41,9 +41,9 @@ namespace JalanKita
             volume.profile = ScriptableObject.CreateInstance<VolumeProfile>();
             volume.profile.Add<Tonemapping>().mode.Override(TonemappingMode.ACES);
             var colour = volume.profile.Add<ColorAdjustments>();
-            colour.postExposure.Override(.25f);
-            colour.contrast.Override(6);
-            colour.saturation.Override(-7);
+            colour.postExposure.Override(.35f);
+            colour.contrast.Override(2);
+            colour.saturation.Override(-5);
             Activate();
         }
 
@@ -63,6 +63,7 @@ namespace JalanKita
             RenderSettings.fogStartDistance = 115;
             RenderSettings.fogEndDistance = 305;
             RenderSettings.reflectionIntensity = .75f;
+            FidelityLighting.Activate(sun);
         }
 
         public Material Surface(string name, string texture, string tint, float smoothness = .12f, float metal = 0)
@@ -81,18 +82,28 @@ namespace JalanKita
                 material.SetTexture("_BumpMap", Resources.Load<Texture2D>(path + "_normal"));
                 material.SetFloat("_BumpScale", .38f);
                 material.EnableKeyword("_NORMALMAP");
+                var mask = Resources.Load<Texture2D>(path + "_mask");
+                if (mask) { material.SetTexture("_MetallicGlossMap", mask); material.SetFloat("_Smoothness", 1); material.EnableKeyword("_METALLICSPECGLOSSMAP"); }
             }
             materials.Add(name, material);
             return material;
         }
 
-        public Material BoxMaterial(string name)
+        public Material BoxMaterial(string name, string colour = "ffffff")
         {
             if (name == "Tanah") return Surface("Verges", "SopoDel/grass_ground", "9b9d83");
             if (name.StartsWith("Trotoar")) return Surface("Paving", "brick_pavement", "c4c3ba");
             if (name == "Koridor Kenanga" || name == "Jalan melintang" || name == "Akses Mawar"
                 || name == "Teluk berhenti" || name == "Jalan teluk jemput")
-                return Surface("Asphalt", "asphalt_02", "92979b", .1f);
+                return Surface("Asphalt", "StreetLook/Surfaces/asphalt", "dededb", .1f);
+            if (name.StartsWith("Marka") || name.StartsWith("Garis tepi") || name.StartsWith("Garis henti")
+                || name.StartsWith("Zebra") || name.StartsWith("Beri jalan") || name.Contains("panah"))
+            {
+                var paint = Surface("Worn road paint " + colour, null, colour, .15f);
+                paint.SetTexture("_BaseMap", Resources.Load<Texture2D>("StreetLook/Surfaces/marking_albedo"));
+                paint.SetFloat("_AlphaClip", 1); paint.SetFloat("_Cutoff", .5f); paint.EnableKeyword("_ALPHATEST_ON");
+                return paint;
+            }
             if (name == "Pagar sekolah") return Surface("Boundary concrete", "plastered_wall", "b9b7a9");
             return null;
         }
@@ -121,7 +132,8 @@ namespace JalanKita
         public void DressBuilding(GameObject building, float location)
         {
             string[] tones = { "c9c7b8", "b5bcba", "c8b7a1", "acb7ad", "d6d3c8", "adaeaa" };
-            int index = Mathf.Abs(Mathf.RoundToInt(location * 3)) % tones.Length;
+            int lot = Mathf.RoundToInt(location);
+            int index = (int)((uint)(lot * 73856093 ^ Mathf.RoundToInt(building.transform.position.x) * 19349663) % tones.Length);
             foreach (var renderer in building.GetComponentsInChildren<MeshRenderer>())
             {
                 var slots = renderer.sharedMaterials;
@@ -134,44 +146,18 @@ namespace JalanKita
                 }
                 renderer.sharedMaterials = slots;
             }
+            ArchitectureDetail.Dress(building, this);
         }
 
         public GameObject Tree(Vector3 position, float yaw, Transform target)
         {
-            var root = new GameObject("Kenanga branching street tree");
-            root.transform.SetParent(target, false);
-            var mesh = new StreetMesh();
-            var bark = Surface("Tree bark", "bark_brown_02", "c0b5a4");
-            var leaves = Surface("Tree foliage", null, "c5cfad", .05f);
-            if (!leaves.GetTexture("_BaseMap"))
-            {
-                leaves.SetTexture("_BaseMap", Resources.Load<Texture2D>("StreetLook/tropical_foliage") ?? Resources.Load<Texture2D>("Jaksa/leaves"));
-                leaves.SetFloat("_AlphaClip", 1); leaves.SetFloat("_Cutoff", .4f);
-                leaves.SetFloat("_Cull", 0); leaves.EnableKeyword("_ALPHATEST_ON");
-                leaves.renderQueue = 2450;
-            }
-            float height = Range(6.5f, 8.4f), radius = Range(2.4f, 3.3f);
-            var crown = new Vector3(.15f, height * .73f, .12f);
-            mesh.Tube(bark, Vector3.zero, crown, .2f, .075f, 9);
-            for (int i = 0; i < 8; i++)
-            {
-                float angle = i * Mathf.PI / 4 + .22f;
-                var branch = new Vector3(Mathf.Cos(angle) * radius * .72f, height * Range(.68f, .9f), Mathf.Sin(angle) * radius * .72f);
-                mesh.Tube(bark, new Vector3(.09f, height * .43f, .06f), branch, .095f, .018f, 7);
-                mesh.Tube(bark, branch * .85f, branch + new Vector3(.35f, .6f, -.25f), .035f, .008f, 5);
-            }
-            for (int i = 0; i < 155; i++)
-            {
-                float angle = Range(0, Mathf.PI * 2), r = Mathf.Sqrt(Range(0, 1)) * radius;
-                var p = crown + new Vector3(Mathf.Cos(angle) * r, Range(-1, 1.35f) * (1 - .45f * r / radius), Mathf.Sin(angle) * r);
-                var rot = Quaternion.Euler(Range(-75, 75), Range(0, 360), Range(-30, 30));
-                float size = Range(.95f, 1.55f);
-                var u = rot * Vector3.right * size * .5f; var v = rot * Vector3.up * size * .5f;
-                mesh.Quad(leaves, p - u - v, p + u - v, p + u + v, p - u + v, atlas: new Rect(0, 0, 1, 1));
-            }
-            mesh.Build(root.transform);
-            root.transform.SetPositionAndRotation(position, Quaternion.Euler(0, yaw, 0));
-            return root;
+            var bark = Surface("Tree bark", "bark_brown_02", "b1a18b");
+            var leaves = Surface("Tree foliage", null, "c9c5b1", .08f);
+            var texture = Resources.Load<Texture2D>("StreetLook/tropical_foliage");
+            leaves.SetTexture("_BaseMap", texture); leaves.SetFloat("_AlphaClip", 1); leaves.SetFloat("_Cutoff", .4f);
+            leaves.SetFloat("_Cull", 0); leaves.EnableKeyword("_ALPHATEST_ON"); leaves.renderQueue = 2450;
+            var root = NaturalTree.Create(target, position, Range(6.5f, 9.2f), random.Next(), bark, leaves);
+            root.transform.Rotate(0, yaw, 0); return root;
         }
 
         public void StreetDetails()

@@ -650,7 +650,7 @@ namespace JalanKita
             obj.transform.localScale = size;
             Models.Kill(obj.GetComponent<BoxCollider>());
             var renderer = obj.GetComponent<Renderer>();
-            var surface = streetLook.BoxMaterial(name);
+            var surface = streetLook.BoxMaterial(name, color);
             renderer.sharedMaterial = surface ? surface : Material(color);
             if (surface) StreetLook.ProjectSurface(obj.GetComponent<MeshFilter>(), name == "Tanah" ? 5 : 3);
             if (emissive) renderer.sharedMaterial.EnableKeyword("_EMISSION");

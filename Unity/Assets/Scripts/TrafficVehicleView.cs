@@ -47,7 +47,8 @@ namespace JalanKita
             for(int level=0;level<2;level++)
             {
                 string path="Traffic/"+choice.Vehicle.Id+"/"+(level==0?"Body":"Body_LOD1");
-                var prefab=Resources.Load<GameObject>(path);if(!prefab)throw new InvalidOperationException("Missing traffic "+path);
+                var prefab=Resources.Load<GameObject>("StreetLook/Vehicles/"+choice.Vehicle.Id+"/"+(level==0?"Body":"Body_LOD1"))
+                    ?? Resources.Load<GameObject>(path);if(!prefab)throw new InvalidOperationException("Missing traffic "+path);
                 var adapter=new GameObject("Traffic forward adapter").transform;adapter.SetParent(content.transform,false);
                 var model=UnityEngine.Object.Instantiate(prefab,adapter);
                 // Infer forward from the physical axles, preserving the FBX import basis.
@@ -67,7 +68,7 @@ namespace JalanKita
                         if(paint)paintSlots.Add(new PaintSlot{Renderer=r,Index=i});
                     }
                     r.sharedMaterials=slots;r.shadowCastingMode=level==0?ShadowCastingMode.On:ShadowCastingMode.Off;
-                    r.lightProbeUsage=LightProbeUsage.Off;r.reflectionProbeUsage=ReflectionProbeUsage.Off;
+                    r.lightProbeUsage=LightProbeUsage.Off;r.reflectionProbeUsage=ReflectionProbeUsage.BlendProbes;
                 }
                 string[] wheelNames=choice.Vehicle.Motorcycle?new[]{"Wheel_Front","Wheel_Rear"}:new[]{"Wheel_FL","Wheel_FR","Wheel_RL","Wheel_RR"};
                 foreach(string n in wheelNames)AddPivot(model.transform,n,wheels,Vector3.right);

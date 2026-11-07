@@ -1,0 +1,32 @@
+[
+  {
+    "model": "city_hatchback",
+    "lod": 0,
+    "triangles": 68168
+  },
+  {
+    "model": "city_hatchback",
+    "lod": 1,
+    "triangles": 22386
+  },
+  {
+    "model": "family_mpv",
+    "lod": 0,
+    "triangles": 68351
+  },
+  {
+    "model": "family_mpv",
+    "lod": 1,
+    "triangles": 22408
+  },
+  {
+    "model": "utility_pickup",
+    "lod": 0,
+    "triangles": 64282
+  },
+  {
+    "model": "utility_pickup",
+    "lod": 1,
+    "triangles": 20122
+  }
+]

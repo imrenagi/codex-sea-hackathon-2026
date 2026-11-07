@@ -24,7 +24,7 @@ namespace JalanKita
             Func<string,string,string,float,float,Material> mat,Func<float,float> roadX,Action<Vector3,float> tree)
         {
             this.root=root;this.data=data;this.mesh=mesh;this.roadX=roadX;this.tree=tree;
-            road=mat("Sopo asphalt","asphalt_02","abaead",.12f,0);
+            road=mat("Sopo asphalt","StreetLook/Surfaces/asphalt","dededb",.12f,0);
             pavement=mat("Sopo granite pavement","concrete_floor_02","a7aaa7",.2f,0);
             stone=mat("Sopo charcoal stone","concrete_floor_02","8c9295",.28f,.08f);
             silver=mat("Sopo aluminium fins",null,"c2c8c9",.55f,.45f);
