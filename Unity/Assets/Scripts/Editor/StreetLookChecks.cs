@@ -73,7 +73,7 @@ namespace JalanKita.EditorTools
             AssetDatabase.SaveAssets();
         }
 
-        static void MotionChecks()
+        public static void MotionChecks()
         {
             foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
             {

@@ -23,6 +23,8 @@ Then use Unity's **Jalan Kita → Prepare traffic vehicles**, or run the followi
 
 `TrafficChecks.Run` runs verification without reimporting assets. `TrafficChecks.Capture` writes actual Unity renders into `Builds/TrafficEvidence`. `TrafficChecks.BuildMac` writes a separate `Builds/TrafficPreview/Jalan Kita Traffic.app` with its own bundle identifier.
 
+`TrafficChecks.CaptureFleet` renders all six models together. The lamp captures additionally compare on/off pixels for each NPC's four corner lenses, both indicators on every current player selection, and NPC brake-versus-tail brightness. Lit materials retain URP's emissive shader variant; changing emission colors alone is insufficient when that variant has been disabled.
+
 ## Runtime behavior
 
 - Training saves one cosmetic `trafficSeed`; a new save gets random models/colors. The existing retry variant changes the roster, while save/reload and demonstration preserve the same roster. Old saves acquire a seed without changing progress or scores.

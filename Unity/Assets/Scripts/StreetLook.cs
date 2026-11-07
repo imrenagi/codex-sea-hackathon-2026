@@ -12,6 +12,7 @@ namespace JalanKita
         readonly Dictionary<string, Material> materials = new();
         readonly Material sky;
         readonly Light sun;
+        readonly Volume volume;
         readonly Transform parent;
         readonly System.Random random = new(9126);
         float Range(float low, float high) => Mathf.Lerp(low, high, (float)random.NextDouble());
@@ -34,7 +35,7 @@ namespace JalanKita
             sky.SetFloat("_AtmosphereThickness", .9f);
             sky.SetFloat("_Exposure", 1.1f);
             sky.SetFloat("_SunSize", .025f);
-            var volume = new GameObject("Kenanga natural colour").AddComponent<Volume>();
+            volume = new GameObject("Kenanga natural colour").AddComponent<Volume>();
             volume.transform.SetParent(parent, false);
             volume.isGlobal = true; volume.priority = 1;
             volume.profile = ScriptableObject.CreateInstance<VolumeProfile>();
@@ -45,6 +46,9 @@ namespace JalanKita
             colour.saturation.Override(-7);
             Activate();
         }
+
+        public void SetLighting(bool active)
+        { sun.enabled = active; volume.enabled = active; }
 
         public void Activate()
         {
@@ -180,7 +184,7 @@ namespace JalanKita
             var cap = Surface("Wall coping", "concrete_floor_02", "d6d4c9");
             foreach (int side in new[] { -1, 1 })
             {
-                for (float z = -24; z < 407; z += 2)
+                for (float z = -24; z < 382; z += 2)
                 {
                     if (Junction(z, 6.5f)) continue;
                     if (side > 0 && z > RouteStage.SpurStart - 3 && z < RouteStage.SpurEnd + 3) continue;

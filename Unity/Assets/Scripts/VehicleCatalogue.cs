@@ -21,8 +21,8 @@ namespace JalanKita
             new("mpv", "MPV keluarga", VehicleMode.Car, "Traffic/family_mpv", "MPV perkotaan dengan kamera kejar dan lampu aktif."),
             new("city", "Mobil kota", VehicleMode.Car, "Car_City", "Mobil ringkas untuk jalan perkotaan."),
             new("sedan", "Sedan", VehicleMode.Car, "Car_Sedan", "Sedan empat pintu dengan kabin tertutup."),
-            new("beat-red", "BeAT merah-putih", VehicleMode.Motorcycle, "BeatRed", "Skuter dengan bodi merah-putih dan detail lengkap.", true),
-            new("beat-blue", "BeAT biru", VehicleMode.Motorcycle, "BeatBlue", "Skuter biru dengan tampilan sederhana.", true),
+            new("beat-red", "motor bebek merah-putih", VehicleMode.Motorcycle, "BeatRed", "Skuter dengan bodi merah-putih dan detail lengkap.", true),
+            new("beat-blue", "motor bebek biru", VehicleMode.Motorcycle, "BeatBlue", "Skuter biru dengan tampilan sederhana.", true),
             new("classic", "Skuter klasik", VehicleMode.Motorcycle, "Motorcycle", "Skuter latihan dengan pengendara dan penumpang.")
         };
 

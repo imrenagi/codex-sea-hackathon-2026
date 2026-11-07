@@ -254,16 +254,23 @@ namespace JalanKita.EditorTools
                 view.Present(Vector3.zero,0,0,0,true,-1);
                 camera.transform.position=def.Motorcycle?new Vector3(-3,2.1f,3.6f):new Vector3(-5,3,6);camera.transform.LookAt(new Vector3(0,def.Motorcycle?.85f:.75f,0));
                 Save(camera,def.Id+"-unity.png");
-                if(def.Id=="sport_scooter"||def.Id=="city_hatchback")
+                foreach(bool frontView in new[]{true,false})
                     foreach(int side in new[]{-1,1})
                     {
                         view.Present(Vector3.zero,0,0,0,true,side);
-                        camera.transform.position=new Vector3(0,def.Motorcycle?1.05f:1.25f,def.Motorcycle?3.1f:5.5f);camera.transform.LookAt(new Vector3(0,.7f,0));
-                        var lit=Save(camera,def.Id+(side<0?"-left-on":"-right-on")+".png");
+                        camera.transform.position=new Vector3(0,def.Motorcycle?1.05f:1.25f,(frontView?1:-1)*(def.Motorcycle?3.1f:5.5f));camera.transform.LookAt(new Vector3(0,.7f,0));
+                        string prefix=def.Id+(frontView?"":"-rear")+(side<0?"-left":"-right");
+                        var lit=Save(camera,prefix+"-on.png");
                         for(int i=0;i<4;i++)view.Present(Vector3.zero,0,0,.1f,true,side);
-                        var dark=Save(camera,def.Id+(side<0?"-left-off":"-right-off")+".png");
-                        CheckBlinkPixels(lit,dark,side<0,def.Id+" side="+side);
+                        var dark=Save(camera,prefix+"-off.png");
+                        CheckBlinkPixels(lit,dark,frontView?side<0:side>0,prefix);
                     }
+                view.Present(Vector3.zero,0,0,0,true,0);
+                var tail=Save(camera,def.Id+"-tail.png");
+                view.Present(Vector3.zero,0,0,0,true,0,true);
+                var brake=Save(camera,def.Id+"-brake.png");
+                Require(ChangedPixels(brake,tail)>8,"Brake brightness not visible: "+def.Id);
+                Debug.Log("TRAFFIC_RENDERED_BRAKE_PASS "+def.Id);
                 UnityEngine.Object.DestroyImmediate(host);
             }
             foreach(var def in VehicleCatalogue.All)
@@ -302,6 +309,24 @@ namespace JalanKita.EditorTools
             float tangent=Mathf.Atan2(drive.Street.RoadX(z+2)-drive.Street.RoadX(z),2)*Mathf.Rad2Deg;
             return RoadVehicleMotion.TrackLane(drive.Mode,drive.Speed,drive.Heading,drive.Position.x,drive.Street.RoadX(z)-1.2f,tangent);
         }
+        public static void CaptureFleet()
+        {
+            Directory.CreateDirectory(Output);EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
+            RenderSettings.fog=false;RenderSettings.ambientMode=AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor=new Color(.8f,.84f,.9f);RenderSettings.ambientEquatorColor=new Color(.45f,.49f,.54f);RenderSettings.ambientGroundColor=new Color(.25f,.28f,.3f);
+            var sun=new GameObject("Fleet daylight").AddComponent<Light>();sun.type=LightType.Directional;sun.intensity=1.4f;sun.transform.rotation=Quaternion.Euler(45,-25,0);
+            var floor=GameObject.CreatePrimitive(PrimitiveType.Plane);floor.transform.localScale=Vector3.one*4;floor.GetComponent<Renderer>().sharedMaterial=MaterialLibrary.Create("Fleet floor",new Color(.23f,.28f,.33f));
+            var host=new GameObject("Six traffic options");
+            for(int i=0;i<6;i++)
+            {
+                var view=new TrafficVehicleView(host.transform,TrafficCatalogue.All[i].Id);view.Select(new TrafficChoice(TrafficCatalogue.All[i],i%2));
+                view.Present(new Vector3((i%3-1)*4.3f,0,i<3?2.8f:-2.8f),-12,0,0,true,0);
+                view.Root.GetComponentInChildren<LODGroup>().ForceLOD(0);
+            }
+            var camera=new GameObject("Fleet camera").AddComponent<Camera>();camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.43f,.52f,.59f);
+            camera.orthographic=true;camera.orthographicSize=6;camera.transform.position=new Vector3(7,10,15);camera.transform.LookAt(new Vector3(0,.6f,0));
+            Save(camera,"traffic-fleet.png");Debug.Log("TRAFFIC_FLEET_CAPTURE_READY");
+        }
         static void CheckBlinkPixels(Color32[] lit,Color32[] dark,bool screenRight,string label)
         {
             int expected=0,wrong=0;
@@ -310,6 +335,12 @@ namespace JalanKita.EditorTools
                 {if((i%1100>=550)==screenRight)expected++;else wrong++;}
             Require(expected>8&&wrong<Mathf.Max(2,expected/20),$"Rendered blink missing/wrong side {label}: correct={expected}, wrong={wrong}");
             Debug.Log($"TRAFFIC_RENDERED_BLINK_PASS {label}: {expected} lens pixels changed, {wrong} on opposite side");
+        }
+        static int ChangedPixels(Color32[] a,Color32[] b)
+        {
+            int count=0;
+            for(int i=0;i<a.Length;i++)if(Math.Abs(a[i].r-b[i].r)+Math.Abs(a[i].g-b[i].g)+Math.Abs(a[i].b-b[i].b)>25)count++;
+            return count;
         }
         static Color32[] Save(Camera camera,string file)
         {

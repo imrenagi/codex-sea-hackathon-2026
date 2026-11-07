@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UjianSim.Game;
 using static JalanKita.RouteStage;
 
 namespace JalanKita
@@ -9,11 +10,16 @@ namespace JalanKita
     [RequireComponent(typeof(UIDocument))]
     public sealed partial class JalanGame : MonoBehaviour
     {
-        enum Page { Menu, Before, Preflight, Drive, Lesson, Progress, After, Jaksa, JaksaPause, Catalogue, Brief }
+        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview }
 
         District district;
         GameObject trainingRoot;
         JaksaDrive jaksa;
+        CityMapPreview cityPreview;
+        bool pitchDemo;
+        bool PitchComplete => pitchDemo && journey.Stage > 2;
+        SoundEngine sound;
+        bool blinkWas;
         Journey journey;
         Journey learner;
         JourneySave stored;
@@ -22,10 +28,12 @@ namespace JalanKita
         bool confirmNew, hood;
         float toastUntil;
         int quizIndex, quizScore;
+        int practiceStart = -1;
         VisualElement root, hud, dialog, overlay, phone;
-        Label location, title, instruction, detail, speed, vehicle, routeCount, toast;
+        Label location, title, instruction, detail, speed, routeCount, toast;
+        HudIcon signalLeft, signalRight, headlight;
         Button progress;
-        readonly Label[] routeSteps = new Label[All.Length];
+        readonly Button[] routeSteps = new Button[All.Length];
 
         void Start()
         {
@@ -34,6 +42,7 @@ namespace JalanKita
             trainingRoot = new GameObject("Kampung Kenanga training");
             trainingRoot.transform.SetParent(transform, false);
             district = new District(trainingRoot.transform);
+            sound = SoundEngine.Create(transform);
             root = GetComponent<UIDocument>().rootVisualElement;
             root.AddToClassList("jalan-root");
             root.pickingMode = PickingMode.Ignore;
@@ -46,11 +55,28 @@ namespace JalanKita
             instruction = root.Q<Label>("instruction");
             detail = root.Q<Label>("detail");
             speed = root.Q<Label>("speed");
-            vehicle = root.Q<Label>("vehicleState");
+            var indicators = root.Q("indicators");
+            signalLeft = new HudIcon(HudIcon.Shape.Left) { name = "signalLeft" };
+            headlight = new HudIcon(HudIcon.Shape.Headlight) { name = "headlight" };
+            signalRight = new HudIcon(HudIcon.Shape.Right) { name = "signalRight" };
+            indicators.Add(signalLeft);
+            indicators.Add(headlight);
+            indicators.Add(signalRight);
             routeCount = root.Q<Label>("routeCount");
             toast = root.Q<Label>("toast");
             for (int i = 0; i < routeSteps.Length; i++)
-                routeSteps[i] = AddLabel(root.Q("steps"), (i+1).ToString("00"), "step");
+            {
+                int mission = i;
+                var button = new Button(() => JumpToMission(mission))
+                {
+                    name = "mission" + (i+1).ToString("00"),
+                    text = (i+1).ToString("00"),
+                    tooltip = "Latihan misi " + (i+1) + " · " + All[i].Title
+                };
+                button.AddToClassList("step");
+                root.Q("steps").Add(button);
+                routeSteps[i] = button;
+            }
 
             progress = root.Q<Button>("progress");
             progress.clicked += () => { if (page == Page.Jaksa) ShowJaksaPause(); else if (learner != null) EndDemonstration(); else ShowProgress(); };
@@ -62,6 +88,12 @@ namespace JalanKita
 
         void Update()
         {
+            if (Input.GetKeyDown(KeyCode.M))
+            {
+                sound.SetMuted(!sound.Muted);
+                var toggle = root.Q<Button>("soundToggle");
+                if (toggle != null) toggle.text = sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)";
+            }
             if (page == Page.Jaksa)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab)) { ShowJaksaPause(); return; }
@@ -77,6 +109,13 @@ namespace JalanKita
                 if (Input.GetKeyDown(KeyCode.Escape)) SetPage(Page.Jaksa);
                 return;
             }
+            if (page == Page.CityPreview)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape)) ShowCityMaps();
+                else cityPreview?.Step(Time.unscaledDeltaTime);
+                return;
+            }
+            if (page == Page.CityMaps && Input.GetKeyDown(KeyCode.Escape)) { ShowMenu(); return; }
             if (learner != null)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.R))
@@ -92,13 +131,20 @@ namespace JalanKita
                 if (Input.GetKeyDown(KeyCode.E)) journey.ToggleIndicator(1);
                 if (Input.GetKeyDown(KeyCode.L) && mode == VehicleMode.Motorcycle) journey.ToggleHeadlight();
                 if (Input.GetKeyDown(KeyCode.F))
-                {
-                    if (journey.IsMarket) PickupPassenger();
-                    else ResolvePhone(false);
-                }
+                { if (journey.IsMarket) PickupPassenger(); else ResolvePhone(false); }
                 if (Input.GetKeyDown(KeyCode.G)) ResolvePhone(true);
             }
-            else if (page == Page.Lesson && Input.GetKeyDown(KeyCode.R)) Retry();
+            else if (page == Page.Lesson)
+            {
+                if (Input.GetKeyDown(KeyCode.R)) Retry();
+                else if (Input.GetKeyDown(KeyCode.D) && journey.Stage > 0) StartDemonstration();
+                else if (Input.GetKeyDown(KeyCode.Escape)) BackToMenu();
+            }
+            else if (page == Page.Checkpoint)
+            {
+                if (Input.GetKeyDown(KeyCode.R) && (PitchComplete || !journey.Finished)) Retry();
+                else if (Input.GetKeyDown(KeyCode.Escape)) BackToMenu();
+            }
             else if (page == Page.Progress && !journey.Finished &&
                 Input.GetKeyDown(KeyCode.Escape)) ReturnToJourney();
         }
@@ -131,31 +177,60 @@ namespace JalanKita
             journey.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
                 Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), steer);
             if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
-            else if (journey.Finished)
-            {
-                if (journey.Activity == null) StartQuiz(true);
-                else ShowProgress();
-            }
+            else if (journey.Activity != null && journey.Finished) ShowMissionProgress();
             else if (journey.Stage != priorStage || journey.Save.checkpoint != priorCheckpoint) AnnounceCheckpoint();
         }
 
         void LateUpdate()
         {
+            if (journey == null) return;
+            UpdateSound(Time.unscaledDeltaTime);
+            if (page == Page.CityPreview) return;
             if (page == Page.Jaksa || page == Page.JaksaPause)
             {
                 jaksa.Present(Time.unscaledDeltaTime);
                 if (page == Page.Jaksa) RefreshJaksaHud();
                 return;
             }
-            if (journey == null) return;
-            district.Present(journey, hood, Time.unscaledDeltaTime);
+            district.Present(journey, hood, Time.unscaledDeltaTime, page == Page.Drive);
             if (page == Page.Drive) RefreshHud();
+        }
+
+        void UpdateSound(float dt)
+        {
+            bool driving = page == Page.Drive && !journey.Failure.HasValue;
+            var frame = new SoundFrame { SirenDist = float.PositiveInfinity, BellDist = float.PositiveInfinity };
+            if (driving)
+            {
+                frame.Speed = journey.Speed;
+                frame.Throttle = journey.Throttle;
+                frame.Motorcycle = journey.Mode == VehicleMode.Motorcycle;
+                frame.Ringing = journey.PhoneRinging;
+                frame.Horn = learner == null && Input.GetKey(KeyCode.H);
+                if (journey.Ambulance.HasValue) frame.SirenDist = Vector2.Distance(journey.Position, journey.Ambulance.Value);
+                if (journey.RailWarning) frame.BellDist = Vector2.Distance(journey.Position, new Vector2(-180, Boulevard.RailwayZ));
+            }
+            if (page == Page.Jaksa)
+            {
+                frame.Speed = jaksa.Speed;
+                frame.Throttle = Pressed(KeyCode.W, KeyCode.UpArrow) ? 1 : 0;
+                frame.Motorcycle = mode == VehicleMode.Motorcycle;
+                frame.Horn = Input.GetKey(KeyCode.H);
+            }
+            sound.UpdateFrame(dt, frame);
+            bool blink = Time.unscaledTime % .7f < .42f;
+            if (blink != blinkWas && (driving && journey.Indicator != 0 || page == Page.Jaksa && jaksa.Indicator != 0)) sound.Tick(blink);
+            blinkWas = blink;
         }
 
         static bool Pressed(KeyCode a, KeyCode b) => Input.GetKey(a) || Input.GetKey(b);
 
         void ShowMenu()
         {
+            CloseCityPreview();
+            pitchDemo = false;
+            practiceStart = -1;
+            learner = null;
             if (jaksa != null) jaksa.Street.Root.SetActive(false);
             trainingRoot.SetActive(true);
             district.RestoreAtmosphere();
@@ -163,26 +238,28 @@ namespace JalanKita
             root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    C Kamera    R Ulang";
             Show(root.Q("steps"), true);
             stored = JourneySave.Load(mode);
-            journey = new Journey(mode, new JourneySave());
+            journey = new Journey(mode, new JourneySave(), persistent: false);
             hood = false;
             district.Snap();
             SetPage(Page.Menu);
-            AddLabel(dialog, "SIMULASI KESELAMATAN JALAN  /  INDONESIA", "kicker");
-            AddLabel(dialog, "Jalan Kita", "hero");
-            AddLabel(dialog, "Uji keterampilan, selesaikan misi sehari-hari di Kampung Kenanga, atau jelajahi area kantor Sea di Mega Kuningan.", "copy");
+            var content = MenuBody();
+            AddLabel(content, "SIMULASI KESELAMATAN JALAN  /  INDONESIA", "kicker");
+            AddLabel(content, "Jalan Kita", "hero");
+            AddLabel(content, "Uji keterampilan, selesaikan misi sehari-hari di Kampung Kenanga, atau jelajahi area kantor Sea di Mega Kuningan.", "copy");
 
-            var modes = Element(dialog, "row section");
+            var modes = Element(content, "row section");
             AddButton(modes, "Mobil", () => SelectMode(VehicleMode.Car), mode == VehicleMode.Car ? "selected" : "quiet");
             AddButton(modes, "Motor", () => SelectMode(VehicleMode.Motorcycle), mode == VehicleMode.Motorcycle ? "selected" : "quiet");
-            AddVehiclePicker();
-            var activities = Element(dialog, "section");
+            AddVehiclePicker(content);
+            var activities = Element(content, "section");
             AddButton(activities, "Uji keterampilan  ·  5 tes singkat", () => ShowCatalogue(MissionKind.SkillTest), "option primary");
             AddButton(activities, "Misi sehari-hari  ·  3 perjalanan", () => ShowCatalogue(MissionKind.Scenario), "option primary");
-            AddLabel(dialog, "JELAJAH & PERJALANAN LENGKAP", "kicker section");
-            var actions = Element(dialog, "row actions");
+            AddButton(activities, "Demo singkat · Hak utama", StartPitchDemo, "option quiet");
+            AddLabel(content, "JELAJAH & PERJALANAN LENGKAP", "kicker section");
+            var actions = Element(content, "row actions");
             AddButton(actions, "Jelajahi kantor Sea · Sopo Del", StartJaksa, "primary");
             if (stored == null)
-                AddButton(actions, "Mulai perjalanan", StartNew, "primary");
+                AddButton(actions, "Perjalanan lengkap · 10 tahap", StartNew, "primary");
             else
             {
                 string resume = stored.next == All.Length && stored.after >= 0 ? "Lihat hasil"
@@ -193,10 +270,23 @@ namespace JalanKita
                     if (confirmNew) StartNew();
                     else { confirmNew = true; ShowMenu(); }
                 }, "quiet");
-                if (confirmNew) AddLabel(dialog, "Ini mengganti progres yang tersimpan untuk kendaraan ini.", "copy");
+                if (confirmNew) AddLabel(content, "Ini mengganti progres yang tersimpan untuk kendaraan ini.", "copy");
             }
+            AddButton(actions, "Peta Jakarta · 6 pratinjau", ShowCityMaps, "quiet");
+            AddSoundControls(content);
             if (Application.platform != RuntimePlatform.WebGLPlayer)
                 AddButton(actions, "Keluar", Application.Quit, "quiet");
+        }
+
+
+        ScrollView MenuBody()
+        {
+            var content = new ScrollView(ScrollViewMode.Vertical)
+            { horizontalScrollerVisibility = ScrollerVisibility.Hidden, verticalScrollerVisibility = ScrollerVisibility.Auto };
+            content.AddToClassList("menu-scroll");
+            content.contentViewport.style.overflow = Overflow.Hidden;
+            dialog.Add(content);
+            return content;
         }
 
         void StartJaksa()
@@ -224,8 +314,11 @@ namespace JalanKita
             routeCount.text = "SOPO DEL · SEKITAR 250 M";
             speed.text = Mathf.RoundToInt(jaksa.Speed*3.6f).ToString("00");
             speed.EnableInClassList("speed-alert", false);
-            vehicle.text = jaksa.Indicator < 0 ? "‹  SEIN KIRI" : jaksa.Indicator > 0 ? "SEIN KANAN  ›"
-                : mode == VehicleMode.Car ? "MOBIL" : jaksa.Headlight ? "MOTOR · LAMPU NYALA" : "MOTOR · LAMPU MATI";
+            bool blink = Time.unscaledTime % .7f < .42f;
+            signalLeft.On = jaksa.Indicator < 0 && blink;
+            signalRight.On = jaksa.Indicator > 0 && blink;
+            headlight.On = mode == VehicleMode.Motorcycle && jaksa.Headlight;
+            Show(root.Q("practiceHint"), false);
         }
 
         void ShowJaksaPause()
@@ -241,6 +334,96 @@ namespace JalanKita
             AddLabel(dialog,"Data peta © OpenStreetMap contributors · ODbL. Material permukaan: Poly Haven · CC0.","rule-source");
         }
 
+
+        void CloseCityPreview()
+        {
+            cityPreview?.Dispose();
+            cityPreview = null;
+            trainingRoot.SetActive(true);
+            if (jaksa != null) jaksa.Street.Root.SetActive(false);
+            district.RestoreAtmosphere();
+        }
+
+        void ShowCityMaps()
+        {
+            CloseCityPreview();
+            SetPage(Page.CityMaps);
+            AddLabel(dialog, "JAKARTA / OPENSTREETMAP", "kicker");
+            AddLabel(dialog, "Pilih peta", "heading");
+            AddLabel(dialog, "Pratinjau kota 3D, sekitar 1,7 × 1,5 km per area. Belum berisi misi atau simulasi lalu lintas.", "copy");
+            var list = Element(dialog, "section");
+            for (int i = 0; i < CityMapData.Ids.Length; i++)
+            {
+                int index = i;
+                AddButton(list, CityMapData.Names[i], () => OpenCityMap(index), "option");
+            }
+            AddButton(dialog, "Kembali ke latihan", ShowMenu, "quiet");
+        }
+
+        void OpenCityMap(int index)
+        {
+            try
+            {
+                var map = CityMapData.Load(CityMapData.Ids[index]);
+                CloseCityPreview();
+                trainingRoot.SetActive(false);
+                cityPreview = new CityMapPreview(transform, map);
+                SetPage(Page.CityPreview);
+                AddLabel(dialog, CityMapData.Names[index], "heading");
+                AddLabel(dialog, "PRATINJAU PETA · BUKAN RUTE LATIHAN", "kicker");
+                AddLabel(dialog, "WASD / panah: geser · + / −: zoom · R: reset", "copy");
+                AddLabel(dialog, "Bangunan dan jalan dari OSM. Tinggi/lebar sebagian perkiraan; bukan model survei. Utara ke depan.", "copy");
+                AddLabel(dialog, "© OpenStreetMap contributors · ODbL", "rule-source");
+                var actions = Element(dialog, "row actions");
+                AddButton(actions, "+", () => cityPreview.Zoom(-.2f), "quiet");
+                AddButton(actions, "−", () => cityPreview.Zoom(.2f), "quiet");
+                AddButton(actions, "Reset", () => cityPreview.Reset(), "quiet");
+                AddButton(actions, "Pilih peta [Esc]", ShowCityMaps, "primary");
+                AddButton(actions, "Sumber OSM", () => Application.OpenURL("https://www.openstreetmap.org/copyright"), "quiet");
+            }
+            catch (Exception error)
+            {
+                ShowCityMaps();
+                AddLabel(dialog, "Peta belum dapat dibuka: " + error.Message, "copy negative");
+                Debug.LogException(error);
+            }
+        }
+
+        void StartPitchDemo()
+        {
+            CloseCityPreview();
+            pitchDemo = true;
+            practiceStart = -1;
+            learner = null;
+            journey = new Journey(mode, new JourneySave { next = 2 }, persistent: false);
+            hood = false;
+            district.Snap();
+            progress.text = "Jeda demo  [Tab]";
+            SetPage(Page.Drive);
+            toast.text = "DEMO · W: GAS · SPACE: REM · R: ULANG";
+            toastUntil = Time.unscaledTime + 6;
+        }
+
+        void ShowPitchComplete()
+        {
+            SetPage(Page.Checkpoint);
+            var sheet = Result("DEMO SELESAI!", "good", "Hak utama · Pasar Bunga");
+            var body = ResultBody(sheet);
+            AddLabel(body, "Kamu memberi prioritas kepada pejalan kaki dan arus di jalan utama.", "sheet-lead");
+            int mistakes = journey.Save.mistakes.Sum();
+            AddLabel(body, mistakes > 0
+                ? mistakes + " pelanggaran dalam sesi ini. Setelah mencoba ulang, kamu melewati situasi dengan benar."
+                : "Situasi ini kamu lewati tanpa pelanggaran dalam sesi demo.", "sheet-text");
+            AddLabel(body, "Pelajaran hari ini: tunggu penyeberangan aman, lalu periksa arus silang. Progres perjalanan tidak diubah.", "copy");
+            var actions = Element(sheet, "sheet-actions");
+            var replay = AddButton(actions, "Ulangi demo", StartPitchDemo, "big primary");
+            AddButton(actions, "Menu utama", BackToMenu, "big quiet");
+            AddLabel(sheet, "R: ulangi demo · Esc: menu", "result-keys");
+            replay.schedule.Execute(replay.Focus).StartingIn(550);
+        }
+
+        void OnDestroy() => cityPreview?.Dispose();
+
         void SelectMode(VehicleMode value)
         {
             mode = value;
@@ -250,6 +433,7 @@ namespace JalanKita
 
         void StartNew()
         {
+            practiceStart = -1;
             confirmNew = false;
             journey = new Journey(mode, new JourneySave());
             StartQuiz(false);
@@ -257,6 +441,7 @@ namespace JalanKita
 
         void Resume()
         {
+            practiceStart = -1;
             journey = new Journey(mode, stored);
             district.Snap();
             if (journey.Finished)
@@ -270,6 +455,24 @@ namespace JalanKita
                 else ShowPreflight();
             }
             else SetPage(Page.Drive);
+        }
+
+        void JumpToMission(int stage)
+        {
+            // Scenario counters describe substeps; they must never launch unrelated route practice.
+            if (journey?.Activity != null || pitchDemo || page == Page.Jaksa || page == Page.JaksaPause
+                || page == Page.CityPreview || page == Page.CityMaps) return;
+            if (stage < 0 || stage >= All.Length) return;
+            root.focusController?.focusedElement?.Blur();
+            learner = null;
+            practiceStart = stage;
+            journey = new Journey(mode, new JourneySave { next = stage }, persistent: false);
+            progress.text = "Kemajuan  [Tab]";
+            district.Snap();
+            toast.text = "LATIHAN MISI " + (stage+1).ToString("00") + " · PROGRES PERJALANAN TETAP TERSIMPAN";
+            toastUntil = Time.unscaledTime + 5;
+            if (stage == 0) ShowPreflight();
+            else { SetPage(Page.Drive); RefreshHud(); }
         }
 
         void ShowPreflight()
@@ -306,27 +509,95 @@ namespace JalanKita
 
         void ShowLesson(Rule rule)
         {
+            sound.Chime(true);
             SetPage(Page.Lesson);
-            dialog.AddToClassList("rule-card");
             var lesson = Lesson.All[(int)rule];
-            AddLabel(dialog, journey.Activity == null ? "LATIHAN " + (journey.Stage + 1).ToString("00") + "  /  COBA LAGI"
-                : journey.Activity.Kind == MissionKind.SkillTest ? "PERCOBAAN BELUM LULUS" : "MISI  /  COBA BAGIAN INI LAGI", "kicker negative");
-            AddLabel(dialog, lesson.Title, "heading");
-            AddLabel(dialog, lesson.Explanation, "copy");
-            var note = Element(dialog, "note");
-            AddLabel(note, "CARA MELAKUKANNYA", "kicker");
-            AddLabel(note, lesson.Action, "copy");
-            if (lesson.HasSource) AddLabel(dialog, lesson.Regulation + " · " + lesson.Citation, "rule-source");
-            var actions = Element(dialog, "row actions");
-            AddButton(actions, journey.Stage == 0 ? "Ulangi persiapan  [R]"
-                : journey.Activity?.Kind == MissionKind.SkillTest ? "Ulangi tes  [R]" : "Ulangi dari checkpoint  [R]", Retry, "primary");
-            if (journey.Stage > 0) AddButton(actions, "Lihat peragaan", StartDemonstration, "quiet");
-            if (lesson.HasSource) AddButton(actions, "Buka sumber resmi", () => Application.OpenURL(lesson.Url), "quiet");
-            if (rule == Rule.Stop) AddButton(actions, "Peraturan rambu", () => Application.OpenURL(Lesson.Signs), "quiet");
-            if (rule == Rule.Signal) AddButton(actions, "Peraturan lampu", () => Application.OpenURL(Lesson.Signals), "quiet");
-            if (rule == Rule.Speed) AddButton(actions, "Peraturan kecepatan", () => Application.OpenURL(Lesson.Limits), "quiet");
-            AddButton(actions, "Menu", BackToMenu, "quiet");
+            var sheet = Result(lesson.HasSource ? "PELANGGARAN!" : "AWAS!",
+                lesson.HasSource ? "bad" : "warn", lesson.Title);
+            var body = ResultBody(sheet);
+            AddLabel(body, lesson.HasSource ? "PELANGGARAN HUKUM" : "SARAN KESELAMATAN",
+                lesson.HasSource ? "kind legal" : "kind advice");
+            AddLabel(body, lesson.Explanation, "sheet-lead");
+            AddLabel(body, "YANG BENAR", "result-label");
+            AddLabel(body, lesson.Action, "sheet-text");
+            if (journey.Activity != null) AddLabel(body, journey.Activity.Title + " · Percobaan " + journey.Save.attempts, "kicker");
+            if (lesson.HasSource) AddLabel(body, lesson.Regulation + " · " + lesson.Citation, "rule-source");
+            Fold(body, "Kenapa ini penting?", content =>
+                AddLabel(content, Why(rule), "sheet-text"));
+            if (lesson.HasSource) Fold(body, "Dasar hukum", content =>
+            {
+                AddLabel(content, lesson.Regulation + " · " + lesson.Citation, "sheet-text");
+                AddButton(content, "Buka sumber resmi", () => Application.OpenURL(lesson.Url), "quiet");
+                if (rule == Rule.Stop) AddButton(content, "Peraturan rambu", () => Application.OpenURL(Lesson.Signs), "quiet");
+                if (rule == Rule.Signal) AddButton(content, "Peraturan lampu", () => Application.OpenURL(Lesson.Signals), "quiet");
+                if (rule == Rule.Speed) AddButton(content, "Peraturan kecepatan", () => Application.OpenURL(Lesson.Limits), "quiet");
+            });
+            var actions = Element(sheet, "sheet-actions");
+            var retry = AddButton(actions, "Coba lagi", Retry, "big primary");
+            if (journey.Stage > 0) AddButton(actions, "Lihat cara benar", StartDemonstration, "big quiet");
+            AddButton(actions, "Menu", BackToMenu, "big quiet");
+            AddLabel(sheet, journey.Stage > 0
+                ? "R: coba lagi dari checkpoint · D: lihat cara benar · Esc: menu"
+                : "R: ulangi persiapan · Esc: menu", "result-keys");
+            retry.schedule.Execute(retry.Focus).StartingIn(550);
         }
+
+        VisualElement Result(string stamp, string tone, string caption)
+        {
+            dialog.AddToClassList("result-layout");
+            var head = Element(dialog, "result-head");
+            var banner = AddLabel(head, stamp, "stamp " + tone + " pre");
+            AddLabel(head, caption, "stamp-caption");
+            var sheet = Element(dialog, "sheet " + tone + " rise pre");
+            banner.schedule.Execute(() => banner.RemoveFromClassList("pre")).StartingIn(40);
+            sheet.schedule.Execute(() => sheet.RemoveFromClassList("pre")).StartingIn(240);
+            return sheet;
+        }
+
+        static ScrollView ResultBody(VisualElement sheet)
+        {
+            var body = new ScrollView(ScrollViewMode.Vertical)
+            {
+                horizontalScrollerVisibility = ScrollerVisibility.Hidden
+            };
+            body.AddToClassList("sheet-body");
+            sheet.Add(body);
+            return body;
+        }
+
+        static void Fold(VisualElement parent, string title, Action<VisualElement> fill)
+        {
+            var fold = Element(parent, "fold");
+            var details = new VisualElement();
+            details.AddToClassList("fold-body");
+            Label sign = null;
+            var button = AddButton(fold, "", () =>
+            {
+                fold.ToggleInClassList("open");
+                sign.text = fold.ClassListContains("open") ? "-" : "+";
+            }, "fold-head");
+            AddLabel(button, title, "fold-title");
+            sign = AddLabel(button, "+", "fold-sign");
+            fill(details);
+            fold.Add(details);
+        }
+
+        static string Why(Rule rule) => rule switch
+        {
+            Rule.SeatBelt => "Sabuk menahan tubuh saat pengereman mendadak atau benturan.",
+            Rule.Helmet => "Helm yang sesuai dan terkunci membantu melindungi kepala saat terjatuh.",
+            Rule.Headlight => "Lampu membantu pengguna jalan lain melihat sepeda motor lebih awal.",
+            Rule.Stop or Rule.Junction or Rule.Signal => "Berhenti dan memberi jalan menyediakan waktu untuk melihat kendaraan dari arah silang.",
+            Rule.Pedestrian => "Pejalan kaki tidak memiliki pelindung seperti pengendara. Tunggu sampai jalur mereka aman.",
+            Rule.Indicator or Rule.Gap or Rule.ReturnLeft => "Isyarat dan ruang yang cukup membantu pengendara lain memahami perpindahan lajurmu.",
+            Rule.KeepLeft or Rule.NoEntry => "Mengikuti arah yang ditetapkan mengurangi risiko berhadapan dengan kendaraan dari arah berlawanan.",
+            Rule.Speed or Rule.BoulevardSpeed => "Kecepatan lebih rendah memberi waktu untuk bereaksi, terutama saat anak-anak berada di dekat jalan.",
+            Rule.Railway => "Kereta membutuhkan jarak sangat panjang untuk berhenti. Palang yang mulai naik belum berarti jalur sudah boleh dilalui.",
+            Rule.Emergency => "Memberi ruang membantu ambulans membawa pasien ke pertolongan lebih cepat tanpa memaksa manuver berbahaya.",
+            Rule.RightArrow or Rule.MovementLane or Rule.TurnSignal => "Lajur dan isyarat yang tepat memisahkan arus kendaraan. Hijau tetap mengharuskan pengemudi memperhatikan pejalan kaki.",
+            Rule.Phone => "Perhatian yang teralihkan membuat bahaya di depan lebih mudah terlewat.",
+            _ => "Jaga ruang di sekitar kendaraan agar ada waktu untuk mengerem dan menghindari bahaya."
+        };
 
         void StartDemonstration()
         {
@@ -350,13 +621,14 @@ namespace JalanKita
         {
             journey = learner;
             learner = null;
-            progress.text = "Kemajuan  [Tab]";
+            progress.text = pitchDemo ? "Jeda demo  [Tab]" : "Kemajuan  [Tab]";
             district.Snap();
             ShowLesson(journey.Failure.Value);
         }
 
         void Retry()
         {
+            if (PitchComplete) { StartPitchDemo(); return; }
             journey.Retry();
             district.Snap();
             if (journey.Stage == 0) ShowPreflight();
@@ -379,11 +651,13 @@ namespace JalanKita
         void ShowProgress()
         {
             if (page == Page.Menu) return;
+            if (PitchComplete) { ShowPitchComplete(); return; }
             if (journey.Activity != null) { ShowMissionProgress(); return; }
             SetPage(Page.Progress);
             AddLabel(dialog, journey.Finished ? "PERJALANAN SELESAI" : "JURNAL PERJALANAN", "kicker");
             AddLabel(dialog, journey.Finished ? "Tiba dengan selamat" : "Kemajuan latihan", "heading");
-            AddLabel(dialog, journey.Stage + " dari " + All.Length + " checkpoint tersimpan  ·  "
+            AddLabel(dialog, pitchDemo ? "DEMO · Hak utama · Progres latihan tidak diubah" : (practiceStart >= 0 ? "Latihan dari misi " + (practiceStart+1) + " · Progres perjalanan tetap tersimpan  ·  "
+                : journey.Stage + " dari " + All.Length + " checkpoint tersimpan  ·  ")
                 + (mode == VehicleMode.Car ? "Mobil" : "Motor"), "copy");
             if (journey.Save.before >= 0)
                 AddLabel(dialog, "Kuis awal  " + journey.Save.before + "/3"
@@ -402,15 +676,72 @@ namespace JalanKita
             var actions = Element(dialog, "row actions");
             if (!journey.Finished) AddButton(actions, "Kembali berkendara", ReturnToJourney, "primary");
             AddButton(actions, "Menu utama", BackToMenu, journey.Finished ? "primary" : "quiet");
+            AddSoundControls(dialog);
         }
 
-        void ReturnToJourney() => SetPage(Page.Drive);
+        void AddSoundControls(VisualElement parent)
+        {
+            var button = AddButton(parent, sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)", null, "quiet tiny");
+            button.name = "soundToggle";
+            button.clicked += () =>
+            {
+                sound.SetMuted(!sound.Muted);
+                button.text = sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)";
+            };
+            AddLabel(parent, "H: klakson · M: aktif/nonaktif suara", "copy");
+        }
+
+        void ReturnToJourney()
+        { if (PitchComplete) ShowPitchComplete(); else SetPage(Page.Drive); }
 
         void AnnounceCheckpoint()
         {
-            toast.text = journey.Activity == null ? "✓  CHECKPOINT " + journey.Stage.ToString("00") + " TERSIMPAN"
-                : "✓  KEMAJUAN TERSIMPAN";
-            toastUntil = Time.unscaledTime + 3;
+            sound.Chime(false);
+            if (PitchComplete) { ShowPitchComplete(); return; }
+            if (journey.Activity != null)
+            {
+                toast.text = "✓  KEMAJUAN TERSIMPAN";
+                toastUntil = Time.unscaledTime + 3;
+                return;
+            }
+            SetPage(Page.Checkpoint);
+            int completed = journey.Stage - 1;
+            var sheet = Result("MISI SELESAI!", "good",
+                "Misi " + journey.Stage + " · " + All[completed].Title);
+            string[] recaps =
+            {
+                "Semua orang memakai perlengkapan keselamatan sebelum kendaraan bergerak.",
+                "Kamu berhenti di rambu STOP, memberi jalan, dan mematuhi lampu lalu lintas.",
+                "Kamu memberi prioritas kepada pejalan kaki dan arus di jalan utama.",
+                "Kamu mengikuti arah jalan, memberi sein, dan berpindah lajur dengan aman.",
+                "Kamu menjaga kecepatan dan tetap fokus melewati zona sekolah.",
+                "Kamu memilih lajur lurus, mematuhi lampu, dan menunggu pejalan kaki.",
+                "Kamu berbelok kiri dengan sein setelah lampu hijau dan zebra cross kosong.",
+                "Kamu berbelok kanan dari lajur yang tepat setelah panah kanan hijau.",
+                "Kamu menunggu kereta lewat dan palang terbuka penuh sebelum melintas.",
+                "Kamu memberi jalan kepada ambulans dengan aman tanpa melampaui batas kecepatan."
+            };
+            var body = ResultBody(sheet);
+            AddLabel(body, recaps[completed], "sheet-lead");
+            AddLabel(body, practiceStart >= 0 ? "Latihan selesai. Progres perjalanan tetap tersimpan."
+                : "Checkpoint " + journey.Stage.ToString("00") + "/" + All.Length.ToString("00") + " tersimpan. "
+                + (journey.Finished ? "Seluruh rute selesai." : "Lanjutkan di jalan yang sama."), "checkpoint-saved");
+            var actions = Element(sheet, "sheet-actions");
+            var next = AddButton(actions, journey.Finished ? practiceStart >= 0 ? "Hasil latihan" : "Kuis akhir" : "Lanjutkan perjalanan",
+                ContinueCheckpoint, "big primary");
+            if (!journey.Finished) AddButton(actions, "Ulang dari checkpoint", Retry, "big quiet");
+            AddButton(actions, "Menu", BackToMenu, "big quiet");
+            AddLabel(sheet, journey.Finished ? practiceStart >= 0 ? "Enter: hasil latihan · Esc: menu" : "Enter: kuis akhir · Esc: menu"
+                : "Enter: lanjutkan · R: ulang dari checkpoint · Esc: menu", "result-keys");
+            next.schedule.Execute(next.Focus).StartingIn(550);
+        }
+
+        void ContinueCheckpoint()
+        {
+            if (PitchComplete) { ShowPitchComplete(); return; }
+            if (journey.Finished && practiceStart >= 0) ShowProgress();
+            else if (journey.Finished) StartQuiz(true);
+            else SetPage(Page.Drive);
         }
 
         void RefreshHud()
@@ -473,48 +804,66 @@ namespace JalanKita
                 target = journey.Front < SchoolLimit ? SchoolLimit : All[stage].End;
                 if (journey.Position.x < -4.25f && !journey.PhoneRinging)
                     prompt = "Kembali ke lajur kiri saat aman sebelum teluk berakhir.";
-                else if (journey.Front >= SchoolLimit) prompt = "Jaga kecepatan hingga garis finis.";
+                else if (journey.Front >= SchoolLimit) prompt = "Jaga kecepatan hingga checkpoint sekolah.";
                 signal = "BATAS 30 KM/J";
+            }
+            if (stage >= 5)
+            {
+                string status;
+                if (stage <= 7)
+                {
+                    status = stage == 7 ? "PANAH KANAN " + (journey.ArrowPhase == 2 ? "HIJAU" : "MERAH")
+                        : journey.MainPhase == 2 ? "HIJAU" : journey.MainPhase == 1 ? "KUNING" : "MERAH";
+                    if (journey.BoulevardPedestrian.HasValue) status += " · TUNGGU PEJALAN KAKI";
+                    prompt += mode == VehicleMode.Car ? " Mobil berhenti sebelum kotak merah." : " Motor berhenti di garis depan kotak merah.";
+                }
+                else if (stage == 8) status = journey.RailWarning ? "BERHENTI · PERINGATAN KERETA" : "PALANG TERBUKA";
+                else status = journey.AmbulancePassed ? "AMBULANS SUDAH LEWAT"
+                    : journey.Ambulance.HasValue ? "SIRENE · AMBULANS " + Mathf.RoundToInt(Mathf.Abs(journey.AmbulanceGap)) + " M"
+                    : "ANGKOT BERHENTI DI LAJUR KIRI";
+                detail.text = status + " · BATAS 50 KM/J";
             }
             RefreshMissionPrompt(ref prompt, ref signal, ref target);
             instruction.text = prompt;
-            detail.text = (signal.Length == 0 ? "" : signal + "   /   ") + Mathf.Max(0, Mathf.RoundToInt(target - journey.Front)) + " M";
-            routeCount.text = "CHECKPOINT  " + stage.ToString("00") + " / " + All.Length.ToString("00");
+            if (stage < 5) detail.text = (signal.Length == 0 ? "" : signal + "   /   ") + Mathf.Max(0, Mathf.RoundToInt(target - journey.Front)) + " M";
+            routeCount.text = pitchDemo ? "DEMO · HAK UTAMA" : practiceStart >= 0 ? "LATIHAN MISI  " + (stage+1).ToString("00") + " / " + All.Length.ToString("00")
+                : "CHECKPOINT  " + stage.ToString("00") + " / " + All.Length.ToString("00");
             if (journey.Activity != null)
-                routeCount.text = journey.Activity.Kind == MissionKind.SkillTest ? "UJI KETERAMPILAN  /  PERCOBAAN " + journey.Save.attempts
-                    : "MISI  /  " + journey.Activity.CompletedSteps(journey) + " DARI 3 BAGIAN";
+                routeCount.text = journey.Activity.Kind == MissionKind.SkillTest ? "UJI KETERAMPILAN / PERCOBAAN " + journey.Save.attempts
+                    : "MISI / " + journey.Activity.CompletedSteps(journey) + " DARI 3 BAGIAN";
             for (int i = 0; i < routeSteps.Length; i++)
             {
-                int completed = journey.Activity == null ? stage : journey.Activity.CompletedSteps(journey);
-                Show(routeSteps[i], journey.Activity == null || journey.Activity.Kind == MissionKind.Scenario && i < 3);
-                routeSteps[i].EnableInClassList("step-done", i < completed);
-                routeSteps[i].EnableInClassList("step-current", i == completed);
+                bool route = journey.Activity == null && !pitchDemo;
+                int complete = route ? stage : journey.Activity?.CompletedSteps(journey) ?? 0;
+                Show(routeSteps[i], !pitchDemo && (route || journey.Activity.Kind == MissionKind.Scenario && i < 3));
+                routeSteps[i].SetEnabled(route);
+                routeSteps[i].focusable = route;
+                routeSteps[i].EnableInClassList("step-done", i < complete && (practiceStart < 0 || i >= practiceStart));
+                routeSteps[i].EnableInClassList("step-current", i == complete);
             }
-            speed.text = Mathf.RoundToInt(journey.Kph).ToString("00");
-            speed.EnableInClassList("speed-alert", stage == 4 && journey.Front >= SchoolLimit && journey.Kph > 30.75f);
-            vehicle.text = journey.Indicator switch
-            {
-                -1 => "‹  SEIN KIRI",
-                1 => "SEIN KANAN  ›",
-                _ => mode == VehicleMode.Car ? "MOBIL" : journey.Headlight ? "MOTOR · LAMPU NYALA" : "MOTOR · LAMPU MATI"
-            };
+            Show(root.Q("practiceHint"), journey.Activity == null && !pitchDemo);
+            speed.text = Mathf.RoundToInt(journey.Kph).ToString();
+            speed.EnableInClassList("speed-alert", stage == 4 && journey.Front >= SchoolLimit && journey.Kph > 30.75f || stage >= 5 && journey.Kph > 50.75f);
+            bool blink = Time.unscaledTime % .7f < .42f;
+            signalLeft.On = journey.Indicator == -1 && blink;
+            signalRight.On = journey.Indicator == 1 && blink;
+            headlight.On = journey.Mode == VehicleMode.Motorcycle && journey.Headlight;
             Show(phone, journey.PhoneRinging && learner == null);
-            Show(root.Q("pickup"), journey.IsMarket && !journey.PassengerPickedUp && learner == null);
-            root.Q<Button>("pickupPassenger").SetEnabled(journey.CanPickup);
+            Show(root.Q("pickup"), journey.IsMarket && !journey.PassengerPickedUp && learner == null && journey.Position.y >= Mission.PickupStart - 6);
             Show(toast, Time.unscaledTime < toastUntil);
         }
 
         void SetPage(Page value)
         {
             page = value;
-            if (page == Page.Drive)
-                root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    C Kamera    R Ulang";
             Show(hud, page == Page.Drive || page == Page.Jaksa);
             Show(overlay, page != Page.Drive && page != Page.Jaksa);
             overlay.EnableInClassList("landing", page == Page.Menu);
             dialog.EnableInClassList("landing-card", page == Page.Menu);
+            overlay.EnableInClassList("city-preview", page == Page.CityPreview);
             dialog.EnableInClassList("catalogue-card", page == Page.Catalogue);
             dialog.RemoveFromClassList("rule-card");
+            dialog.RemoveFromClassList("result-layout");
             dialog.Clear();
         }
 
@@ -622,7 +971,7 @@ namespace JalanKita
             }
             if (after) journey.Save.after = quizScore;
             else journey.Save.before = quizScore;
-            journey.Save.Store(mode);
+            if (practiceStart < 0 && !pitchDemo) journey.Save.Store(mode, journey.Activity);
             if (after) ShowProgress();
             else ShowPreflight();
         }

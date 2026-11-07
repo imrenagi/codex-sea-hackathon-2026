@@ -5,12 +5,16 @@ using UjianSim.Game;
 
 namespace JalanKita
 {
-    public sealed class District
+    public sealed partial class District
     {
         static readonly int[] Side = { -1, 1 };
         static readonly float[] Junctions = { StopJunction, LightJunction, MainJunction };
         static readonly string[] Shops = { "Ruko_A", "Ruko_B", "Ruko_C", "Ruko_D" };
+        // Ujian SIM TownLayout.Buildings wall palette, unchanged.
+        static readonly string[] WallColors = { "efe2c2", "f3b27a", "ececec", "bfe0de", "f4c9bf",
+            "d9c8e6", "ffd98a", "c9d8b6", "f7efe1", "e8cfa8" };
         readonly Dictionary<string, Material> palette = new();
+        readonly Dictionary<string, Material> surfaces = new();
         readonly GameObject scenery;
         readonly Transform actors;
         readonly TrafficVehicleView crossCar, laneCar, spurCar, pickupCar;
@@ -25,6 +29,9 @@ namespace JalanKita
         readonly Light headlamp;
         readonly StreetLook streetLook;
         readonly DrivingCamera followCamera = new();
+        readonly GameObject routeLighting;
+        readonly Atmosphere routeAtmosphere;
+        bool routeLook;
         bool snapCamera = true;
 
         public District(Transform parent)
@@ -46,6 +53,8 @@ namespace JalanKita
             BuildSigns();
             BuildMissionScenery();
             streetLook.StreetDetails();
+            BuildStreetProps();
+            BuildBoulevard();
             StaticBatchingUtility.Combine(scenery);
 
             playerVehicle = new PlayerVehicleView(actors);
@@ -66,12 +75,19 @@ namespace JalanKita
             camera = new GameObject("Kamera pengemudi").AddComponent<Camera>();
             camera.transform.SetParent(parent);
             camera.tag = "MainCamera";
-            camera.clearFlags = CameraClearFlags.SolidColor;
+
+            camera.clearFlags = CameraClearFlags.Skybox;
             camera.backgroundColor = new Color(.65f, .81f, .79f);
             camera.fieldOfView = 55;
             camera.nearClipPlane = .08f;
             camera.farClipPlane = 285;
             DrivingCamera.Configure(camera);
+            camera.farClipPlane = 500;
+            camera.gameObject.AddComponent<AudioListener>();
+            routeLighting = new GameObject("Full journey lighting");
+            routeLighting.transform.SetParent(parent, false);
+            routeAtmosphere = new Atmosphere(routeLighting.transform, camera);
+            RestoreAtmosphere();
         }
 
         void SetupLight()
@@ -81,18 +97,21 @@ namespace JalanKita
 
         public void RestoreAtmosphere()
         {
+            if (routeLighting) routeLighting.SetActive(false);
+            routeLook = false;
+            streetLook.SetLighting(true);
             streetLook.Activate();
         }
 
         void BuildRoad()
         {
-            Box("Tanah", new Vector3(0, -.3f, 184), new Vector3(245, .45f, 475), "8eaa77");
-            Road("Koridor Kenanga", 0, -28, 415, 9.5f);
+            SurfaceBox("Tanah", new Vector3(0, -.3f, 184), new Vector3(245, .45f, 475), "Grass");
+            Road("Koridor Kenanga", 0, -28, 382, 9.5f);
             Road("Akses Mawar", 6.85f, SpurStart, SpurEnd + 1, 4.35f);
             Road("Teluk berhenti", -6.15f, PhoneStart + 4, PhoneEnd, 3.4f);
             foreach (float center in Junctions)
             {
-                Box("Jalan melintang", new Vector3(0, -.045f, center), new Vector3(90, .08f, 9.1f), "535d63");
+                SurfaceBox("Jalan melintang", new Vector3(0, -.045f, center), new Vector3(90, .08f, 9.1f), "Asphalt");
                 for (int x = -42; x <= 42; x += 4)
                 {
                     if (Mathf.Abs(x) < 7) continue;
@@ -100,15 +119,15 @@ namespace JalanKita
                 }
             }
 
-            for (int z = -25; z < 410; z += 4)
+            for (int z = -25; z < 382; z += 4)
             {
                 if (NearJunction(z, 5.3f) || Mathf.Abs(z - Zebra) < 3.5f) continue;
                 if (z >= OneWayStart && z <= Merge) Mark("Marka pindah lajur", 0, z, .14f, 1.95f);
-                else Mark("Marka tengah", 0, z, .14f, 2.05f, "e9ddae");
+                else Mark("Marka tengah", 0, z, .14f, 2.05f, "e9e9e2");
             }
             foreach (int side in Side)
             {
-                for (int z = -24; z < 408; z += 4)
+                for (int z = -24; z < 382; z += 4)
                 {
                     if (NearJunction(z, 6.1f)) continue;
                     bool opening = side == 1 ? z > SpurStart - 3 && z < SpurEnd + 3
@@ -122,7 +141,7 @@ namespace JalanKita
                             (z / 4) % 2 == 0 ? "c4b499" : "cdbea4", curbParent);
                     }
                     else if (side == 1)
-                        Mark("Pemisah cabang", 5.02f, z, .13f, 2.25f, "e9ddae");
+                        Mark("Pemisah cabang", 5.02f, z, .13f, 2.25f, "e9e9e2");
                     else
                         Mark("Batas teluk", -4.45f, z, .12f, 1.9f);
                 }
@@ -142,21 +161,21 @@ namespace JalanKita
             for (float z = PhoneStart + 5; z < PhoneEnd - 1; z += 4)
                 Mark("Teluk berhenti", -7.1f, z, .12f, 4);
 
-            for (int i = 1; i < All.Length; i++)
+            for (int i = 1; i < 5; i++)
             {
                 float z = All[i].End;
-                string color = i == All.Length - 1 ? "fac86a" : "65dfbf";
+                string color = "2fae64";
                 for (int stripe = 0; stripe < 8; stripe++)
                     Mark("Garis checkpoint", -4.32f + stripe * .55f, z, .27f, .22f, color);
                 foreach (float x in new[] { -5.72f, 5.72f })
                 {
-                    Box("Tiang checkpoint", new Vector3(x, .76f, z), new Vector3(.25f, 1.53f, .25f), "254b51");
+                    Box("Tiang checkpoint", new Vector3(x, .76f, z), new Vector3(.25f, 1.53f, .25f), "15181d");
                     Box("Puncak checkpoint", new Vector3(x, 1.46f, z), new Vector3(.29f, .21f, .29f), color);
                 }
             }
             for (int i = 0; i < 12; i++)
             {
-                float x = -93 + i * 17;
+                float x = (i % 2 == 0 ? -1 : 1) * (145 + i * 8);
                 float z = 429 + (i % 3) * 11;
                 var hill = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 hill.name = "Bukit";
@@ -174,7 +193,7 @@ namespace JalanKita
             foreach (int side in Side)
             {
                 float rotation = side < 0 ? -90 : 90;
-                for (int z = -20; z < 408; z += 7)
+                for (int z = -20; z < 388; z += 7)
                 {
                     if (NearJunction(z, 10) || (side < 0 && (z > 300 && z < 375 || z > 244 && z < 283 || z > 43 && z < 61))) continue;
                     float edge = side == 1 && z > SpurStart - 4 && z < SpurEnd + 5 ? 12 : 8.9f;
@@ -187,9 +206,9 @@ namespace JalanKita
                     if (z < 24) continue;
                     string shop = Shops[rng.Next(Shops.Length)];
                     GameObject building = Model(shop, new Vector3(side * edge, .06f, z), rotation);
-                    building.transform.localScale = Vector3.one * (.94f + (float)rng.NextDouble() * .16f);
+                    building.transform.localScale = new Vector3(6.85f / 4.5f, 1, .85f);
                     if ((z + 20) % 35 == 0)
-                        Model("StreetLamp", new Vector3(side * (edge - 2.7f), .12f, z + 2.4f), rotation);
+                        Model("StreetLamp", new Vector3(side * 5.1f, .12f, z + 2.4f), rotation);
                 }
             }
             Model("Ruko_D", new Vector3(-10.2f, .04f, 341), -90);
@@ -213,7 +232,7 @@ namespace JalanKita
             }
             for (int i = 0; i < 40; i++)
             {
-                float z = rng.Next(-24, 429);
+                float z = rng.Next(-24, 385);
                 float x = (i % 2 == 0 ? -1 : 1) * rng.Next(16, 41);
                 if (!NearJunction(z, 5)) Model("Tree_Shade_0", new Vector3(x, 0, z), i * 33);
             }
@@ -261,8 +280,17 @@ namespace JalanKita
                 Box("Penanda tujuan", new Vector3(x, 1.1f, 0), new Vector3(.3f, 2.2f, .3f), "fac86a", finishMarker.transform);
         }
 
-        public void Present(Journey run, bool hood, float dt)
+        public void Present(Journey run, bool hood, float dt, bool driving = true)
         {
+            bool useRouteLook = run.UsesRouteSteering;
+            if (useRouteLook != routeLook)
+            {
+                routeLook = useRouteLook;
+                routeLighting.SetActive(routeLook);
+                streetLook.SetLighting(!routeLook);
+                if (routeLook) routeAtmosphere.Activate(); else streetLook.Activate();
+            }
+            PresentBoulevard(run, driving);
             bool onMotorcycle = run.Mode == VehicleMode.Motorcycle;
             var point = World(run.Position);
             var rotation = Quaternion.Euler(0, run.Heading, 0);
@@ -310,6 +338,12 @@ namespace JalanKita
             else view.Hide();
         }
 
+        static void Pose(GameObject obj, Vector2? p, float yaw)
+        {
+            obj.SetActive(p.HasValue);
+            if (p.HasValue) obj.transform.SetPositionAndRotation(World(p.Value), ModelRotation(yaw + 180));
+        }
+
         static bool NearJunction(float z, float radius)
         {
             foreach (float j in Junctions)
@@ -323,17 +357,30 @@ namespace JalanKita
             var wrapper = new GameObject(asset);
             wrapper.transform.SetParent(parent ? parent : scenery.transform, false);
             wrapper.transform.SetPositionAndRotation(pos, ModelRotation(yaw));
-            var model = Models.Spawn(asset, wrapper.transform);
+            var model = Models.Spawn(asset, wrapper.transform, out var mats);
+            if (mats.TryGetValue("M_CarPaint", out var carPaint))
+                carPaint.SetColor("_BaseColor", ColorOf("9a1b1f"));
+            if (mats.TryGetValue("M_MotoPaint", out var motoPaint))
+                motoPaint.SetColor("_BaseColor", ColorOf("1d4fa3"));
             if (asset == "Motorcycle")
                 foreach (var part in model.GetComponentsInChildren<Transform>(true))
                     if (part.name.Contains("Helmet_Catok") || part.name.Contains("Strap_Open") || part.name.Contains("_Hair"))
                         part.gameObject.SetActive(false);
             if (asset.StartsWith("Ruko_"))
             {
-                var sign = Models.Spawn("ShopSign_" + (Mathf.Abs(Mathf.RoundToInt(pos.z)) % 10), model.transform);
+                int seed = Mathf.Abs(Mathf.RoundToInt(pos.z * 7.31f + pos.x * 31)) + 11;
+                var random = new System.Random(seed);
+                if (mats.TryGetValue("M_WallPaint", out var wall))
+                    wall.SetColor("_BaseColor", ColorOf(WallColors[random.Next(WallColors.Length)]));
+                if (mats.TryGetValue("M_Awning", out var awning))
+                    awning.SetColor("_BaseColor", Color.HSVToRGB((float)random.NextDouble(), .55f, .55f));
+                if (mats.TryGetValue("M_ShopSign", out var board))
+                    board.SetColor("_BaseColor", Color.HSVToRGB((float)random.NextDouble(), .75f, .6f));
+                var sign = Models.Spawn("ShopSign_" + random.Next(10), model.transform);
                 sign.transform.localPosition = new Vector3(0, 4.35f, .1f);
                 sign.transform.localRotation = Quaternion.identity;
-                Models.Spawn("Shutter_Half", model.transform).transform.localRotation = Quaternion.identity;
+                sign.transform.localScale = new Vector3(4.5f / 6.85f, 1, 1 / .85f);
+                Models.Spawn(random.NextDouble() < .62 ? "Shutter_Half" : "Shutter_Closed", model.transform).transform.localRotation = Quaternion.identity;
                 streetLook.DressBuilding(model, pos.z);
             }
             return wrapper;
@@ -342,16 +389,77 @@ namespace JalanKita
         static Quaternion ModelRotation(float yaw) => Quaternion.Euler(0, yaw, 0);
 
         void Road(string name, float x, float a, float b, float width) =>
-            Box(name, new Vector3(x, -.042f, (a+b)/2), new Vector3(width, .08f, b-a), "535d63");
+            SurfaceBox(name, new Vector3(x, -.042f, (a+b)/2), new Vector3(width, .08f, b-a), "Asphalt");
 
         void Mark(string name, float x, float z, float w, float l, string color = "f4edda", Transform parent = null) =>
             Box(name, new Vector3(x, .012f, z), new Vector3(w, .019f, l), color, parent);
 
-        void Arrow(float x, float z, int direction)
+        void Arrow(float x, float z, int direction) =>
+            Model("LaneArrow_Straight", new Vector3(x, .025f, z), direction > 0 ? 0 : 180);
+
+        void SurfaceBox(string name, Vector3 pos, Vector3 size, string surface)
         {
-            Mark("Batang panah", x, z - .28f * direction, .18f, 1.16f);
-            for (int i = 0; i < 5; i++)
-                Mark("Kepala panah", x, z + (.29f + i * .14f) * direction, .83f - .15f * i, .15f);
+            if (!surfaces.TryGetValue(surface, out var material))
+            {
+                material = MaterialLibrary.Create("M_" + surface, Color.white, 0,
+                    surface == "Asphalt" ? .35f : surface == "Paving" ? .2f : .05f);
+                var state = Random.state;
+                Random.InitState(11);
+                material.SetTexture("_BaseMap", surface == "Asphalt" ? Textures.Asphalt()
+                    : surface == "Paving" ? Textures.Paving() : Textures.Grass());
+                Random.state = state;
+                surfaces.Add(surface, material);
+            }
+            var mesh = new MeshBuilder(surface == "Asphalt" ? .12f : surface == "Paving" ? .5f : .05f);
+            mesh.Box(pos - size * .5f, pos + size * .5f);
+            mesh.Build(name, scenery.transform, material, surface == "Paving");
+        }
+
+        void BuildStreetProps()
+        {
+            foreach (int side in Side)
+            {
+                Vector3? lastPole = null;
+                for (int z = -15; z < 388; z += 28)
+                {
+                    bool opening = side < 0 && z > PhoneStart && z < PhoneEnd
+                        || side > 0 && z > SpurStart - 3 && z < SpurEnd + 3;
+                    if (NearJunction(z, 9) || opening) continue;
+                    Model(z % 3 == 0 ? "Tree_Palm" : "Tree_Shade_1", new Vector3(side * 6.1f, .13f, z), z * 13);
+                    Vector3 pole = new(side * 7.1f, .13f, z + 5);
+                    Model("PowerPole", pole);
+                    if (lastPole.HasValue)
+                    {
+                        for (int wire = 0; wire < 2; wire++)
+                        {
+                            var cable = new GameObject("Kabel listrik").AddComponent<LineRenderer>();
+                            cable.transform.SetParent(scenery.transform);
+                            cable.sharedMaterial = Material("151515");
+                            cable.widthMultiplier = .025f;
+                            cable.positionCount = 13;
+                            var offset = new Vector3(wire * .28f, 7.1f, 0);
+                            for (int i = 0; i <= 12; i++)
+                            {
+                                float t = i / 12f;
+                                cable.SetPosition(i, Vector3.Lerp(lastPole.Value, pole, t) + offset
+                                    + Vector3.down * .55f * 4 * t * (1-t));
+                            }
+                        }
+                    }
+                    lastPole = pole;
+                }
+            }
+            Model("Sign_Parking", new Vector3(-7.6f, .13f, PhoneStart + 5));
+            StreetName(-6.5f, StopJunction - 7, "kenanga");
+            StreetName(-6.5f, OneWayStart + 2, "mawar");
+        }
+
+        void StreetName(float x, float z, string name)
+        {
+            var pole = Model("StreetName_Pole", new Vector3(x, .13f, z));
+            var plate = Models.Spawn("StreetName_" + name, pole.transform);
+            plate.transform.localPosition = new Vector3(0, 3.1f, 0);
+            plate.transform.localRotation = Quaternion.Euler(0, 180, 0);
         }
 
         Renderer Box(string name, Vector3 pos, Vector3 size, string color, Transform parent = null, bool emissive = false)

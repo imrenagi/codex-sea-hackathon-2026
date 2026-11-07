@@ -39,6 +39,7 @@ namespace JalanKita
                 person.transform.SetPositionAndRotation(new Vector3(Street.RoadX(spot.z)+spot.x,.25f,spot.z),Quaternion.Euler(0,spot.x<0?90:270,0));
             }
             Camera = new GameObject("Jaksa camera").AddComponent<Camera>();
+            Camera.gameObject.AddComponent<AudioListener>();
             Camera.transform.SetParent(Street.Root.transform,false);Camera.tag="MainCamera";
             Camera.clearFlags=CameraClearFlags.Skybox;Camera.backgroundColor=new Color(.72f,.78f,.79f);
             Camera.fieldOfView=64;Camera.nearClipPlane=.08f;Camera.farClipPlane=330;

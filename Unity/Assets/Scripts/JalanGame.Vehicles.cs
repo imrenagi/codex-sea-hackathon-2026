@@ -4,10 +4,10 @@ namespace JalanKita
 {
     public sealed partial class JalanGame
     {
-        void AddVehiclePicker()
+        void AddVehiclePicker(UnityEngine.UIElements.VisualElement parent = null)
         {
             var selected = VehicleCatalogue.Selected(mode);
-            var picker = Element(dialog, "vehicle-picker");
+            var picker = Element(parent ?? dialog, "vehicle-picker");
             AddLabel(picker, "KENDARAAN", "kicker");
             var choices = Element(picker, "vehicle-choices");
             foreach (var choice in VehicleCatalogue.All.Where(v => v.Mode == mode))

@@ -5,3 +5,25 @@ Generation prompt:
 Use case: photorealistic-natural. Asset type: transparent alpha-cutout foliage texture for a real-time Unity 3D Indonesian urban driving game. Create one original square texture of a small dense tropical roadside tree branch cluster: thin branching brown twigs carrying about 35 naturally irregular oval green leaves with pointed tips, subtle veins, varied leaf angles, some overlap and ample transparent holes between leaves. A natural loose asymmetrical branching spray centered in the square, leaves occupy about 75% of canvas, entirely contained with transparent margins. Orthographic front view, neutral diffuse overcast lighting, base-color/albedo appearance without baked hard shadows or directional highlights. Muted medium olive and fresh green tones, realistic botanical leaf shapes, no polygonal/triangular stylization, no tree trunk, no scenery, no text, no logo. True transparent background, including gaps between leaves. This will be repeated on foliage cards, so balanced midtone greens, no black background, no white halo.
 
 Existing surface maps are reused from Resources/Jaksa and Resources/SopoDel; their authors and CC0 sources are recorded in those folders' NOTICE.txt files.
+
+VISUAL REFERENCE ONLY
+CARLA / ScenarioRunner: https://github.com/carla-simulator/scenario_runner
+Indonesian residential street references: https://www.google.com/search?udm=2&q=gang+indonesia
+https://www.realoka.com/703892-rumah-shm-2-lantai-didaerah-cempaka-putih-jakarta-pusat
+https://www.sewakost.com/jateng/semarang/kost-putri-di-tanah-mas-semarang-126928.html
+References inform material scale, daylight, roadside planting, gates, roofs and overhead wiring.
+No photographs from these references are bundled or used as textures. Residential meshes,
+tree branches/card placement, camera and kinematic bicycle driving model are original project code.
+
+SCOPE
+The Kenanga village is a residential frontage pass along the existing 9.5 m teaching road,
+not a reconstruction of a particular alley. Road bounds, lesson hazards and stopping bays
+retain their gameplay geometry. This pass does not implement CARLA's sensor stack,
+full rigidbody vehicle dynamics or photorealistic rendering parity.
+
+PREPARATION AND VALIDATION
+JalanKita.EditorTools.StreetLookChecks.Run prepares soft shadows/material variants and
+the foliage importer, checks vehicle motion, runs the full Journey/Mission/Vehicle suites,
+and captures six camera renders into Builds/GroundedPreview. It does not launch the game.
+StreetLookChecks.Prepare can also run before a final player build. Preview renders are
+editor camera captures; interactive playtesting and release builds are coordinated separately.

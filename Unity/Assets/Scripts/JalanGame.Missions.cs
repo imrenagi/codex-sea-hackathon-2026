@@ -63,6 +63,7 @@ namespace JalanKita
 
         void StartMission(Mission activity, JourneySave saved, bool restart = false)
         {
+            pitchDemo = false; practiceStart = -1; learner = null;
             var save = !restart && saved != null && saved.next <= activity.LastStage ? saved : activity.NewSave(saved);
             journey = new Journey(mode, save, mission: activity);
             save.Store(mode, activity);

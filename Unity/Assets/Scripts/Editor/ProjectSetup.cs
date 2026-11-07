@@ -26,7 +26,7 @@ namespace JalanKita.EditorTools
             var pipeline = GetOrCreate("Assets/Settings/DistrictPipeline.asset",
                 () => UniversalRenderPipelineAsset.Create(renderer));
             pipeline.shadowDistance = 57;
-            pipeline.supportsHDR = false;
+            pipeline.supportsHDR = true;
             pipeline.msaaSampleCount = 2;
             EditorUtility.SetDirty(renderer);
             EditorUtility.SetDirty(pipeline);
@@ -51,10 +51,13 @@ namespace JalanKita.EditorTools
 
             var graphics = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset")[0]);
             var shaders = graphics.FindProperty("m_AlwaysIncludedShaders");
-            var lit = Shader.Find("Universal Render Pipeline/Lit");
-            if (!lit) throw new System.InvalidOperationException("URP Lit is unavailable.");
-            if (!Enumerable.Range(0, shaders.arraySize).Any(i => shaders.GetArrayElementAtIndex(i).objectReferenceValue == lit))
-                shaders.GetArrayElementAtIndex(shaders.arraySize++).objectReferenceValue = lit;
+            foreach (string shaderName in new[] { "Universal Render Pipeline/Lit", "Skybox/Procedural", "Universal Render Pipeline/Particles/Unlit" })
+            {
+                var shader = Shader.Find(shaderName);
+                if (!shader) throw new System.InvalidOperationException(shaderName + " is unavailable.");
+                if (!Enumerable.Range(0, shaders.arraySize).Any(i => shaders.GetArrayElementAtIndex(i).objectReferenceValue == shader))
+                    shaders.GetArrayElementAtIndex(shaders.arraySize++).objectReferenceValue = shader;
+            }
             graphics.ApplyModifiedPropertiesWithoutUndo();
 
             foreach (var model in Directory.GetFiles("Assets/Resources/Models", "*.fbx"))

@@ -143,10 +143,12 @@ namespace JalanKita.EditorTools
         static void VerifySaveIsolation(VehicleMode mode)
         {
             var mission = Mission.Scenarios[1];
-            string mainKey = JourneySave.Key(mode), missionKey = JourneySave.Key(mode, mission);
+            string mainKey = JourneySave.LegacyKey(mode), currentKey = JourneySave.Key(mode), missionKey = JourneySave.Key(mode, mission);
+            string oldCurrent = PlayerPrefs.GetString(currentKey, null);
             string oldMain = PlayerPrefs.GetString(mainKey, null), oldMission = PlayerPrefs.GetString(missionKey, null);
             try
             {
+                PlayerPrefs.DeleteKey(currentKey);
                 // A save from the original 17-rule build must survive appended mission rules.
                 var legacy = new JourneySave { next = 3, mistakes = new int[17], before = 2 };
                 legacy.mistakes[(int)Rule.Stop] = 2;
@@ -174,7 +176,7 @@ namespace JalanKita.EditorTools
             }
             finally
             {
-                Restore(mainKey, oldMain); Restore(missionKey, oldMission); PlayerPrefs.Save();
+                Restore(mainKey, oldMain); Restore(currentKey, oldCurrent); Restore(missionKey, oldMission); PlayerPrefs.Save();
             }
         }
 
