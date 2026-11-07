@@ -84,8 +84,25 @@ namespace JalanKita
             var tallRoofs = new Batch(this,"Tower roofs",new Color(.37f,.43f,.45f));
             var roofTrim = new Batch(this,"Roof edge trim",new Color(.89f,.85f,.73f));
             var windows = new Batch(this,"Windows and shopfronts",new Color(.13f,.29f,.34f));
-            foreach (var building in map.buildings)
+            // Spend illustrative facade detail near the selected location before distant blocks.
+            var ordered = new (CityBuilding building, float distance)[map.buildings.Length];
+            for (int i = 0; i < map.buildings.Length; i++)
             {
+                var building = map.buildings[i];
+                Vector2 center = Vector2.zero;
+                if (building.points != null && building.points.Length > 0)
+                {
+                    foreach (var point in building.points) center += new Vector2(point.x, point.z);
+                    center /= building.points.Length;
+                }
+                ordered[i] = (building, center.sqrMagnitude);
+            }
+            Array.Sort(ordered, (a, b) => a.distance != b.distance
+                ? a.distance.CompareTo(b.distance) : string.CompareOrdinal(a.building.osmId, b.building.osmId));
+            int windowsRemaining = 24000;
+            foreach (var item in ordered)
+            {
+                var building = item.building;
                 if (building.points == null || building.points.Length < 3) continue;
                 var outline=new List<Vector3>();
                 foreach (var p in building.points) outline.Add(p.At(0));
@@ -121,13 +138,14 @@ namespace JalanKita
                     roofTrim.Quad(a+top-band+offset,a+top+offset,b+top+offset,b+top-band+offset);
                     int columns=Mathf.Min(24,Mathf.FloorToInt(length/3));
                     int floors=Mathf.Min(18,Mathf.FloorToInt(height/3));
-                    for (int floor=0;floor<floors;floor++)
-                        for (int col=0;col<columns;col++)
+                    for (int floor=0;floor<floors && windowsRemaining>0;floor++)
+                        for (int col=0;col<columns && windowsRemaining>0;col++)
                         {
                             Vector3 center=a+along*(length*(col+.5f)/columns)+Vector3.up*((floor+.5f)*height/floors);
                             Vector3 half=along*Mathf.Min(.7f,length/columns*.3f);
                             Vector3 up=Vector3.up*.65f;
                             windows.Quad(center-half-up+offset,center-half+up+offset,center+half+up+offset,center+half-up+offset);
+                            windowsRemaining--;
                         }
                 }
                 (height>18 ? tallRoofs : roofs).Polygon(roof);
