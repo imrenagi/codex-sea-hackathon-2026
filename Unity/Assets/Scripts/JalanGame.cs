@@ -85,12 +85,7 @@ namespace JalanKita
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.M))
-            {
-                sound.SetMuted(!sound.Muted);
-                var toggle = root.Q<Button>("soundToggle");
-                if (toggle != null) toggle.text = sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)";
-            }
+            if (Input.GetKeyDown(KeyCode.M)) ToggleSound();
             if (page == Page.CityPreview)
             {
                 if (Input.GetKeyDown(KeyCode.Escape)) ShowCityMaps();
@@ -570,15 +565,20 @@ namespace JalanKita
             AddSoundControls(dialog);
         }
 
+        void ToggleSound()
+        {
+            sound.SetMuted(!sound.Muted);
+            var toggle = root.Q<Button>("soundToggle");
+            if (toggle != null) toggle.text = sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)";
+            toast.text = sound.Muted ? "SUARA DIMATIKAN · M UNTUK MENGAKTIFKAN" : "SUARA DIAKTIFKAN";
+            toastUntil = Time.unscaledTime + 3;
+        }
+
         void AddSoundControls(VisualElement parent)
         {
             var button = AddButton(parent, sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)", null, "quiet tiny");
             button.name = "soundToggle";
-            button.clicked += () =>
-            {
-                sound.SetMuted(!sound.Muted);
-                button.text = sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)";
-            };
+            button.clicked += ToggleSound;
             var ambience = AddButton(parent, sound.AmbienceEnabled ? "Ambience: aktif" : "Ambience: mati", null, "quiet tiny");
             ambience.clicked += () =>
             {
