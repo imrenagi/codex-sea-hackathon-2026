@@ -360,7 +360,7 @@ namespace JalanKita
                 if (page == Page.Jaksa) RefreshJaksaHud();
                 return;
             }
-            district.Present(journey, hood, presentationDt, page == Page.Drive && !inputReleaseRequired, look);
+            district.Present(journey, hood, presentationDt, page == Page.Drive && !inputReleaseRequired, look, page == Page.Menu);
             if (page == Page.Drive) RefreshHud();
         }
 
