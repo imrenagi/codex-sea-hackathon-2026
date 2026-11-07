@@ -38,10 +38,10 @@ namespace UjianSim.Game
         enum Wave { Sine = 0, Square = 1, Saw = 2, Triangle = 3 }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-        [DllImport("__Internal")] static extern void UjianAudio_Init();
+        [DllImport("__Internal")] static extern void UjianAudio_Init(float[] crossingLoop, int sampleCount, int sampleRate);
         [DllImport("__Internal")] static extern void UjianAudio_Dispose();
         [DllImport("__Internal")] static extern void UjianAudio_Set(float master, float engineFreq, float engineCut, float engineGain,
-            float sirenFreq, float sirenGain, float hornA, float hornB, float hornGain, float wind, float rain);
+            float sirenFreq, float sirenGain, float hornA, float hornB, float hornGain, float wind, float rain, float crossingGain);
         [DllImport("__Internal")] static extern void UjianAudio_Tone(double freq, double delay, double dur, int wave, double volume, double slideTo);
 #endif
 
@@ -62,19 +62,23 @@ namespace UjianSim.Game
         readonly System.Random random = new System.Random();
 
         AudioClip silentClip;
+        float[] crossingLoop;
+        int crossingCursor;
+        bool crossingWasActive;
         int rate = 48000;
         /// <summary>Audio-thread clock in seconds; tones are scheduled against it.</summary>
         double now;
 
         // Targets written by the main thread, smoothed per sample on the audio thread.
-        volatile float tMaster, tEngineFreq, tEngineCut, tEngineGain, tSirenFreq, tSirenGain, tHornA, tHornB, tHornGain, tWind, tRain;
+        volatile float tMaster, tEngineFreq, tEngineCut, tEngineGain, tSirenFreq, tSirenGain, tHornA, tHornB, tHornGain, tWind, tRain, tCrossingGain;
         float master, engineFreq = 40f, engineCut = 300f, engineGain, sirenFreq = 650f, sirenGain, hornA = 410f, hornB = 500f, hornGain, wind, rain;
+        float crossingGain;
 
         // Oscillator phases and filter states (audio thread only).
         double pEngine, pSub, pSiren, pHornA, pHornB;
         float lpEngine1, lpEngine2, bpWindLow, bpWindBand, lpHorn, lpRain, hpRain;
 
-        float ringTimer, sirenPhase, bellTimer, ambienceTimer = 2f;
+        float ringTimer, sirenPhase, ambienceTimer = 2f;
         float ambienceStartupQuiet = 8f;
 
         public bool Muted { get; private set; }
@@ -101,13 +105,14 @@ namespace UjianSim.Game
             var engine = go.AddComponent<SoundEngine>();
             engine.silentClip = source.clip;
             engine.rate = sr;
+            engine.crossingLoop = CreateCrossingLoop(sr);
             engine.Muted = PlayerPrefs.GetInt(PrefKey, 0) == 1;
             engine.AmbienceEnabled = PlayerPrefs.GetInt(AmbienceKey, 1) != 0;
             float volume = PlayerPrefs.GetFloat(VolumeKey, 1f);
             engine.Volume = float.IsNaN(volume) || float.IsInfinity(volume) ? 1f : Mathf.Clamp01(volume);
             engine.tMaster = engine.Muted ? 0f : 0.7f * engine.Volume;
 #if UNITY_WEBGL && !UNITY_EDITOR
-            UjianAudio_Init();
+            UjianAudio_Init(engine.crossingLoop, engine.crossingLoop.Length, sr);
             engine.PushTargets();
 #else
             if (Application.isPlaying) source.Play();
@@ -156,8 +161,31 @@ namespace UjianSim.Game
         void PushTargets()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            UjianAudio_Set(tMaster, tEngineFreq, tEngineCut, tEngineGain, tSirenFreq, tSirenGain, tHornA, tHornB, tHornGain, tWind, tRain);
+            UjianAudio_Set(tMaster, tEngineFreq, tEngineCut, tEngineGain, tSirenFreq, tSirenGain, tHornA, tHornB, tHornGain, tWind, tRain, tCrossingGain);
 #endif
+        }
+
+        // Original synthesis inspired by the alternating alarm at 0:21–0:42 in
+        // https://www.youtube.com/watch?v=4Kpb0c4lvbo (no recording is bundled).
+        // Both back ends consume these same PCM samples, so timing is independent of frame rate.
+        static float[] CreateCrossingLoop(int sampleRate)
+        {
+            int noteSamples = (int)Math.Round(sampleRate * .74);
+            var samples = new float[noteSamples * 2];
+            for (int i = 0; i < samples.Length; i++)
+            {
+                bool high = i < noteSamples;
+                int local = i % noteSamples;
+                double t = (double)local / sampleRate;
+                double phase = 2 * Math.PI * (high ? 755 : 551) * t;
+                double tone = high
+                    ? Math.Sin(phase) + .045 * Math.Sin(3 * phase) + .006 * Math.Sin(5 * phase)
+                    : .72 * (Math.Sin(phase) + .15 * Math.Sin(2 * phase) + .32 * Math.Sin(3 * phase) + .04 * Math.Sin(5 * phase));
+                // Short fades avoid clicks at the note changes and loop boundary; the body sustains.
+                double envelope = Math.Min(1, Math.Min(t / .005, (double)(noteSamples - 1 - local) / sampleRate / .008));
+                samples[i] = (float)(.8 * tone * envelope);
+            }
+            return samples;
         }
 
         // ------------------------------------------------------------------------------- main thread
@@ -238,19 +266,10 @@ namespace UjianSim.Game
             tHornB = m ? 535f : 500f;
             tHornGain = f.Horn && f.Motorcycle.HasValue ? 0.07f : 0f;
 
-            // Level-crossing bell: "teng-teng", about twice a second.
-            if (!float.IsInfinity(f.BellDist) && f.BellDist < 200f)
-            {
-                bellTimer -= dt;
-                if (bellTimer <= 0f)
-                {
-                    double v = 0.09 * (1 - f.BellDist / 200f);
-                    Tone(1480, 0, 0.35, Wave.Sine, v);
-                    Tone(2960, 0, 0.2, Wave.Sine, v * 0.3);
-                    bellTimer = 0.55f;
-                }
-            }
-            else bellTimer = 0f;
+            // Sustained high/low crossing alarm. An inactive warning (including pause/menu)
+            // sends infinity and fades this channel out without leaving scheduled tones behind.
+            tCrossingGain = float.IsNaN(f.BellDist) || float.IsInfinity(f.BellDist)
+                ? 0f : .18f * Mathf.Clamp01(1f - f.BellDist / 200f);
 
             tWind = !AmbienceEnabled ? 0f : f.Motorcycle.HasValue ? 0.018f + Mathf.Clamp01(Mathf.Abs(f.Speed) / 18f) * 0.025f : 0.006f;
             tRain = AmbienceEnabled && f.Rain ? 0.05f : 0f;
@@ -322,6 +341,7 @@ namespace UjianSim.Game
                 hornA += (tHornA - hornA) * fast;
                 hornB += (tHornB - hornB) * fast;
                 hornGain += (tHornGain - hornGain) * fast;
+                crossingGain += (tCrossingGain - crossingGain) * fast;
                 wind += (tWind - wind) * slow;
                 rain += (tRain - rain) * slow;
 
@@ -357,6 +377,15 @@ namespace UjianSim.Game
                 float horn = (float)(Osc(Wave.Square, pHornA) + Osc(Wave.Square, pHornB));
                 lpHorn += (horn - lpHorn) * Coef(2200f);
                 s += lpHorn * hornGain;
+
+                bool crossingActive = tCrossingGain > 0;
+                if (crossingActive && !crossingWasActive) crossingCursor = 0;
+                crossingWasActive = crossingActive;
+                if (crossingGain > .000001f)
+                {
+                    s += crossingLoop[crossingCursor] * crossingGain;
+                    crossingCursor = (crossingCursor + 1) % crossingLoop.Length;
+                }
 
                 // One-shot tones.
                 foreach (var v in active)

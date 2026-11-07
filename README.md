@@ -90,6 +90,8 @@ Original authoring packs remain under `assets/`; runtime resources and metadata 
 
 The integrated HUD has three rear-view mirrors, with mirror rendering paused outside driving. Boulevard traffic follows lanes and signals, waits for pedestrians/trains, and interacts with the ambulance. Audio settings group master volume, mute, ambience and preview controls; disabling ambience retains horn, rail, phone and siren warnings. See INTEGRATION_VERIFICATION.md for completed source gates and remaining native QA.
 
+The railway warning in Practice 09 and the full journey uses an original synthesized high/low alarm, inspired by the alternating sound at [0:21–0:42 in the reference video](https://www.youtube.com/watch?v=4Kpb0c4lvbo&t=21s). It alternates approximately 755 Hz and 551 Hz every 0.74 seconds, with short fades at each change. Desktop and WebGL use the same generated PCM loop; no audio from the video is bundled. Distance and master volume control its loudness, and an inactive warning or pause fades it out. `JalanKita.EditorTools.SoundChecks.Run` checks the sustained notes, cadence, distance, mute/volume, and stop/restart behavior.
+
 ## Web deployment
 
 Run `make deploy/web` to rebuild WebGL and deploy it to Cloud Run.

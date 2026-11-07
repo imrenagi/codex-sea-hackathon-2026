@@ -66,7 +66,8 @@ namespace JalanKita.EditorTools
                 sound.SetMuted(true);
                 render.Invoke(sound, new object[] { samples, 2 });
                 if (Mathf.Abs(samples[^1])>.0001f) throw new InvalidOperationException("Mute did not silence output");
-                Debug.Log("Sound checks passed: car/motor mix, finite samples, mute, persisted/clamped volume, ambience toggle and critical warning audio.");
+                VerifyCrossing(parent.transform, render);
+                Debug.Log("Sound checks passed: car/motor mix, finite samples, mute, persisted/clamped volume, ambience toggle, critical warnings and sustained two-tone crossing alarm lifecycle.");
             }
             finally
             {
@@ -76,6 +77,70 @@ namespace JalanKita.EditorTools
                 if (hadAmbience) PlayerPrefs.SetInt(ambienceKey, previousAmbience); else PlayerPrefs.DeleteKey(ambienceKey);
                 PlayerPrefs.Save();
             }
+        }
+
+        static void VerifyCrossing(Transform parent, MethodInfo render)
+        {
+            var sound = SoundEngine.Create(parent);
+            sound.GetComponent<AudioSource>().Stop();
+            sound.SetMuted(false);
+            sound.SetVolume(1);
+            sound.SetAmbience(false);
+            int rate = AudioSettings.outputSampleRate > 0 ? AudioSettings.outputSampleRate : 48000;
+            float[] Capture(float distance, float seconds)
+            {
+                sound.UpdateFrame(.02f, new SoundFrame { BellDist = distance, SirenDist = float.PositiveInfinity });
+                var pcm = new float[(int)(rate * seconds)];
+                render.Invoke(sound, new object[] { pcm, 1 });
+                return pcm;
+            }
+            double Rms(float[] pcm, float from, float to)
+            {
+                int first = (int)(from * rate), last = (int)(to * rate);
+                double energy = 0;
+                for (int i = first; i < last; i++) energy += pcm[i] * pcm[i];
+                return Math.Sqrt(energy / (last - first));
+            }
+            double Magnitude(float[] pcm, float from, double frequency)
+            {
+                int first = (int)(from * rate), count = rate / 10;
+                double real = 0, imaginary = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    double phase = 2 * Math.PI * frequency * i / rate;
+                    real += pcm[first + i] * Math.Cos(phase);
+                    imaginary += pcm[first + i] * Math.Sin(phase);
+                }
+                return Math.Sqrt(real * real + imaginary * imaginary) / count;
+            }
+            void Require(bool condition, string message)
+            {
+                if (!condition) throw new InvalidOperationException("Crossing alarm: " + message);
+            }
+
+            // Capture several loops with no intervening game frames: rhythm must use the audio clock.
+            var near = Capture(0, 3.1f);
+            foreach (float at in new[] { .15f, 1.63f, 2.99f })
+                Require(Magnitude(near, at, 755) > 8 * Magnitude(near, at, 551), "high note missing or cadence drifted");
+            foreach (float at in new[] { .9f, 2.38f })
+                Require(Magnitude(near, at, 551) > 8 * Magnitude(near, at, 755), "low note missing or cadence drifted");
+            Require(Rms(near, .5f, .65f) > .8 * Rms(near, .1f, .25f), "alarm decays like a bell instead of sustaining");
+            Require(Rms(near, .1f, .25f) > .05, "nearby warning too quiet with ambience disabled");
+            foreach (float distance in new[] { float.PositiveInfinity, float.NaN, 200f, 300f })
+                Require(Rms(Capture(distance, .15f), .1f, .14f) < .000001, "inactive/out-of-range warning did not stop");
+
+            var far = Capture(100, .4f);
+            double nearRms = Rms(near, .1f, .25f), farRms = Rms(far, .1f, .25f);
+            Require(farRms > nearRms * .48 && farRms < nearRms * .52, "distance attenuation changed");
+            sound.SetMuted(true);
+            Require(Rms(Capture(0, .2f), .1f, .19f) < .000001, "mute left the crossing audible");
+            sound.SetMuted(false);
+            sound.SetVolume(.25f);
+            Capture(float.PositiveInfinity, .15f);
+            var quiet = Capture(0, .4f);
+            Require(Rms(quiet, .1f, .25f) < nearRms * .26 && Rms(quiet, .1f, .25f) > nearRms * .24,
+                "master volume does not scale the warning");
+            Require(Magnitude(quiet, .15f, 755) > 8 * Magnitude(quiet, .15f, 551), "warning restart did not begin at the high note");
         }
     }
 }

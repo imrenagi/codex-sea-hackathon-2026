@@ -2,7 +2,7 @@
 // The graph follows web-threejs/src/audio/AudioEngine.ts; SoundEngine still decides every target and tone,
 // this file only plays them. Browsers start audio suspended, so the context resumes on the first key or touch.
 mergeInto(LibraryManager.library, {
-  UjianAudio_Init: function () {
+  UjianAudio_Init: function (crossingSamples, sampleCount, sampleRate) {
     if (window.ujianAudio) return;
     var Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
@@ -17,6 +17,13 @@ mergeInto(LibraryManager.library, {
     }
 
     a.master = gain(0, ctx.destination);
+
+    // Copy the exact synthesized loop used by the native mixer out of Unity's heap.
+    a.crossingBuffer = ctx.createBuffer(1, sampleCount, sampleRate);
+    a.crossingBuffer.getChannelData(0).set(HEAPF32.subarray(crossingSamples >> 2, (crossingSamples >> 2) + sampleCount));
+    a.crossingGain = gain(0, a.master);
+    a.crossingSource = null;
+    a.crossingTail = null;
 
     // Engine: saw plus a square an octave down through a low-pass.
     a.engineGain = gain(0, a.master);
@@ -64,6 +71,8 @@ mergeInto(LibraryManager.library, {
     document.removeEventListener('visibilitychange', a.visibility);
     a.master.gain.cancelScheduledValues(a.ctx.currentTime);
     a.master.gain.setValueAtTime(0, a.ctx.currentTime);
+    if (a.crossingSource) { a.crossingSource.stop(); a.crossingSource.disconnect(); }
+    if (a.crossingTail) { a.crossingTail.stop(); a.crossingTail.disconnect(); }
     [a.engine, a.sub, a.siren, a.hornA, a.hornB, a.noise].forEach(function (node) {
       node.stop();
       node.disconnect();
@@ -72,7 +81,7 @@ mergeInto(LibraryManager.library, {
     delete window.ujianAudio;
   },
 
-  UjianAudio_Set: function (master, engineFreq, engineCut, engineGain, sirenFreq, sirenGain, hornA, hornB, hornGain, wind, rain) {
+  UjianAudio_Set: function (master, engineFreq, engineCut, engineGain, sirenFreq, sirenGain, hornA, hornB, hornGain, wind, rain, crossingGain) {
     var a = window.ujianAudio;
     if (!a) return;
     var t = a.ctx.currentTime;
@@ -90,6 +99,25 @@ mergeInto(LibraryManager.library, {
     a.hornGain.gain.setTargetAtTime(hornGain, t, fast);
     a.wind.gain.setTargetAtTime(wind, t, slow);
     a.rain.gain.setTargetAtTime(rain, t, slow);
+    a.crossingGain.gain.setTargetAtTime(crossingGain, t, fast);
+    if (crossingGain > 0 && !a.crossingSource) {
+      // A quick retry can arrive before the previous 50 ms fade has finished.
+      if (a.crossingTail) { a.crossingTail.stop(); a.crossingTail.disconnect(); a.crossingTail = null; }
+      var crossing = a.ctx.createBufferSource();
+      crossing.buffer = a.crossingBuffer;
+      crossing.loop = true;
+      crossing.connect(a.crossingGain);
+      crossing.onended = function () {
+        crossing.disconnect();
+        if (a.crossingTail === crossing) a.crossingTail = null;
+      };
+      crossing.start();
+      a.crossingSource = crossing;
+    } else if (crossingGain === 0 && a.crossingSource) {
+      a.crossingSource.stop(t + 0.05); // Allow the gain ramp to finish before stopping.
+      a.crossingTail = a.crossingSource;
+      a.crossingSource = null;
+    }
   },
 
   // wave: 0 sine, 1 square, 2 saw, 3 triangle (SoundEngine.Wave).
