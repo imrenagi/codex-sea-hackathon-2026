@@ -29,6 +29,10 @@
                 <ui:Label name="signalRight" class="label signal-state" />
                 <ui:Label name="signalHint" class="label signal-hint" />
             </ui:VisualElement>
+            <ui:VisualElement name="progressiveCue" class="progressive-cue row hidden" picking-mode="Ignore">
+                <ui:Label name="cueKeys" class="label keycap" picking-mode="Ignore" />
+                <ui:Label name="cueCopy" class="label cue-copy" picking-mode="Ignore" />
+            </ui:VisualElement>
             <ui:Label name="toast" class="label toast hidden" picking-mode="Ignore" />
             <ui:VisualElement class="row split bottom-row" picking-mode="Ignore">
                 <ui:VisualElement class="driving-controls" picking-mode="Ignore">

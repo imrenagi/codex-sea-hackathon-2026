@@ -7,9 +7,9 @@ namespace JalanKita
     public sealed partial class JalanGame
     {
         readonly HashSet<string> controlsSeen = new();
+        readonly HashSet<string> cueActionsSeen = new();
         Page controlsOrigin, controlsDrivingPage;
-        bool controlsFirstEntry, inputReleaseRequired;
-        string controlsContext;
+        bool inputReleaseRequired;
         static readonly KeyCode[] DrivingInputKeys =
         {
             KeyCode.W, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.UpArrow, KeyCode.DownArrow,
@@ -21,25 +21,17 @@ namespace JalanKita
 
         void EnterHumanDrive(Page drivingPage)
         {
-            string context = (drivingPage == Page.Jaksa ? "explore:" : "training:") + mode;
-            if (controlsSeen.Contains(context))
-            {
-                SetPage(drivingPage);
-                inputReleaseRequired = true;
-            }
-            else ShowControls(page, drivingPage, true);
+            SetPage(drivingPage);
+            inputReleaseRequired = true;
         }
 
         void ShowControls(Page origin, Page drivingPage, bool firstEntry)
         {
             controlsOrigin = origin;
             controlsDrivingPage = drivingPage;
-            controlsFirstEntry = firstEntry;
-            controlsContext = (drivingPage == Page.Jaksa ? "explore:" : "training:") + mode;
             SetPage(Page.Controls);
             AddLabel(dialog, mode == VehicleMode.Car ? "Kontrol mobil" : "Kontrol motor", "heading");
-            AddLabel(dialog, firstEntry ? "Permainan dijeda. Kenali tombolnya, lalu mulai saat siap."
-                : learner != null ? "Contoh otomatis dijeda. Tutup panduan untuk melanjutkan contoh."
+            AddLabel(dialog, learner != null ? "Contoh otomatis dijeda. Tutup panduan untuk melanjutkan contoh."
                 : "Permainan tetap dijeda selama panduan ini terbuka.", "copy controls-intro");
             var body = new ScrollView(ScrollViewMode.Vertical)
             { horizontalScrollerVisibility = ScrollerVisibility.Hidden };
@@ -71,16 +63,13 @@ namespace JalanKita
                 AddLabel(extra, "Di layar pelanggaran: R mencoba lagi, D menampilkan contoh cara benar.", "control-note");
             });
             var footer = Element(dialog, "controls-footer");
-            string action = firstEntry ? "Siap, mulai [Enter]"
-                : origin == Page.Progress || origin == Page.JaksaPause ? "Kembali ke jeda [Enter]"
+            string action = origin == Page.Progress || origin == Page.JaksaPause ? "Kembali ke jeda [Enter]"
                 : origin == Page.Options ? "Kembali ke Options [Enter]"
                 : origin == Page.PlayChooser ? "Kembali ke pilihan perjalanan [Enter]"
                 : origin == Page.Menu ? "Kembali ke menu [Enter]"
                 : learner != null ? "Lanjutkan contoh [Enter]" : "Kembali berkendara [Enter]";
             AddButton(footer, action, () => CloseControls(true), "primary tutorial-start");
-            if (firstEntry) AddButton(footer, "Menu utama [Esc]", () => CloseControls(false), "quiet");
-            AddLabel(footer, firstEntry ? "Progres perjalanan tidak diubah oleh panduan ini."
-                : "F1 membuka panduan saat berkendara. Esc menutup panduan.", "control-note");
+            AddLabel(footer, "F1 membuka panduan saat berkendara. Esc menutup panduan.", "control-note");
         }
 
         static void ControlKey(VisualElement parent, string key, string title, string note, DrivingGlyph.Kind? glyph = null)
@@ -97,14 +86,6 @@ namespace JalanKita
         void CloseControls(bool accepted)
         {
             if (page != Page.Controls) return;
-            if (controlsFirstEntry)
-            {
-                if (!accepted) { inputReleaseRequired = false; ShowMenu(); return; }
-                controlsSeen.Add(controlsContext);
-                SetPage(controlsDrivingPage);
-                inputReleaseRequired = true;
-                return;
-            }
             inputReleaseRequired = false;
             if (controlsOrigin == Page.Progress) ShowProgress();
             else if (controlsOrigin == Page.JaksaPause) ShowJaksaPause();
@@ -125,6 +106,72 @@ namespace JalanKita
             if (Input.GetMouseButton(0)) return false;
             inputReleaseRequired = false;
             return true;
+        }
+
+        void RefreshProgressiveCue()
+        {
+            var cue = root.Q("progressiveCue");
+            Show(cue, false);
+            if ((page != Page.Drive && page != Page.Jaksa) || learner != null
+                || inputReleaseRequired || !Application.isFocused) return;
+            if (!root.Q("hudHint").ClassListContains("hidden")) return;
+            string context = (page == Page.Jaksa ? "explore:" : "training:") + mode;
+            float drivingSpeed = page == Page.Jaksa ? jaksa.Speed : journey.Speed;
+            if (!controlsSeen.Contains(context))
+            {
+                if (drivingSpeed > .2f && Pressed(KeyCode.W, KeyCode.UpArrow)) controlsSeen.Add(context);
+                else { PresentCue("W A S D", "Coba gas dan kemudi."); return; }
+            }
+            if (page == Page.Jaksa || journey.Finished || journey.Failure.HasValue) return;
+            float front = journey.Front, z = journey.Position.y;
+            int stage = journey.Stage;
+            string brake = null;
+            bool Near(float line) => front >= line - 25 && front < line + 1;
+            if (stage == 1 && !journey.FullStop && Near(RouteStage.StopLine)) brake = "stop";
+            else if (stage == 1 && journey.LightPhase != 2 && Near(RouteStage.LightLine)) brake = "light";
+            else if ((stage == 2 || journey.IsSchool) && journey.PedestrianBlocksPath && Near(journey.CrossingZebra - 2)) brake = "pedestrian";
+            else if (stage == 2 && journey.CrossTraffic.HasValue && Near(RouteStage.YieldLine)) brake = "yield";
+            else if (stage >= 5 && stage <= 7 && (!journey.MovementGreen || journey.BoulevardPedestrianBlocksPath))
+            {
+                float along = Boulevard.Local(stage, journey.Nose).y;
+                if (along >= journey.JunctionStopLine - 25 && along < journey.JunctionStopLine + 1) brake = "junction";
+            }
+            else if (stage == 8 && journey.RailWarning && Near(Boulevard.RailLine)) brake = "rail";
+            if (brake != null && drivingSpeed > .28f)
+            {
+                bool braking = Input.GetKey(KeyCode.Space) || Pressed(KeyCode.S, KeyCode.DownArrow);
+                Suggest("brake:" + brake, "SPASI / S", "Rem sebelum area berhenti.", braking);
+                return;
+            }
+            int direction = 0;
+            if (stage == 3 && !journey.IsMarket && z >= RouteStage.OneWayStart - 12 && z < RouteStage.Merge && !journey.ReturnedLeft)
+                direction = journey.ChangedRight ? -1 : 1;
+            else if (stage == 6 || stage == 7)
+            {
+                float along = Boulevard.Local(stage, journey.Position).y;
+                if (along >= -70 && along < -11) direction = stage == 6 ? -1 : 1;
+            }
+            else if (journey.IsMarket && z >= Mission.PickupStart - 15 && z < Mission.PickupEnd)
+                direction = journey.PassengerPickedUp ? 1 : journey.Position.x >= -4.25f ? -1 : 0;
+            else if (stage == 4 && journey.PhoneRinging && journey.Position.x >= -4.25f && z < RouteStage.PhoneEnd)
+                direction = -1;
+            if (direction != 0)
+                Suggest("indicator:" + direction, direction < 0 ? "Q" : "E",
+                    direction < 0 ? "Sein kiri sebelum bermanuver." : "Sein kanan sebelum bermanuver.", journey.Indicator == direction);
+
+            void Suggest(string action, string keys, string copy, bool performed)
+            {
+                string id = context + ":" + stage + ":" + journey.Save.checkpoint + ":" + action;
+                if (performed) cueActionsSeen.Add(id);
+                if (!cueActionsSeen.Contains(id)) PresentCue(keys, copy);
+            }
+        }
+
+        void PresentCue(string keys, string copy)
+        {
+            root.Q<Label>("cueKeys").text = keys;
+            root.Q<Label>("cueCopy").text = copy;
+            Show(root.Q("progressiveCue"), true);
         }
 
         void AddControlsHelp(VisualElement parent)

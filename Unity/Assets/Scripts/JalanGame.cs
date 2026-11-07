@@ -302,6 +302,7 @@ namespace JalanKita
         void LateUpdate()
         {
             if (journey == null) return;
+            RefreshProgressiveCue();
             float presentationDt = page == Page.Controls || inputReleaseRequired ? 0 : Time.unscaledDeltaTime;
             float look = Mathf.Clamp(heldLook + (Input.GetKey(KeyCode.X) ? 1 : 0) - (Input.GetKey(KeyCode.Z) ? 1 : 0), -1, 1);
             UpdateSound(Time.unscaledDeltaTime);
