@@ -1,0 +1,339 @@
+{
+  "schema_version": 1,
+  "state": "frozen",
+  "label": "Avanza-inspired MPV",
+  "scope": "Visual geometry and default paint only; no Unity execution",
+  "replacements": [
+    {
+      "source": "assets/vehicles/avanza_inspired/unity/Body.fbx",
+      "target": "Unity/Assets/Resources/Traffic/family_mpv/Body.fbx",
+      "source_sha256": "f52d448553194cedd7349d6c003fc306b6d9e077cd56acec9b6ef1818540622f",
+      "baseline_sha256": "18c11d41db9fa2871ff138ebd31dfed51395e43350b66f2ab1f4de56692b1c56",
+      "preserve_meta": "Unity/Assets/Resources/Traffic/family_mpv/Body.fbx.meta",
+      "meta_sha256": "2e26e1def1dae81095c50bc0c2833fd144289d447eccc8f9f25d19f74923e922"
+    },
+    {
+      "source": "assets/vehicles/avanza_inspired/unity/Body_LOD1.fbx",
+      "target": "Unity/Assets/Resources/Traffic/family_mpv/Body_LOD1.fbx",
+      "source_sha256": "76e8b89baa273e905c5d8cfcdeceeaec9a5c64bb8d4a7b86e00be63b3cbc2c9a",
+      "baseline_sha256": "8b1f821ae35bbf81a710a6caafbf441b48c6cea0c31a0d0a395cc9e4ec0c6c47",
+      "preserve_meta": "Unity/Assets/Resources/Traffic/family_mpv/Body_LOD1.fbx.meta",
+      "meta_sha256": "bd7259e6c22508fa964dbd31cc7d5506bb458d08dc556d73b3ff45e3863523b0"
+    },
+    {
+      "source": "assets/vehicles/avanza_inspired/unity/family_mpv_0.mat",
+      "target": "Unity/Assets/Resources/Traffic/Materials/family_mpv_0.mat",
+      "source_sha256": "09bee01fd66d373a987ee6449b96c8541dd7fe93e7382e62e2048e348c49db7a",
+      "baseline_sha256": "6693d08f68f9562fe9a0e847dfce8efc0579231e7707afa8f408a760614f50fc",
+      "preserve_meta": "Unity/Assets/Resources/Traffic/Materials/family_mpv_0.mat.meta",
+      "meta_sha256": "328570b09e7e05ee9297229dbd5cab779236a85550763d7c7cd12d96d613f76d"
+    }
+  ],
+  "patch": {
+    "file": "assets/vehicles/avanza_inspired/unity/TrafficCatalogue.silver.patch",
+    "target": "Unity/Assets/Scripts/TrafficCatalogue.cs",
+    "baseline_sha256": "0b32d776d484c1992346b56c54f96f463d5a16d608f95e8c6b63995715f34ace",
+    "result_sha256": "b95775e86a815bcbfbc620a7430a6dfcdbccf3640626c3a3c23ead8e7e6346b4",
+    "change": "family_mpv first paint DCE1DD -> C5CACD only"
+  },
+  "generation_patch": {
+    "file": "assets/vehicles/avanza_inspired/unity/TrafficPrepare.avanza.patch",
+    "target": "tools/traffic/prepare.py",
+    "baseline_sha256": "c13036ecef9b2580f64fd683c284edd1261f8f8432892a0115f3f2ca75e2c955",
+    "result_sha256": "8c83bcbe1e4f60b3b541e1e4507ea478080ddbf37779ac44cbac251a1e6079bd",
+    "change": "Prefer authored family_mpv FBXs during traffic regeneration"
+  },
+  "preserved_contract": {
+    "selection_id": "mpv",
+    "resource_id": "family_mpv",
+    "wheelbase_metres": 2.75,
+    "wheel_radius_metres": 0.32,
+    "renderer_count": 11,
+    "materials": [
+      "Traffic_Atlas_PBR",
+      "Body_Paint"
+    ],
+    "runtime_textures": "existing shared traffic atlas; standalone textures are authoring/export only"
+  },
+  "dependencies": [
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/Atlas.mat",
+      "sha256": "0189d4eefb5a25267df2b70f0c97c288aa0f709b7290fdcccd38c20208a4bed4",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/Atlas.mat.meta",
+      "sha256": "61f39288b90a20af3ce6f00a88c555314fcc4124424639d2a9d74598d36285d3",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/BrakeOn.mat",
+      "sha256": "180b6c8b2ac939d759228f5f751c965edd3ecdf03ec631811d08496d89a6d01b",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/BrakeOn.mat.meta",
+      "sha256": "0e02c6a4187dc66cdf15c79295eaa5490d2961144a4899ce71295588d5e0a731",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/HeadOn.mat",
+      "sha256": "f18df61700e31a9003f5c72de3534be02f145faac64bf78e73caabcae08cf249",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/HeadOn.mat.meta",
+      "sha256": "6a7eb2df8c3e7246c16e839bb54dce2c6f7e39acaa5bc47171f9d32763b045df",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/IndicatorOn.mat",
+      "sha256": "dc2b3d95f5cfbcfdc4f56748fc2cbfd136b5f0453f44b1117e734613839cdd4b",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/IndicatorOn.mat.meta",
+      "sha256": "056d2f06c1d7897db1520478ab7e14dbf08829c839802105a16e49deb3d93a2d",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/TailOn.mat",
+      "sha256": "fff50ef30e9bf82f18c4a8f4fe859bf53e110008c3a34fc917c761b42afdeba3",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/TailOn.mat.meta",
+      "sha256": "c3da1a9a1e279eb4765d7b83bd3de9cdd09c7bbf542cae62133ee06b3d5113fe",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/family_mpv_0.mat",
+      "sha256": "6693d08f68f9562fe9a0e847dfce8efc0579231e7707afa8f408a760614f50fc",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/family_mpv_0.mat.meta",
+      "sha256": "328570b09e7e05ee9297229dbd5cab779236a85550763d7c7cd12d96d613f76d",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/family_mpv_1.mat",
+      "sha256": "0ec2b3010a56226d480611288ad7c4d1ac8e68b47a88909b7d87f58dc32ce3eb",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Materials/family_mpv_1.mat.meta",
+      "sha256": "b2b756ccd99d92a5a67760c33c36879ac88a68b1ee43d4924cc76733aedacf8e",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Textures/BaseColor.png",
+      "sha256": "ff81b5ad60f2425aea4bca13338db7205ffd8fb48665ba1e42b5a0c1287a685a",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Textures/BaseColor.png.meta",
+      "sha256": "933371e9927ed5c77d3cc442d041faace6c1a88ded7d7b7538b0f17d5d21903e",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Textures/LampMask.png",
+      "sha256": "23ea4a744a618783bf4021cdf97fea898a2c5385ce3831d9838d28fcd4b35645",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Textures/LampMask.png.meta",
+      "sha256": "8f4042c28e08a47a10828e518916d98bdcd1f24e15a9dacafb5d702adf9475e4",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Textures/MetallicSmoothness.png",
+      "sha256": "1cb71e5aa91cea2d206b8ae2f803ff7f3aba982a1d817a0b2ef8648dfa0791b5",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Resources/Traffic/Textures/MetallicSmoothness.png.meta",
+      "sha256": "afccc58483f0d5aac16509b7bbdfaff22b426911feff01cece705bc5ea17894d",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Scripts/TrafficVehicleView.cs",
+      "sha256": "f6c3f3bec8e5cb0f15d6ea79e05de939b26fc6585bbe45a8caef7c9aab602869",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Scripts/TrafficVehicleView.cs.meta",
+      "sha256": "46c15d24e2af0ce3ebd9b5076bd738a89305491a93b6a10c62201b36575df9f6",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Scripts/PlayerVehicleView.cs",
+      "sha256": "93cdcabac237a213f403f5893356a081785699a5317b8a75350aa07fcaa40aa9",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Scripts/PlayerVehicleView.cs.meta",
+      "sha256": "6e46569f86fe41aa710e115e63741f734fb43bcbee42e679a6c94bb86ae3d37c",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Scripts/TrafficCatalogue.cs",
+      "sha256": "0b32d776d484c1992346b56c54f96f463d5a16d608f95e8c6b63995715f34ace",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Scripts/TrafficCatalogue.cs.meta",
+      "sha256": "6ebee9db6cda673fdebaabf59fbb505bbb89376982c0d7f2368b17e729e1beb0",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Scripts/VehicleCatalogue.cs",
+      "sha256": "6742a6fd284546d558e5fca57a699b6376a0ab776e11dcf34155d205bdafb8b0",
+      "action": "preserve"
+    },
+    {
+      "path": "Unity/Assets/Scripts/VehicleCatalogue.cs.meta",
+      "sha256": "19d64320b697522c19b7aaaa55b40eb4c6862400144c1c0bc09e13674afa744e",
+      "action": "preserve"
+    },
+    {
+      "path": "assets/vehicles/indonesia_traffic_pack/build.py",
+      "sha256": "b4d48c4e86b02118ac1dbe706dad65e034f0f15179b004dedb5a955722faf5b1",
+      "action": "preserve"
+    }
+  ],
+  "new_files": [
+    {
+      "path": "assets/vehicles/avanza_inspired/README.md",
+      "sha256": "2bb265a6d1f0da1f235febadcf3422b68e3d5ddf214607b995987c52f7cacf9a",
+      "bytes": 5031,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/asset_inspection.json",
+      "sha256": "216c15ebec3d73048cc4131928543f0ad04527355decbd1cdb66a7c86e78dd95",
+      "bytes": 3690,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/asset_stats.json",
+      "sha256": "187c00911c37d87b8854c483cdbe5cf8bdfb2cb49adfa39280318b4d7dd6a0f6",
+      "bytes": 1008,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/avanza_inspired.blend",
+      "sha256": "b053fe1e6cd9c2ccab0b86c5587869197c0dce29e0c7d6f4df1919f127494fc6",
+      "bytes": 329964,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/avanza_inspired.glb",
+      "sha256": "4ff834416af247c749d90cf3002c99b4a8a1a0a316685f52d47cf36e900f89dd",
+      "bytes": 1448064,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/avanza_inspired_lod1.glb",
+      "sha256": "bc2f6bcd6513b818f4e32a1a91e0bcc2c55456521a40d34205128218e5f8cca1",
+      "bytes": 763352,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/previews/front.png",
+      "sha256": "145009bb0c3e54ff47948aa797ab59b41f5d84b327a05a8f2bb5f8f996a2870d",
+      "bytes": 1291509,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/previews/lod1_roundtrip.png",
+      "sha256": "c8430c1f6edd56aa7d84f98c543781a33890189afdc0ef3108dd3352857d5ec7",
+      "bytes": 995638,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/previews/rear.png",
+      "sha256": "f93a36dbb710a90fe9e0e103d19264c4563ff179bb80f3e7675b3cc1062243a1",
+      "bytes": 1282938,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/previews/side.png",
+      "sha256": "ba4e1f9603c632975d2a7a5ad7bd93a363243ffa0ee3a7a89a21b84399b913be",
+      "bytes": 1242107,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/textures/traffic_base_color.png",
+      "sha256": "ff81b5ad60f2425aea4bca13338db7205ffd8fb48665ba1e42b5a0c1287a685a",
+      "bytes": 1004,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/textures/traffic_emission.png",
+      "sha256": "d2ac636ba10deb2b1fc8b0bb837ce4348e0753c9c40cfd28faa60914b9c6eb01",
+      "bytes": 946,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/textures/traffic_metallic.png",
+      "sha256": "c425f85ea308a9ad840b7c9f9bca3e2cbd7a18d97e6775feb4044aa4aedb3865",
+      "bytes": 964,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/textures/traffic_roughness.png",
+      "sha256": "1877f193a9780e64227418542d4cd448ec82a4ab27b2dae34717625acb038747",
+      "bytes": 979,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/unity/Body.fbx",
+      "sha256": "f52d448553194cedd7349d6c003fc306b6d9e077cd56acec9b6ef1818540622f",
+      "bytes": 474972,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/unity/Body_LOD1.fbx",
+      "sha256": "76e8b89baa273e905c5d8cfcdeceeaec9a5c64bb8d4a7b86e00be63b3cbc2c9a",
+      "bytes": 388892,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/unity/TrafficCatalogue.silver.patch",
+      "sha256": "0fe418826301126fb410a64e5143e780ac7b3b844521818bc28186edcdd8a945",
+      "bytes": 692,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/unity/TrafficPrepare.avanza.patch",
+      "sha256": "69e9b73884d73d664cfcab13d6438db2403310e2583574a873730c85d39933c2",
+      "bytes": 839,
+      "baseline": "absent"
+    },
+    {
+      "path": "assets/vehicles/avanza_inspired/unity/family_mpv_0.mat",
+      "sha256": "09bee01fd66d373a987ee6449b96c8541dd7fe93e7382e62e2048e348c49db7a",
+      "bytes": 3859,
+      "baseline": "absent"
+    },
+    {
+      "path": "tools/vehicles/build_avanza.py",
+      "sha256": "e48cc14776f9a9facf0a829b3c72d50737a907b67c742bfcfecf34ed40661666",
+      "bytes": 18364,
+      "baseline": "absent"
+    },
+    {
+      "path": "tools/vehicles/freeze_avanza.py",
+      "sha256": "fad6255da3765b0dcb9c8b4dec9a1c41fb5976df36f3a2a1e31bd00bba9e3010",
+      "bytes": 4794,
+      "baseline": "absent"
+    },
+    {
+      "path": "tools/vehicles/inspect_avanza.py",
+      "sha256": "f583b82feb001f1d0b7ba67b464652fe759ad0e366c6f7321d49b94019bc0dc8",
+      "bytes": 3697,
+      "baseline": "absent"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+--- a/tools/traffic/prepare.py
++++ b/tools/traffic/prepare.py
+@@ -72,6 +72,14 @@
+ report=[]
+ for spec in manifest['models']:
+     dest=OUT/spec['id'];dest.mkdir(exist_ok=True)
++    authored=ROOT/'assets/vehicles/avanza_inspired'
++    if spec['id']=='family_mpv' and (authored/'asset_stats.json').exists():
++        # Keep the authored Avanza visual while preserving the original source pack.
++        stats=json.loads((authored/'asset_stats.json').read_text())
++        for lod,fn in [(0,'Body.fbx'),(1,'Body_LOD1.fbx')]:
++            shutil.copy2(authored/'unity'/fn,dest/fn)
++            report.append(dict(model=spec['id'],lod=lod,triangles=stats['lods'][lod]['triangles']))
++        continue
+     for lod in [0,1]:
+         bpy.ops.wm.read_factory_settings(use_empty=True)
+         source=spec['variants'][0]['lod1' if lod else 'glb']

@@ -1,0 +1,68 @@
+{
+  "name": "Avanza-inspired MPV",
+  "id": "family_mpv",
+  "wheels": [
+    {
+      "node": "Wheel_FL",
+      "position": [
+        -0.81,
+        1.375,
+        0.32
+      ],
+      "radius": 0.32
+    },
+    {
+      "node": "Wheel_FR",
+      "position": [
+        0.81,
+        1.375,
+        0.32
+      ],
+      "radius": 0.32
+    },
+    {
+      "node": "Wheel_RL",
+      "position": [
+        -0.81,
+        -1.375,
+        0.32
+      ],
+      "radius": 0.32
+    },
+    {
+      "node": "Wheel_RR",
+      "position": [
+        0.81,
+        -1.375,
+        0.32
+      ],
+      "radius": 0.32
+    }
+  ],
+  "materials": 2,
+  "atlas_size": 128,
+  "bounds_m": {
+    "min": [
+      -1.0740000009536743,
+      -2.234499931335449,
+      0.0
+    ],
+    "max": [
+      1.0740000009536743,
+      2.258500099182129,
+      1.774999976158142
+    ]
+  },
+  "lods": [
+    {
+      "level": 0,
+      "triangles": 22336,
+      "meshes": 11
+    },
+    {
+      "level": 1,
+      "triangles": 9396,
+      "meshes": 11
+    }
+  ]
+}
