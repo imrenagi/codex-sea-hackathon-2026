@@ -371,6 +371,7 @@
 .home-action.quiet:focus { background-color: rgba(51,60,64,.9); border-color: var(--rs-brass); }
 .landing-card .team-credit { margin-top: 16px; margin-bottom: 0; color: var(--rs-brass-hover); letter-spacing: .5px; }
 .play-card { width: 640px; height: 94%; max-height: 740px; overflow: hidden; }
+.dialog.play-card { padding: 28px 32px; }
 .options-card { width: 580px; height: 80%; max-height: 580px; overflow: hidden; }
 .menu-scroll .unity-scroll-view__content-and-vertical-scroll-container { flex-grow: 1; flex-shrink: 1; min-height: 0; }
 
@@ -458,23 +459,34 @@
 .compact .tutorial-initial .tutorial-card { padding: 12px 18px; }
 
 /* Vehicle chooser: one journey action, optional activities disclosed below. */
-.chooser-vehicles { align-items: stretch; margin-top: 18px; margin-bottom: 4px; }
+.chooser-vehicles { align-items: stretch; margin: 24px -8px 0; }
 .button.chooser-vehicle {
-    flex-direction: column; flex-grow: 1; flex-basis: 0; min-width: 0; min-height: 158px;
-    margin: 0 8px 0 0; padding: 16px; align-items: flex-start;
+    flex-direction: column; flex-grow: 1; flex-basis: 0; min-width: 0; min-height: 164px;
+    margin: 0 8px; padding: 20px; align-items: flex-start;
     background-color: var(--rs-raised); border-width: 1px; border-color: var(--rs-line); border-radius: 6px;
     white-space: normal;
 }
 .button.chooser-vehicle.selected { background-color: #393d35; border-color: var(--rs-brass); }
 .button.chooser-vehicle:hover, .button.chooser-vehicle:focus { border-color: var(--rs-brass); background-color: var(--rs-hover); }
-.chooser-vehicle .driving-glyph { width: 32px; height: 32px; margin-bottom: 10px; }
+.chooser-vehicle .driving-glyph { width: 64px; height: 64px; margin-bottom: 16px; }
 .chooser-selection { font-size: 11px; color: #d5cbb9; letter-spacing: 1px; }
-.chooser-vehicle-title { font-size: 25px; -unity-font-style: bold; color: #ffffff; margin-top: 4px; }
+.chooser-vehicle-title { font-size: 25px; -unity-font-style: bold; color: #ffffff; margin-top: 8px; white-space: normal; }
 .chooser-vehicle-note { font-size: 14px; color: #d5cbb9; white-space: normal; margin-top: 5px; }
-.chooser-summary { margin-top: 14px; margin-bottom: 12px; }
-.button.chooser-start { min-height: 54px; font-size: 21px; margin-bottom: 14px; }
-.compact .button.chooser-vehicle { min-height: 142px; padding: 12px; }
-.compact .chooser-vehicles { margin-top: 12px; }
+.chooser-summary { margin-top: 24px; margin-bottom: 16px; }
+.button.chooser-start { min-height: 56px; font-size: 21px; margin: 0 0 24px; padding: 12px 20px; }
+.play-card .menu-scroll .unity-scroll-view__content-container { padding-right: 4px; padding-bottom: 4px; }
+.play-card .fold { margin-top: 0; }
+.play-card .fold-body { padding: 16px; }
+.play-card .fold-body .option { margin-top: 12px; padding: 10px 14px; }
+.play-card .fold-body .fold { margin-top: 20px; }
+.play-card .menu-note { margin-top: 12px; margin-bottom: 12px; }
+.play-card .button.exit-action { margin-top: 24px; margin-bottom: 0; }
+.compact .dialog.play-card { padding: 20px 24px; }
+.compact .button.chooser-vehicle { min-height: 156px; padding: 16px; }
+.compact .chooser-vehicles { margin-top: 20px; }
+.compact .chooser-summary { margin-top: 20px; margin-bottom: 12px; }
+.compact .button.chooser-start { margin-bottom: 20px; }
+.compact .play-card .button.exit-action { margin-top: 20px; }
 
 /* Feedback shares one quiet surface; severity is a label, not a full-screen color. */
 .dialog.landing-card { background-color: transparent; border-width: 0; border-radius: 0; }
@@ -519,17 +531,18 @@
 
 .showroom { flex-direction: row; align-items: center; justify-content: center; }
 .showroom > .dialog { flex-grow: 1; flex-basis: 0; min-width: 0; max-width: 620px; }
-.vehicle-showroom { flex-grow: 1; flex-basis: 0; min-width: 0; max-width: 520px; height: 94%; max-height: 680px; margin-left: 16px; background-color: #13171c; }
+.vehicle-showroom { flex-grow: 1; flex-basis: 0; min-width: 0; max-width: 520px; height: 94%; max-height: 680px; margin-left: 24px; padding: 24px; background-color: #13171c; }
 .vehicle-showroom > .label, .vehicle-showroom > .row, .vehicle-showroom > .vehicle-choices, .preview-angle { flex-shrink: 0; }
 .vehicle-preview { flex-grow: 1; flex-shrink: 1; min-height: 80px; margin: 8px 0; }
 .vehicle-preview:focus { border-width: 1px; border-color: #85dcc5; }
 .preview-hint { font-size: 12px; white-space: normal; color: #c9c6be; }
-.preview-controls { flex-wrap: wrap; margin-top: 6px; margin-bottom: 8px; }
-.preview-controls > .button { flex-grow: 1; }
+.preview-controls { flex-wrap: wrap; margin: 12px -4px 8px; }
+.preview-controls > .button { flex-grow: 1; margin: 0 4px 8px; }
+.vehicle-showroom .vehicle-choice { margin: 4px 8px 4px 0; }
 .preview-angle .unity-base-field__label { min-width: 44px; }
-.compact .vehicle-showroom { padding: 12px; margin-left: 8px; }
+.compact .vehicle-showroom { padding: 16px; margin-left: 16px; }
 .compact .vehicle-showroom .subhead { font-size: 18px; }
-.compact .vehicle-showroom .vehicle-choice { font-size: 12px; padding: 4px 6px; min-height: 27px; }
+.compact .vehicle-showroom .vehicle-choice { font-size: 12px; padding: 8px 10px; min-height: 44px; }
 
 /* Home-only contrast panel keeps scenery from competing with menu text. */
 .landing .dialog.landing-card {

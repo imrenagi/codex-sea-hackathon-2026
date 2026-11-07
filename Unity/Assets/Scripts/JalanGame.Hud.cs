@@ -58,7 +58,7 @@ namespace JalanKita
         // Painter2D keeps every glyph independent of font coverage and display density.
         sealed class DrivingGlyph : VisualElement
         {
-            public enum Kind { Steering, Throttle, Camera, Lamp, Left, Right, Pause }
+            public enum Kind { Steering, Throttle, Camera, Lamp, Left, Right, Pause, Motorcycle }
             readonly Kind kind;
             public DrivingGlyph(Kind kind)
             {
@@ -92,6 +92,19 @@ namespace JalanKita
                         Circle(.5f, .5f, .37f);
                         Circle(.5f, .5f, .09f);
                         Line(.14f, .43f, .42f, .5f); Line(.86f, .43f, .58f, .5f); Line(.5f, .59f, .5f, .87f);
+                        break;
+                    case Kind.Motorcycle:
+                        // Side profile: separate wheels, frame, fuel tank, saddle and front fork.
+                        Circle(.22f, .72f, .14f); Circle(.8f, .72f, .14f);
+                        Line(.22f, .72f, .4f, .48f); Line(.22f, .72f, .53f, .72f);
+                        Line(.4f, .48f, .53f, .72f); Line(.53f, .72f, .68f, .45f);
+                        Line(.66f, .28f, .8f, .72f); Line(.59f, .25f, .7f, .25f);
+                        Line(.7f, .25f, .74f, .31f);
+                        pen.BeginPath(); pen.MoveTo(P(.42f, .44f)); pen.LineTo(P(.53f, .35f));
+                        pen.LineTo(P(.64f, .37f)); pen.LineTo(P(.69f, .47f));
+                        pen.LineTo(P(.55f, .54f)); pen.LineTo(P(.43f, .51f)); pen.ClosePath(); pen.Fill();
+                        pen.lineWidth = 4;
+                        Line(.19f, .43f, .42f, .43f); Line(.46f, .58f, .56f, .63f);
                         break;
                     case Kind.Throttle:
                         pen.BeginPath(); pen.MoveTo(P(.57f, .08f)); pen.LineTo(P(.23f, .55f));

@@ -449,10 +449,9 @@ namespace JalanKita
             SetPage(Page.PlayChooser);
             var content = MenuBody();
             AddLabel(content, GameText.Get("text.choose_your_journey"), "heading");
-            AddLabel(content, GameText.Get("text.choose_a_vehicle_for_your_journey"), "copy");
             var modes = Element(content, "row chooser-vehicles");
             AddChooserVehicle(modes, VehicleMode.Car, GameText.Get("text.car_a5cdf0"), DrivingGlyph.Kind.Steering);
-            AddChooserVehicle(modes, VehicleMode.Motorcycle, GameText.Get("text.motorcycle_965701"), DrivingGlyph.Kind.Lamp);
+            AddChooserVehicle(modes, VehicleMode.Motorcycle, GameText.Get("text.motorcycle_965701"), DrivingGlyph.Kind.Motorcycle);
             AddLabel(content, GameText.Get("level.choose.summary"), "copy chooser-summary");
             AddButton(content, GameText.Get("level.choose.title"),
                 () => ShowCatalogue(MissionKind.SkillTest), "primary chooser-start");
@@ -493,7 +492,6 @@ namespace JalanKita
                 selected ? "chooser-vehicle selected" : "chooser-vehicle quiet");
             card.tooltip = title + (selected ? GameText.Get("text.selected") : GameText.Get("text.select_vehicle"));
             card.Add(new DrivingGlyph(glyph));
-            AddLabel(card, selected ? GameText.Get("text.selected_6a6df4") : GameText.Get("text.select"), "chooser-selection");
             AddLabel(card, title, "chooser-vehicle-title");
             foreach (var child in card.Children()) child.pickingMode = PickingMode.Ignore;
         }
