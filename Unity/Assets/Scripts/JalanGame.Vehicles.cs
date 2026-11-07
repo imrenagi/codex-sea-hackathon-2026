@@ -119,7 +119,7 @@ namespace JalanKita
             void Move(PointerMoveEvent e)
             {
                 if (e.pointerId != pointer || !target.HasPointerCapture(pointer)) return;
-                preview.Rotate((e.position.x - previous) * .6f); previous = e.position.x; e.StopPropagation();
+                preview.Rotate((previous - e.position.x) * .6f); previous = e.position.x; e.StopPropagation();
             }
             void Up(PointerUpEvent e) { if (e.pointerId == pointer) { target.ReleasePointer(pointer); pointer = -1; e.StopPropagation(); } }
             void Cancel(PointerCaptureOutEvent e) { pointer = -1; }
