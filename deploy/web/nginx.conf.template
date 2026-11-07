@@ -1,0 +1,68 @@
+map $uri $unity_encoding {
+    default "";
+    ~\.gz$ gzip;
+    ~\.br$ br;
+}
+
+server {
+    listen ${PORT};
+    # Cloud Run forwards h2c; large game assets exceed its HTTP/1 response limit.
+    http2 on;
+    server_name _;
+    server_tokens off;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Unity uses stable filenames, so revalidate assets after each deployment.
+    add_header Cache-Control "no-cache" always;
+
+    # Cloud Run reserves paths ending in "z", so use /health for public checks.
+    location = /health {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # Native browser decompression when a Unity export uses .gz or .br.
+    location ~ \.wasm\.(gz|br)$ {
+        types { }
+        default_type application/wasm;
+        add_header Content-Encoding $unity_encoding;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
+    location ~ \.js\.(gz|br)$ {
+        types { }
+        default_type application/javascript;
+        add_header Content-Encoding $unity_encoding;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
+    location ~ \.(data|symbols\.json)\.(gz|br)$ {
+        types { }
+        default_type application/octet-stream;
+        add_header Content-Encoding $unity_encoding;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
+    # Decompression-fallback builds use .unityweb; Unity's loader decodes them.
+    # Do not attach a Content-Encoding header to these files.
+    location ~ \.unityweb$ {
+        types { }
+        default_type application/octet-stream;
+        try_files $uri =404;
+    }
+
+    location ~ \.wasm$ {
+        types { }
+        default_type application/wasm;
+        try_files $uri =404;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}

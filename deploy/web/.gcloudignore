@@ -1,0 +1,7 @@
+# This context is staged explicitly; never inherit the project's .gitignore,
+# which excludes the WebGL export we need to upload.
+.gcloudignore
+.git
+.DS_Store
+**/.DS_Store
+**/._*

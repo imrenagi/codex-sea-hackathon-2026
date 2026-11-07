@@ -87,3 +87,9 @@ Original authoring packs remain under `assets/`; runtime resources and metadata 
 `INTEGRATION_COVERAGE.md` records the source/feature/test matrix; `INTEGRATION_SNAPSHOT.json`, `STREETLOOK_HANDOFF.json`, and `TRAFFIC_HANDOFF.json` preserve source provenance and handoff hashes.
 
 The integrated HUD has three rear-view mirrors, with mirror rendering paused outside driving. Boulevard traffic follows lanes and signals, waits for pedestrians/trains, and interacts with the ambulance. Audio settings group master volume, mute, ambience and preview controls; disabling ambience retains horn, rail, phone and siren warnings. See INTEGRATION_VERIFICATION.md for completed source gates and remaining native QA.
+
+## Web deployment
+
+Run `make deploy/web` to rebuild WebGL and deploy it to Cloud Run.
+See [deployment setup and GitHub Actions](docs/deployment/web.md) for Unity
+activation, Google identity federation, and automatic deployments from `main`.

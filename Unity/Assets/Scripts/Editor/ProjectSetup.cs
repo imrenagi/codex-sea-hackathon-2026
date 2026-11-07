@@ -150,7 +150,19 @@ namespace JalanKita.EditorTools
         }
 
         [MenuItem("Jalan Kita/Build WebGL")]
-        public static void BuildWeb() => Build(BuildTarget.WebGL, "Builds/WebGL");
+        public static void BuildWeb()
+        {
+            var args = System.Environment.GetCommandLineArgs();
+            int outputIndex = System.Array.IndexOf(args, "-buildOutput");
+            string destination = "Builds/WebGL";
+            if (outputIndex >= 0)
+            {
+                if (outputIndex + 1 >= args.Length || args[outputIndex + 1].StartsWith("-"))
+                    throw new System.ArgumentException("-buildOutput requires a destination path.");
+                destination = args[outputIndex + 1];
+            }
+            Build(BuildTarget.WebGL, destination);
+        }
 
         [MenuItem("Jalan Kita/Build macOS")]
         public static void BuildMac() => Build(BuildTarget.StandaloneOSX, "Builds/macOS/Jalan Kita.app");
