@@ -2668,6 +2668,74 @@
     {
       "key": "vehicles.selected",
       "value": "Vehicle · {0}"
+    },
+    {
+      "key": "missions.thumbnail_caption",
+      "value": "ENCOUNTER DIAGRAM"
+    },
+    {
+      "key": "maps.thumbnail_caption",
+      "value": "MAP GEOMETRY PREVIEW"
+    },
+    {
+      "key": "maps.thumbnail_attribution",
+      "value": "Map thumbnails: © OpenStreetMap contributors · ODbL. Illustrative building heights. Previews are not practice routes."
+    },
+    {
+      "key": "maps.open_preview",
+      "value": "Open {0} map preview"
+    },
+    {
+      "key": "maps.view_preview",
+      "value": "VIEW MAP  →"
+    },
+    {
+      "key": "maps.summary.morrissey",
+      "value": "Compact neighborhood streets around Kebon Sirih."
+    },
+    {
+      "key": "maps.summary.bundaran_hi",
+      "value": "The landmark roundabout and central Jakarta towers."
+    },
+    {
+      "key": "maps.summary.sea_labs",
+      "value": "Office blocks and connecting streets around Sea Labs."
+    },
+    {
+      "key": "maps.summary.semanggi",
+      "value": "Curving interchange ramps and layered main roads."
+    },
+    {
+      "key": "maps.summary.monas",
+      "value": "The monument precinct and surrounding city avenues."
+    },
+    {
+      "key": "maps.summary.bundaran_senayan",
+      "value": "A broad roundabout at the southern end of Sudirman."
+    },
+    {
+      "key": "level.choose.title",
+      "value": "Choose a level"
+    },
+    {
+      "key": "level.tutorial.title",
+      "value": "Level 0 — Tutorial"
+    },
+    {
+      "key": "level.tutorial.description",
+      "value": "Learn to brake, yield and cross safely."
+    },
+    {
+      "key": "level.tutorial.detail",
+      "value": "Guided practice at Pasar Bunga. Replay any time."
+    },
+    {
+      "key": "level.tutorial.start",
+      "value": "Start tutorial"
+    },
+    {
+      "key": "level.choose.summary",
+      "value": "Choose a tutorial or driving challenge. Your saved journey remains available in More modes."
     }
   ]
 }

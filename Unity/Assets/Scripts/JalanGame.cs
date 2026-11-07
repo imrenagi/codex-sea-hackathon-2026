@@ -453,17 +453,11 @@ namespace JalanKita
             var modes = Element(content, "row chooser-vehicles");
             AddChooserVehicle(modes, VehicleMode.Car, GameText.Get("text.car_a5cdf0"), DrivingGlyph.Kind.Steering);
             AddChooserVehicle(modes, VehicleMode.Motorcycle, GameText.Get("text.motorcycle_965701"), DrivingGlyph.Kind.Lamp);
-            AddLabel(content, stored == null ? GameText.Get("text.full_journey_10_stages_start_from_the_beginning")
-                : stored.next == All.Length && stored.after >= 0 ? GameText.Get("text.journey_complete_view_your_saved_results")
-                : GameText.Get("text.continue_the_saved_journey_for_this_vehicle"), "copy chooser-summary");
-            AddButton(content, GameText.Get("text.start_journey"), () =>
-            {
-                if (stored == null) StartNew(); else Resume();
-            }, "primary chooser-start");
+            AddLabel(content, GameText.Get("level.choose.summary"), "copy chooser-summary");
+            AddButton(content, GameText.Get("level.choose.title"),
+                () => ShowCatalogue(MissionKind.SkillTest), "primary chooser-start");
             Fold(content, GameText.Get("text.more_modes"), other =>
             {
-                AddButton(other, GameText.Get("text.try_demo_right_of_way_f2"), StartPitchDemo, "quiet option");
-                AddLabel(other, GameText.Get("text.a_short_pasar_bunga_demo_your_journey_progress_stays"), "menu-note");
                 AddButton(other, GameText.Get("text.skill_tests_5_tests"), () => ShowCatalogue(MissionKind.SkillTest), "quiet option");
                 AddButton(other, GameText.Get("text.everyday_missions_3_journeys"), () => ShowCatalogue(MissionKind.Scenario), "quiet option");
                 AddLabel(other, GameText.Get("text.results_are_saved_for_each_test_and_mission"), "menu-note");
@@ -608,12 +602,7 @@ namespace JalanKita
             AddLabel(dialog, GameText.Get("text.jakarta_openstreetmap"), "kicker");
             AddLabel(dialog, GameText.Get("text.choose_map"), "heading");
             AddLabel(dialog, GameText.Get("text.3d_city_previews_about_1_7_1_5_km"), "copy");
-            var list = Element(dialog, "section");
-            for (int i = 0; i < CityMapData.Ids.Length; i++)
-            {
-                int index = i;
-                AddButton(list, CityMapData.Names[i], () => OpenCityMap(index), "option");
-            }
+            AddCityMapChoices();
             AddButton(dialog, GameText.Get("text.main_menu"), ShowMenu, "quiet");
         }
 

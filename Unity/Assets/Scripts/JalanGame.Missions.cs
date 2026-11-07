@@ -12,7 +12,7 @@ namespace JalanKita
             catalogueKind = kind;
             SetPage(Page.Catalogue);
             AddLabel(dialog, GameText.Get("missions.choose_activity", mode == VehicleMode.Car ? GameText.Get("text.car") : GameText.Get("text.motorcycle")), "kicker");
-            AddLabel(dialog, kind == MissionKind.Scenario ? GameText.Get("text.everyday_missions") : GameText.Get("text.skill_tests"), "heading");
+            AddLabel(dialog, kind == MissionKind.Scenario ? GameText.Get("text.everyday_missions") : GameText.Get("level.choose.title"), "heading");
             AddLabel(dialog, kind == MissionKind.Scenario
                 ? GameText.Get("text.one_goal_several_decisions_retry_difficult_sections_and_try")
                 : GameText.Get("text.choose_a_skill_to_test_results_and_attempts_are"), "copy");
@@ -22,19 +22,31 @@ namespace JalanKita
             list.contentViewport.style.overflow = Overflow.Hidden;
             list.AddToClassList("mission-list");
             dialog.Add(list);
+            if (kind == MissionKind.SkillTest)
+            {
+                var tutorial = Element(list.contentContainer, "mission-card selection-mission-card");
+                AddSelectionThumbnail(tutorial, "mission_tutorial", GameText.Get("missions.thumbnail_caption"));
+                var body = Element(tutorial, "selection-mission-body");
+                AddLabel(body, GameText.Get("level.tutorial.title"), "subhead mission-title");
+                AddLabel(body, GameText.Get("level.tutorial.description"), "copy");
+                AddLabel(body, GameText.Get("level.tutorial.detail"), "objective-detail");
+                AddButton(body, GameText.Get("level.tutorial.start"), StartPitchDemo, "primary");
+            }
             foreach (var activity in kind == MissionKind.Scenario ? Mission.Scenarios : Mission.Tests)
             {
                 var saved = JourneySave.Load(mode, activity);
-                var card = Element(list.contentContainer, "mission-card");
-                var row = Element(card, "row split");
+                var card = Element(list.contentContainer, "mission-card selection-mission-card");
+                AddSelectionThumbnail(card, "mission_" + activity.Id, GameText.Get("missions.thumbnail_caption"));
+                var body = Element(card, "selection-mission-body");
+                var row = Element(body, "row split");
                 AddLabel(row, activity.Title, "subhead mission-title");
                 AddLabel(row, activity.Duration, "kicker duration");
-                AddLabel(card, activity.Focus, "copy");
+                AddLabel(body, activity.Focus, "copy");
                 string status = saved == null ? GameText.Get("text.not_attempted")
                     : saved.next <= activity.LastStage ? GameText.Get("missions.in_progress", saved.attempts)
                     : GameText.Get("missions.completed", saved.completions, saved.bestMistakes);
-                AddLabel(card, status, "objective-detail");
-                AddButton(card, saved != null && saved.next <= activity.LastStage ? GameText.Get("text.continue") : GameText.Get("text.select_2a7802"), () => ShowMissionBrief(activity), "primary");
+                AddLabel(body, status, "objective-detail");
+                AddButton(body, saved != null && saved.next <= activity.LastStage ? GameText.Get("text.continue") : GameText.Get("text.select_2a7802"), () => ShowMissionBrief(activity), "primary");
             }
             var actions = Element(dialog, "row actions catalogue-footer");
             AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
