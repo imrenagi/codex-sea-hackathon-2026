@@ -12,7 +12,7 @@
                 <ui:VisualElement class="panel route-panel">
                     <ui:Label name="routeCount" class="label kicker" />
                     <ui:VisualElement name="steps" class="row route-steps" />
-                    <ui:Label text="Klik nomor untuk latihan misi" class="label kicker" />
+                    <ui:Label name="missionHint" text="Klik nomor untuk latihan misi" class="label kicker" />
                     <ui:Button name="progress" text="Kemajuan  [Tab]" class="button quiet tiny" />
                 </ui:VisualElement>
             </ui:VisualElement>
