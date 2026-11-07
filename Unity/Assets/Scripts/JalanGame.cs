@@ -164,6 +164,19 @@ namespace JalanKita
                 (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Escape))) ReturnToJourney();
         }
 
+        void OnApplicationFocus(bool focused)
+        {
+            if (!focused) heldLook = 0;
+            if (focused || root == null || journey == null || page != Page.Drive) return;
+            if (learner != null) EndDemonstration();
+            else ShowProgress();
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            if (paused) OnApplicationFocus(false);
+        }
+
         void FixedUpdate()
         {
             if (page != Page.Drive) return;
@@ -223,7 +236,6 @@ namespace JalanKita
             cityPreview?.Dispose();
             district?.Mirrors.Dispose();
         }
-        void OnApplicationFocus(bool focus) { if(!focus) heldLook=0; }
 
         void ShowMenu()
         {
