@@ -409,8 +409,8 @@ namespace JalanKita
             AddLabel(content, "Pilih perjalanan", "heading");
             AddLabel(content, "Pilih kendaraan untuk perjalananmu.", "copy");
             var modes = Element(content, "row chooser-vehicles");
-            AddChooserVehicle(modes, VehicleMode.Car, "Mobil", "Sabuk pengaman · 4 roda", DrivingGlyph.Kind.Steering);
-            AddChooserVehicle(modes, VehicleMode.Motorcycle, "Motor", "Helm & lampu utama · 2 roda", DrivingGlyph.Kind.Lamp);
+            AddChooserVehicle(modes, VehicleMode.Car, "Mobil", DrivingGlyph.Kind.Steering);
+            AddChooserVehicle(modes, VehicleMode.Motorcycle, "Motor", DrivingGlyph.Kind.Lamp);
             AddLabel(content, stored == null ? "Perjalanan lengkap · 10 tahap. Mulai dari awal."
                 : stored.next == All.Length && stored.after >= 0 ? "Perjalanan selesai. Buka hasil yang tersimpan."
                 : "Lanjutkan progres perjalanan untuk kendaraan ini.", "copy chooser-summary");
@@ -450,16 +450,15 @@ namespace JalanKita
             AddButton(content, "Menu utama [Esc]", ShowMenu, "quiet exit-action");
         }
 
-        void AddChooserVehicle(VisualElement parent, VehicleMode choice, string title, string note, DrivingGlyph.Kind glyph)
+        void AddChooserVehicle(VisualElement parent, VehicleMode choice, string title, DrivingGlyph.Kind glyph)
         {
             bool selected = mode == choice;
             var card = AddButton(parent, "", () => SelectMode(choice),
                 selected ? "chooser-vehicle selected" : "chooser-vehicle quiet");
-            card.tooltip = title + ": " + note + (selected ? " · Dipilih" : " · Pilih kendaraan");
+            card.tooltip = title + (selected ? " · Dipilih" : " · Pilih kendaraan");
             card.Add(new DrivingGlyph(glyph));
             AddLabel(card, selected ? "DIPILIH" : "PILIH", "chooser-selection");
             AddLabel(card, title, "chooser-vehicle-title");
-            AddLabel(card, note, "chooser-vehicle-note");
             foreach (var child in card.Children()) child.pickingMode = PickingMode.Ignore;
         }
 
