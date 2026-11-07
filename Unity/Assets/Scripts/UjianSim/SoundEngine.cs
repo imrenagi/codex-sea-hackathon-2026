@@ -53,6 +53,7 @@ namespace UjianSim.Game
 
         const string PrefKey = "jalan-kita:muted";
         const string VolumeKey = "jalan-kita:volume";
+        const string AmbienceKey = "jalan-kita:ambience";
 
         readonly object gate = new object();
         readonly List<Voice> voices = new List<Voice>();
@@ -74,6 +75,7 @@ namespace UjianSim.Game
 
         public bool Muted { get; private set; }
         public float Volume { get; private set; } = 1f;
+        public bool AmbienceEnabled { get; private set; } = true;
 
         public static SoundEngine Create(Transform parent)
         {
@@ -89,6 +91,7 @@ namespace UjianSim.Game
             var engine = go.AddComponent<SoundEngine>();
             engine.rate = sr;
             engine.Muted = PlayerPrefs.GetInt(PrefKey, 0) == 1;
+            engine.AmbienceEnabled = PlayerPrefs.GetInt(AmbienceKey, 1) != 0;
             float volume = PlayerPrefs.GetFloat(VolumeKey, 1f);
             engine.Volume = float.IsNaN(volume) || float.IsInfinity(volume) ? 1f : Mathf.Clamp01(volume);
             engine.tMaster = engine.Muted ? 0f : 0.7f * engine.Volume;
@@ -115,6 +118,14 @@ namespace UjianSim.Game
             Volume = Mathf.Clamp01(volume);
             tMaster = Muted ? 0f : 0.7f * Volume;
             PlayerPrefs.SetFloat(VolumeKey, Volume);
+            PushTargets();
+        }
+
+        public void SetAmbience(bool enabled)
+        {
+            AmbienceEnabled = enabled;
+            PlayerPrefs.SetInt(AmbienceKey, enabled ? 1 : 0);
+            if (!enabled) { tWind = tRain = 0f; ambienceTimer = 2f; }
             PushTargets();
         }
 
@@ -217,11 +228,11 @@ namespace UjianSim.Game
             }
             else bellTimer = 0f;
 
-            tWind = f.Motorcycle.HasValue ? 0.018f + Mathf.Clamp01(Mathf.Abs(f.Speed) / 18f) * 0.025f : 0.006f;
-            tRain = f.Rain ? 0.05f : 0f;
+            tWind = !AmbienceEnabled ? 0f : f.Motorcycle.HasValue ? 0.018f + Mathf.Clamp01(Mathf.Abs(f.Speed) / 18f) * 0.025f : 0.006f;
+            tRain = AmbienceEnabled && f.Rain ? 0.05f : 0f;
 
             // Keep menus and feedback quiet for the instructor or presenter.
-            if (f.Motorcycle.HasValue) ambienceTimer -= dt;
+            if (AmbienceEnabled && f.Motorcycle.HasValue) ambienceTimer -= dt;
             else ambienceTimer = 2f;
             if (ambienceTimer <= 0f)
             {
