@@ -1,0 +1,154 @@
+name: Deploy WebGL
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      verify_identity_only:
+        description: Verify Google federation without building or deploying
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-production
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ vars.GCP_REGION }}
+  WEB_SERVICE: ${{ vars.WEB_SERVICE }}
+  ARTIFACT_REPOSITORY: ${{ vars.ARTIFACT_REPOSITORY }}
+
+jobs:
+  identity:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+      - name: Verify deployment access
+        run: |
+          gcloud builds list --project="$GCP_PROJECT" --region="$GCP_REGION" --limit=1
+          gcloud artifacts repositories describe "$ARTIFACT_REPOSITORY" --project="$GCP_PROJECT" --location="$GCP_REGION"
+          gcloud storage buckets describe "gs://${GCP_PROJECT}_cloudbuild" --project="$GCP_PROJECT"
+          gcloud run services describe "$WEB_SERVICE" --project="$GCP_PROJECT" --region="$GCP_REGION" --format='value(status.url)'
+
+  build-webgl:
+    if: github.ref == 'refs/heads/main' && inputs.verify_identity_only != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check Unity activation configuration
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          if [[ -z "$UNITY_LICENSE" && ( -z "$UNITY_EMAIL" || -z "$UNITY_PASSWORD" ) ]]; then
+            echo '::error::Configure Unity CI secrets as described in docs/deployment/web.md. No deployment will run without a fresh Unity build.'
+            exit 1
+          fi
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: Unity/Library
+          key: ${{ runner.os }}-unity-webgl-${{ hashFiles('Unity/Packages/**', 'Unity/ProjectSettings/**') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-unity-webgl-${{ hashFiles('Unity/Packages/**', 'Unity/ProjectSettings/**') }}-
+      - name: Build fresh WebGL player
+        uses: game-ci/unity-builder@eb1b9fba120c6e62c9fb7a7a81d6c107ce004c45 # v6.0.0
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          cliVersion: v0.1.72
+          projectPath: Unity
+          targetPlatform: WebGL
+          buildName: WebGL
+          buildsPath: Unity/Builds
+          buildMethod: JalanKita.EditorTools.ProjectSetup.BuildWeb
+          customParameters: -buildOutput Builds/WebGL
+          versioning: None
+      - name: Record source commit
+        run: |
+          test -s Unity/Builds/WebGL/index.html
+          printf '{"commit":"%s"}\n' "$GITHUB_SHA" > Unity/Builds/WebGL/build-info.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: webgl-${{ github.sha }}
+          path: Unity/Builds/WebGL
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  deploy:
+    needs: [identity, build-webgl]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      WEB_BUILD_DIR: Unity/Builds/WebGL
+      WEB_BOOTSTRAP: 'false'
+      WEB_PUBLIC: 'false'
+      GCP_BUILD_SERVICE_ACCOUNT: ${{ vars.GCP_BUILD_SERVICE_ACCOUNT }}
+      GCP_RUNTIME_SERVICE_ACCOUNT: ${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Skip commits superseded during the Unity build
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          head=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          if [[ "$head" == "$GITHUB_SHA" ]]; then
+            echo 'deploy=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'deploy=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::main advanced during the build; its queued workflow will deploy the newer commit.'
+          fi
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: steps.current.outputs.deploy == 'true'
+        with:
+          name: webgl-${{ github.sha }}
+          path: Unity/Builds/WebGL
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        if: steps.current.outputs.deploy == 'true'
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+        if: steps.current.outputs.deploy == 'true'
+      - name: Cloud Build image and Cloud Run deployment
+        if: steps.current.outputs.deploy == 'true'
+        run: sh deploy/web/deploy.sh
+      - name: Verify public build and complete asset downloads
+        if: steps.current.outputs.deploy == 'true'
+        run: |
+          url=$(gcloud run services describe "$WEB_SERVICE" --project="$GCP_PROJECT" --region="$GCP_REGION" --format='value(status.url)')
+          python3 deploy/web/verify.py "$url" "$WEB_BUILD_DIR" "$GITHUB_SHA"
+          printf 'Deployed `%s` to [%s](%s)\n' "$GITHUB_SHA" "$url" "$url" >> "$GITHUB_STEP_SUMMARY"

@@ -101,3 +101,9 @@ Mute, volume and ambience settings also control fountain sound. Pause freezes th
 water, spray, traffic and pedestrians. Landmarks and small architectural details are
 approximations; map attribution and provenance are in
 `Unity/Assets/Resources/JakartaLandmarks/NOTICE.txt`.
+
+## Web deployment
+
+Run `make deploy/web` to rebuild WebGL and deploy it to Cloud Run.
+See [deployment setup and GitHub Actions](docs/deployment/web.md) for Unity
+activation, Google identity federation, and automatic deployments from `main`.

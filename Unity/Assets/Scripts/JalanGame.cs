@@ -10,7 +10,7 @@ namespace JalanKita
     [RequireComponent(typeof(UIDocument))]
     public sealed partial class JalanGame : MonoBehaviour
     {
-        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, Locations, Landmark, LandmarkPause }
+        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, Locations, Landmark, LandmarkPause, MissionPicker }
 
         District district;
         GameObject trainingRoot;
@@ -99,10 +99,10 @@ namespace JalanKita
 
             root.Q<Button>("missionPicker").clicked += () =>
             {
-                if(journey.Activity!=null || pitchDemo) return;
-                var popup=root.Q("missionPickerPopup");
-                Show(popup,popup.ClassListContains("hidden"));
+                if (page == Page.MissionPicker) CloseMissionPicker();
+                else OpenMissionPicker();
             };
+            RevealFocusedChildren(root.Q<ScrollView>("missionPickerScroll"));
             root.Q<Button>("closeMissionPicker").clicked += CloseMissionPicker;
             progress = root.Q<Button>("progress");
             progress.clicked += () => { if (page == Page.Landmark) ShowLandmarkPause(); else if (page == Page.Jaksa) ShowJaksaPause(); else if (learner != null) EndDemonstration(); else ShowProgress(); };
@@ -158,16 +158,36 @@ namespace JalanKita
             button.RegisterCallback<PointerCaptureOutEvent>(_=>heldLook=0);
         }
 
-        void CloseMissionPicker() => Show(root.Q("missionPickerPopup"),false);
+        void OpenMissionPicker()
+        {
+            if (page != Page.Drive || journey.Activity != null || pitchDemo || learner != null) return;
+            heldLook = 0;
+            page = Page.MissionPicker;
+            Show(root.Q("missionPickerPopup"), true);
+            root.focusController?.focusedElement?.Blur();
+            routeSteps[Mathf.Clamp(journey.Stage, 0, routeSteps.Length - 1)].Focus();
+        }
+
+        void CloseMissionPicker()
+        {
+            Show(root.Q("missionPickerPopup"), false);
+            if (page != Page.MissionPicker) return;
+            page = Page.Drive;
+            heldLook = 0;
+            root.focusController?.focusedElement?.Blur();
+        }
 
         void Update()
         {
-            if(page==Page.Drive && !root.Q("missionPickerPopup").ClassListContains("hidden") && Input.GetKeyDown(KeyCode.Escape))
-            { CloseMissionPicker(); return; }
             if (page == Page.Menu && Input.GetKeyDown(KeyCode.F2)) { StartPitchDemo(); return; }
             if (Input.GetKeyDown(KeyCode.M)) ToggleSound();
             if (LandmarkInput()) return;
             if(page==Page.Locations&&Input.GetKeyDown(KeyCode.Escape)){ShowMenu();return;}
+            if (page == Page.MissionPicker)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P)) CloseMissionPicker();
+                return;
+            }
             if (page == Page.Jaksa)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab)) { ShowJaksaPause(); return; }
@@ -198,6 +218,7 @@ namespace JalanKita
             }
             if (page == Page.Drive)
             {
+                if (Input.GetKeyDown(KeyCode.P) && journey.Activity == null && !pitchDemo) { OpenMissionPicker(); return; }
                 if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Escape)) { ShowProgress(); return; }
                 if (Input.GetKeyDown(KeyCode.R)) Retry();
                 if (Input.GetKeyDown(KeyCode.C)) { hood = !hood; district.Snap(); }
@@ -395,8 +416,22 @@ namespace JalanKita
             { horizontalScrollerVisibility = ScrollerVisibility.Hidden, verticalScrollerVisibility = ScrollerVisibility.Auto };
             content.AddToClassList("menu-scroll");
             content.contentViewport.style.overflow = Overflow.Hidden;
+            RevealFocusedChildren(content);
             dialog.Add(content);
             return content;
+        }
+
+        static void RevealFocusedChildren(ScrollView scroll)
+        {
+            scroll.RegisterCallback<FocusInEvent>(e =>
+            {
+                if (e.target is not VisualElement focused || !scroll.contentContainer.Contains(focused)) return;
+                scroll.schedule.Execute(() =>
+                {
+                    if (scroll.panel != null && scroll.focusController?.focusedElement == focused)
+                        scroll.ScrollTo(focused);
+                });
+            });
         }
 
         void StartJaksa()
