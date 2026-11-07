@@ -8,7 +8,7 @@ namespace JalanKita.EditorTools
     // Render representative gameplay and forecourt views without modifying the saved game scene or player saves.
     public static class ScenarioAtmosphereChecks
     {
-        [MenuItem("Jalan Kita/Verify and capture scenario life")]
+        [MenuItem("RoadSense/Verify and capture scenario life")]
         public static void Run()
         {
             MissionChecks.Run();

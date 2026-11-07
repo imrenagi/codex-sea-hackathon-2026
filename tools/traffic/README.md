@@ -12,7 +12,7 @@ From the repository root:
 /Applications/Blender.app/Contents/MacOS/Blender --background --python tools/traffic/prepare.py
 ```
 
-Then use Unity's **Jalan Kita → Prepare traffic vehicles**, or run the following against a separate project copy when the main editor/build is in use:
+Then use Unity's **RoadSense → Prepare traffic vehicles**, or run the following against a separate project copy when the main editor/build is in use:
 
 ```sh
 /Applications/Unity/Hub/Editor/6000.3.27f1-arm64/Unity.app/Contents/MacOS/Unity \

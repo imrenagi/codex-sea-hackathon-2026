@@ -29,7 +29,9 @@ namespace JalanKita.EditorTools
             var root=game.GetComponent<UIDocument>().rootVisualElement;
             foreach(var definition in VehicleCatalogue.All)
             {
+                Call(game,"ShowPlayChooser");
                 Call(game,"SelectMode",definition.Mode);
+                Click(root.Query<Button>().ToList().Find(b=>b.text=="Lihat kendaraan 3D"));
                 Click(root.Q<Button>("vehicle-"+definition.Id));
                 var preview=(VehiclePreview)Field(game,"vehiclePreview");
                 Require(preview.Definition==definition && VehicleCatalogue.Selected(definition.Mode)==definition,"Selecting model updates render and gameplay selection");
@@ -91,7 +93,10 @@ namespace JalanKita.EditorTools
                 var def=VehicleCatalogue.All[Mathf.Min(shot,VehicleCatalogue.All.Length-1)];
                 if(!captured && EditorApplication.timeSinceStartup-began<.2)
                 {
+                    Call(game,"ShowPlayChooser");
                     Call(game,"SelectMode",def.Mode); VehicleCatalogue.Select(def);
+                    var chooserRoot=game.GetComponent<UIDocument>().rootVisualElement;
+                    Click(chooserRoot.Query<Button>().ToList().Find(b=>b.text=="Lihat kendaraan 3D"));
                     if(shot==7) Call(game,"ShowMissionBrief",Mission.Scenarios[1]);
                     if(shot==8) Call(game,"ShowPreflight");
                 }

@@ -11,7 +11,7 @@ namespace JalanKita.EditorTools
 {
     public static class VehicleChecks
     {
-        [MenuItem("Jalan Kita/Prepare and verify vehicles")]
+        [MenuItem("RoadSense/Prepare and verify vehicles")]
         public static void Prepare()
         {
             foreach (string folder in new[] { "BeatRed", "BeatBlue" })
@@ -62,7 +62,7 @@ namespace JalanKita.EditorTools
             return material;
         }
 
-        [MenuItem("Jalan Kita/Verify vehicles")]
+        [MenuItem("RoadSense/Verify vehicles")]
         public static void Run()
         {
             foreach (var definition in VehicleCatalogue.All)

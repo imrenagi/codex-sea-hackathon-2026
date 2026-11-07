@@ -38,3 +38,11 @@ Inputs are accepted checkpoint `27781b90cf09c98843f818c3a7b31ed9149dbe03` and up
 | Existing catalogues, maps, pitch demo, mission picker, save isolation and keyboard brake guard | Retain checkpoint behavior; combined simulation and ResultFlowChecks remain release gates. |
 
 Native acceptance and the exact built-source SHA are recorded alongside the new immutable app manifest; this section does not claim that a source check alone certifies the native preview or final app.
+
+## Frozen RoadSense follow-on
+
+User cutoff: upstream `b02e30a23e3ab3f39439bcdf67e085318ed8ad75` (RoadSense runtime through `4f0ed85`, then pitch-document assets only). Do not infer later upstream changes are included. This preserves accepted `e1d489f` NPC/reverse/showroom integration and adds RoadSense home, chooser, HUD/help, guided crossing, branding and the renamed scene. HI/Monas and visual-v2 remain excluded.
+
+The guided crossing uses brake-only control and suppresses scoring only in its isolated demo. Continue restores normal rules; ordinary driving retains bounded reverse. Successful completion exposes the chooser and remembers onboarding, so all saved journeys, activities, vehicle choices, exploration and map previews remain reachable. A normal violation retry retains its mistake history; replaying a completed/guided demo starts a fresh isolated session. Delayed page focus respects an explicitly focused mission button. Preference test fixtures restore the new onboarding integer as well as legacy progress.
+
+`ResultFlowChecks` covers real Play-button entry, crossing pause/brake/wait/continue, successful completion-button chooser access, returning Play, immutable saved journey payloads, restored normal violations/retries, help/pause/input release and paused mission navigation. Native acceptance and exact final source remain recorded with the immutable app manifest.

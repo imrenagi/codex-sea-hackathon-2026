@@ -20,6 +20,9 @@ namespace JalanKita.EditorTools
         public sealed class SavedPreferences : IDisposable
         {
             readonly Dictionary<string, string> values = new();
+            const string OnboardingKey = "RoadSense.Onboarding.MovementBrake.v1";
+            readonly bool onboardingExists = PlayerPrefs.HasKey(OnboardingKey);
+            readonly int onboardingValue = PlayerPrefs.GetInt(OnboardingKey);
             public SavedPreferences()
             {
                 foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
@@ -34,13 +37,14 @@ namespace JalanKita.EditorTools
             void Remember(string key) => values[key] = PlayerPrefs.HasKey(key) ? PlayerPrefs.GetString(key) : null;
             public void Dispose()
             {
+                if (onboardingExists) PlayerPrefs.SetInt(OnboardingKey, onboardingValue); else PlayerPrefs.DeleteKey(OnboardingKey);
                 foreach (var pair in values)
                     if (pair.Value == null) PlayerPrefs.DeleteKey(pair.Key); else PlayerPrefs.SetString(pair.Key, pair.Value);
                 PlayerPrefs.Save();
             }
         }
 
-        [MenuItem("Jalan Kita/Verify combined simulation")]
+        [MenuItem("RoadSense/Verify combined simulation")]
         public static void RunSimulation()
         {
             using var preferences = new SavedPreferences();
@@ -101,7 +105,11 @@ namespace JalanKita.EditorTools
                 foreach (var ramp in ramps)
                 {
                     Require(ramp.GetComponent<Renderer>().sharedMaterial != null, "Landing material exists with local StreetLook paving");
-                    var vertices = ramp.sharedMesh.vertices.Select(ramp.transform.TransformPoint).ToArray();
+                    // Static batching can share unrelated vertices; inspect only this renderer's submesh.
+                    var mesh = ramp.sharedMesh;
+                    var points = mesh.vertices;
+                    int submesh = ramp.GetComponent<MeshRenderer>().subMeshStartIndex;
+                    var vertices = mesh.GetIndices(submesh).Distinct().Select(i => ramp.transform.TransformPoint(points[i])).ToArray();
                     Require(vertices.All(v => Mathf.Abs(v.x) >= 4.66f && Mathf.Abs(v.x) <= 5.51f), "Ramp uses retained sidewalk width");
                     Require(vertices.Min(v => v.y) < .01f && vertices.Max(v => v.y) >= .12f, "Ramp joins street to sidewalk");
                 }
@@ -157,6 +165,8 @@ namespace JalanKita.EditorTools
                 Call(game, "ShowMenu"); Call(game, "StartPitchDemo");
                 run = (Journey)Field(game, "journey");
                 Require(run.Stage == 2 && run.Activity == null && run.UsesRouteSteering, "Pitch starts its isolated route encounter");
+                // The onboarding gate is tested separately; exercise real rules after its release.
+                run.LearningControls = false;
                 for (int i = 0; i < 1500 && !run.Failure.HasValue; i++) run.Step(.02f, true, false, 0);
                 Require(run.Failure == Rule.Pedestrian, "Pitch reproducible pedestrian violation");
                 Call(game, "ShowLesson", run.Failure.Value);

@@ -13,7 +13,7 @@ namespace JalanKita.EditorTools
             ProjectSetup.BuildMac();
         }
 
-        [MenuItem("Jalan Kita/Verify Missions")]
+        [MenuItem("RoadSense/Verify Missions")]
         public static void Run()
         {
             JourneyChecks.Run();

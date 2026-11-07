@@ -1,6 +1,6 @@
-# Jalan Kita
+# RoadSense
 
-An Indonesian road-safety learning prototype built in Unity **6000.3.27f1**. Open `Unity/Assets/Scenes/KampungKenanga.unity` and enter Play mode, or build with `Jalan Kita/Build macOS` / `Build WebGL`.
+An Indonesian road-safety learning prototype by **We Will Handle**, built in Unity **6000.3.27f1**. Open `Unity/Assets/Scenes/RoadSense.unity` and enter Play mode, or build with `RoadSense/Build macOS` / `Build WebGL`.
 
 ## Experiences
 
@@ -17,13 +17,13 @@ The local village activities and Sopo Del retain their deterministic bicycle con
 
 ## Pitch demo
 
-For the presenting laptop, fetch and check out `codex/demo-ready`. It contains the same consolidated code as PR #1; the individual improvement PRs are superseded by that PR.
+For the presenting laptop, fetch and check out `codex/demo-ready`. This alias follows the RoadSense integration; PR #1 is already merged and new changes use PR #18. See the [macOS handoff](docs/ROAD_SENSE_HANDOFF.md) for the installed app revision and remaining user checks.
 
-Choose **Mobil** or **Motor**, then **Demo singkat · Hak utama**. This opens Pasar Bunga directly. The demo uses a separate session and leaves saved progress unchanged.
+From the **Play / Options / Exit** home, choose **Play**, choose the **Mobil** or **Motor** card, then **Mode lainnya** > **Coba demo · Hak utama**. Follow WASD practice, then hold **S** to brake to a stop. This practice has no penalties or saved progression; it then restores the real journey. Later braking and indicator hints follow the situation. This opens Pasar Bunga; the demo leaves saved progress unchanged. **F1** opens the paused controls guide, and **Options** contains audio settings. WebGL omits Exit.
 
-1. Use **F2** on the main menu to enter the demo, or choose its button. Hold **W** toward the occupied zebra crossing to show a violation. Release the key when the feedback opens.
-2. Show the explanation, correct action, and visible legal citation. **Lihat cara benar** plays the existing driving coach. **Tab** returns to the feedback.
-3. Press **R** to retry. Use **Space** to stop before the crossing. Wait for the pedestrian. At the next intersection, stop before the yield line and give way to cross traffic. **Lihat cara benar** is the live backup for this full sequence.
+1. Use **F2** on the main menu to enter the demo, or choose it from **Play > Mode lainnya**. Complete the initial movement practice, then hold **S** until stopped. After the real session is restored, hold **W** toward the occupied zebra crossing to show a violation. Release the key when the feedback opens.
+2. Show the explanation, correct action, and visible legal citation. **Lihat contoh** plays the existing driving coach. **Tab** returns to the feedback.
+3. Press **R** to retry. Use **Space** to stop before the crossing. Wait for the pedestrian. At the next intersection, stop before the yield line and give way to cross traffic. **Lihat contoh** is the live backup for this full sequence.
 4. Finish at the green checkpoint. The demo ends with its actual mistake count. **Ulangi demo** starts a fresh session.
 
 | Pitch segment | Time |
@@ -38,14 +38,16 @@ Choose **Mobil** or **Motor**, then **Demo singkat · Hak utama**. This opens Pa
 
 The map preview is optional. Limit it to 15 seconds within the prototype section. Keep a recording of the rehearsed demo on the presenting laptop.
 
-Before presenting, use Unity **6000.3.27f1** on the other laptop. Check the demo in both vehicle modes at **1280 × 720**. Try violation, retry, **Lihat cara benar**, pause/resume, completion, replay, and return to the saved journey. Confirm that the earlier save is unchanged. Build and rehearse on that laptop. See the verification section below for automated checks; rehearse on the presentation hardware as well.
+Before presenting, use Unity **6000.3.27f1** on the other laptop. Check the demo in both vehicle modes at **1280 × 720**. Try violation, retry, **Lihat contoh**, pause/resume, completion, replay, and return to the saved journey. Confirm that the earlier save is unchanged. Build and rehearse on that laptop. See the verification section below for automated checks; rehearse on the presentation hardware as well.
 
 ## Controls
 
 | Input | Action |
 |---|---|
+| F1 | Open the controls guide |
 | W / Up | Accelerate |
-| S / Down / Space | Brake |
+| S / Down | Brake, then slow reverse after stopping; brake only during the guided tutorial |
+| Space | Brake only |
 | A / D or Left / Right | Steer |
 | Q / E | Left / right indicator; press again to cancel |
 | L | Motorcycle headlight |
@@ -74,7 +76,7 @@ Run batch Unity against an isolated copy, not an editor project that another per
 - `JalanKita.EditorTools.IntegrationChecks.RunSimulation`: save migration, local driving physics, all seven player models, traffic/lamp state, all eight activities and variations, full ten-stage route, steering/audio, exploration, and six map datasets. Use `-batchmode -nographics -quit -executeMethod`.
 - `JalanKita.EditorTools.ResultFlowChecks.Run`: Play-mode completion/feedback cards, checkpoint practice, save isolation, visible citations, pitch retry/demo/completion/replay, scenario-step navigation guards, arrows, map transitions, and listener lifecycle. Use `-batchmode -nographics -executeMethod` without `-quit`; the runner exits with its result.
 - `StreetLookChecks.Run`, `ScenarioAtmosphereChecks.Run`, `VehicleChecks.Capture`, and `TrafficChecks.Capture` create isolated visual evidence. Rendering checks need graphics enabled.
-- `ProjectSetup.BuildMac` / `ProjectSetup.BuildWeb` build the current prepared project. Do not rerun `CreateProjectAssets` merely to build: it recreates project settings and the scene.
+- `ProjectSetup.BuildMac` produces `Unity/Builds/macOS/RoadSense.app` for native Apple Silicon ARM64 with Mono; `ProjectSetup.BuildWeb` builds WebGL and installs the RoadSense favicons. `BrandChecks.Run` checks the web icon exports and template links without requiring the WebGL module. Both builds set the public product/team identity while preserving the standalone bundle ID `id.jalankita.hackathon`, existing PlayerPrefs keys, and canonical editor storage names. They build the current prepared project. Do not rerun `CreateProjectAssets` merely to build: it recreates project settings and the scene.
 
 Native QA additionally checks layout/keyboard navigation at normal and small windows, each vehicle in playable modes, lights/steering, actual menu transitions, and real saved sessions. Automated audio tests check signal/mute behavior and finite output; they do not replace listening tests.
 
