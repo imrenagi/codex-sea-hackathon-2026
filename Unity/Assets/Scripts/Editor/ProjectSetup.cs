@@ -162,22 +162,63 @@ namespace JalanKita.EditorTools
                 destination = args[outputIndex + 1];
             }
             Build(BuildTarget.WebGL, destination);
+            ApplyWebBranding(destination);
         }
 
         [MenuItem("Jalan Kita/Build macOS")]
-        public static void BuildMac() => Build(BuildTarget.StandaloneOSX, "Builds/macOS/Jalan Kita.app");
+        public static void BuildMac()
+        {
+#if UNITY_EDITOR_OSX
+            UnityEditor.OSXStandalone.UserBuildSettings.architecture = UnityEditor.Build.OSArchitecture.ARM64;
+            PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
+            Build(BuildTarget.StandaloneOSX, "Builds/macOS/RoadSense.app");
+#else
+            throw new System.PlatformNotSupportedException("Build RoadSense ARM64 on macOS.");
+#endif
+        }
+
+        internal static void ApplyWebBranding(string destination)
+        {
+            string exports = Path.GetFullPath(Path.Combine(Application.dataPath, "../../Brand/exports"));
+            Directory.CreateDirectory(Path.Combine(destination, "TemplateData"));
+            File.Copy(Path.Combine(exports, "favicon.ico"), Path.Combine(destination, "TemplateData/favicon.ico"), true);
+            foreach (string name in new[] { "favicon.ico", "favicon-16.png", "favicon-32.png", "favicon-48.png", "apple-touch-icon.png" })
+                File.Copy(Path.Combine(exports, name), Path.Combine(destination, name), true);
+            string index = Path.Combine(destination, "index.html");
+            string html = File.ReadAllText(index);
+            if (!html.Contains("</head>")) throw new System.InvalidOperationException("WebGL template has no closing head.");
+            const string links = "<link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\">\n"
+                + "<link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"favicon-32.png\">\n";
+            File.WriteAllText(index, html.Replace("</head>", links + "</head>"));
+        }
 
         static void Build(BuildTarget target, string destination)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(destination));
-            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Brand/RoadSenseIcon.png");
+            if (!icon) throw new System.InvalidOperationException("RoadSense build icon is missing.");
+            PlayerSettings.SetIcons(UnityEditor.Build.NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
+            string company = PlayerSettings.companyName, product = PlayerSettings.productName;
+            try
             {
-                scenes = new[] { ScenePath },
-                locationPathName = destination,
-                target = target,
-            });
-            if (report.summary.result != BuildResult.Succeeded)
-                throw new System.InvalidOperationException($"Build {target}: {report.summary.result}");
+                // Keep editor/other-platform preference paths stable; macOS saves use the unchanged bundle ID.
+                PlayerSettings.companyName = "We Will Handle";
+                PlayerSettings.productName = "RoadSense";
+                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+                {
+                    scenes = new[] { ScenePath },
+                    locationPathName = destination,
+                    target = target,
+                });
+                if (report.summary.result != BuildResult.Succeeded)
+                    throw new System.InvalidOperationException($"Build {target}: {report.summary.result}");
+                Debug.Log($"RoadSense build ready: {Path.GetFullPath(destination)}");
+            }
+            finally
+            {
+                PlayerSettings.companyName = company;
+                PlayerSettings.productName = product;
+            }
         }
     }
 }
