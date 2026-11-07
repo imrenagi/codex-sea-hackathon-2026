@@ -17,6 +17,7 @@ namespace JalanKita
             string Meta { get; }
             string Description { get; }
             string Notice { get; }
+            int Stars { get; }
             string ActionLabel { get; }
             Rule[] Rules { get; }
             bool Confirm { get; }
@@ -30,6 +31,7 @@ namespace JalanKita
             public string Meta { get; set; }
             public string Description { get; set; }
             public string Notice { get; set; }
+            public int Stars { get; set; } = -1;
             public string ActionLabel { get; set; }
             public Rule[] Rules { get; set; } = Array.Empty<Rule>();
             public bool Confirm { get; set; }
@@ -75,6 +77,7 @@ namespace JalanKita
                 AddBrowserImage(detail, item.Asset, "selection-detail-image");
                 AddLabel(detail, item.Meta, "selection-detail-meta kicker");
                 AddLabel(detail, item.Title, "selection-detail-title heading");
+                if(item.Stars>=0) AddLabel(detail,PracticeRating.Symbols(item.Stars)+"  "+GameText.Get("rating.best",item.Stars),"subhead");
                 AddLabel(detail, item.Description, "selection-detail-copy copy");
                 if (!string.IsNullOrEmpty(item.Notice)) AddLabel(detail, item.Notice, "selection-detail-notice objective-detail");
                 if (item.Rules.Length > 0)
@@ -113,7 +116,10 @@ namespace JalanKita
                 var body = Element(card, "selection-card-body");
                 AddLabel(body, item.Title, "selection-card-title");
                 AddLabel(body, item.Meta, "selection-card-meta");
-                foreach (var child in card.Query<VisualElement>().ToList()) child.pickingMode = PickingMode.Ignore;
+                if(item.Stars>=0) AddLabel(body,PracticeRating.Symbols(item.Stars),"selection-card-meta");
+                foreach (var child in card.Query<VisualElement>().ToList())
+                    if (child != card) child.pickingMode = PickingMode.Ignore;
+                card.pickingMode = PickingMode.Position;
                 card.RegisterCallback<FocusInEvent>(_ => Select(current));
                 cards.Add(item, card);
             }
@@ -153,6 +159,7 @@ namespace JalanKita
         {
             var items = new List<ISelectionItem> { new SelectionItem {
                 Id = "tutorial", Title = GameText.Get("level.tutorial.title"), Asset = "mission_tutorial",
+                Stars = PracticeScore.Load(mode,"tutorial").bestStars,
                 Meta = GameText.Get("home.practice"), Description = GameText.Get("level.tutorial.description"),
                 Notice = GameText.Get("level.tutorial.detail"), ActionLabel = GameText.Get("level.tutorial.start"), Action = StartPitchDemo } };
             string[] ids = { "preparation", "signals", "priority", "lanes", "focus", "straight", "left_turn", "right_turn", "railway", "ambulance" };
@@ -164,7 +171,8 @@ namespace JalanKita
                 if (!Resources.Load<Texture2D>("UI/Thumbnails/" + asset)) asset = "mission_" + fallback[i];
                 items.Add(new SelectionItem { Id = "checkpoint-" + i,
                     Title = GameText.Get("level.checkpoint.title", i + 1, stage.Title), Asset = asset,
-                    Meta = stage.Location, Description = stage.Instruction, Notice = GameText.Get("level.checkpoint.detail"),
+                    Meta = stage.Location, Description = stage.Instruction, Notice = GameText.Get("rating.criteria"),
+                    Stars = PracticeScore.Load(mode,"checkpoint-"+i).bestStars,
                     Rules = StageRules(i), ActionLabel = GameText.Get("level.checkpoint.start"), Action = () => JumpToMission(index) });
             }
             return items;
@@ -182,8 +190,8 @@ namespace JalanKita
                 items.Add(new SelectionItem { Id = "mission-" + activity.Id, Title = activity.Title,
                     Asset = "mission_" + activity.Id, Meta = activity.Focus,
                     Description = activity.Brief, Rules = rules.Distinct().ToArray(),
-                    Notice = saved == null ? GameText.Get("text.not_attempted") : resume ? GameText.Get("missions.in_progress", saved.attempts)
-                        : GameText.Get("missions.completed", saved.completions, saved.bestMistakes),
+                    Stars = PracticeScore.Load(mode,"mission-"+activity.Id).bestStars,
+                    Notice = GameText.Get("rating.criteria") + (resume ? " · "+GameText.Get("missions.in_progress",saved.attempts):""),
                     ActionLabel = GameText.Get(resume ? "text.continue" : "text.start"), Action = () => StartMission(activity, saved) });
             }
             return items;
@@ -201,7 +209,7 @@ namespace JalanKita
                     ActionLabel = GameText.Get("text.start"), Action = StartNew });
             else
             {
-                string resume = stored.next == All.Length && stored.after >= 0 ? GameText.Get("text.view_journey_results")
+                string resume = stored.next == RouteStage.All.Length && stored.after >= 0 ? GameText.Get("text.view_journey_results")
                     : stored.next > 0 ? GameText.Get("text.continue_journey") : GameText.Get("text.continue_preparation");
                 items.Add(new SelectionItem { Id = "journey-resume", Title = resume, Asset = "mission_lanes",
                     Meta = GameText.Get("selection.journey"), Description = GameText.Get("chooser.saved_journey.description"),

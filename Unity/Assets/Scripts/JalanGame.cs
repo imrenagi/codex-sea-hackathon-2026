@@ -283,7 +283,7 @@ namespace JalanKita
             }
             else if (page == Page.Checkpoint)
             {
-                if (Input.GetKeyDown(KeyCode.R) && (PitchComplete || !journey.Finished)) Retry();
+                if (Input.GetKeyDown(KeyCode.R) && (PitchComplete || !journey.Finished || practiceStart >= 0)) Retry();
                 else if (Input.GetKeyDown(KeyCode.Escape)) BackToMenu();
             }
             else if (page == Page.Progress && pitchDemo && Input.GetKeyDown(KeyCode.R)) RestartDemoTutorial();
@@ -672,6 +672,7 @@ namespace JalanKita
             AddLabel(content, GameText.Get("tutorial.complete"), "heading");
             AddLabel(content, GameText.Get(demoTutorial.Scenario.CompletionSummaryKey), "copy");
             AddLabel(content, GameText.Get("demo.session_summary", DemoDuration(), journey.MistakeCount), "copy");
+            ShowTutorialScore(content);
             var actions = Element(content, "row actions");
             AddButton(actions, GameText.Get(practiceChooser ? "home.practice" : "navigation.explore_modes"),
                 () => { if (practiceChooser) ShowPracticeChooser(); else ShowPlayChooser(true); }, "primary");
@@ -726,6 +727,7 @@ namespace JalanKita
             learner = null;
             practiceStart = stage;
             journey = new Journey(mode, new JourneySave { next = stage }, persistent: false);
+            BeginPracticeScore();
             progress.tooltip = GameText.Get("text.progress_tab");
             district.Snap();
             toast.text = GameText.Get("mission.practice_started", stage + 1);
@@ -808,7 +810,9 @@ namespace JalanKita
                 AddButton(content, GameText.Get("text.open_official_source"), () => Application.OpenURL(Lesson.Signals), "quiet");
             });
             var actions = Element(sheet, "sheet-actions");
-            var retry = AddButton(actions, GameText.Get("example.retry"), Retry, "big primary");
+            AddLabel(body, GameText.Get(journey.Activity != null ? "rating.recovery_mission" : practiceStart >= 0 || pitchDemo ? "rating.recovery" : "rating.recovery_journey"), "copy");
+            AddButton(actions, GameText.Get("rating.continue"), ContinueAfterViolation, "big primary");
+            var retry = AddButton(actions, GameText.Get(journey.Activity != null ? "rating.restart_mission" : "example.retry"), Retry, "big quiet");
             if (journey.Stage > 0)
             {
                 bool available = ExampleProvider.TryGetExample(journey, out _);
@@ -816,10 +820,7 @@ namespace JalanKita
                 example.SetEnabled(available);
                 if (!available) AddLabel(body, GameText.Get("example.unavailable"), "copy");
             }
-            AddButton(actions, GameText.Get("text.main_menu_esc"), BackToMenu, "quiet menu-action");
-            AddLabel(sheet, journey.Stage > 0
-                ? GameText.Get("text.scroll_for_details_r_checkpoint_d_example_esc_menu")
-                : GameText.Get("text.r_retry_preparation_esc_menu"), "result-keys");
+            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet menu-action");
         }
 
         VisualElement Result(string stamp, string tone, string caption)
@@ -913,6 +914,11 @@ namespace JalanKita
         void Retry()
         {
             sound.RetryCue();
+            if (page == Page.Lesson && journey.Activity != null)
+            { StartMission(journey.Activity, journey.Save, restart: true); return; }
+            if (practiceStart >= 0 && page == Page.Checkpoint && completedPracticeStage >= 0)
+            { JumpToMission(completedPracticeStage); return; }
+            if (practiceStart >= 0) BeginPracticeScore();
             if (pitchDemo) { RestartDemoTutorial(); return; }
             journey.Retry();
             district.Snap();
@@ -1033,6 +1039,7 @@ namespace JalanKita
             }
             SetPage(Page.Checkpoint);
             int completed = journey.Stage - 1;
+            if (practiceStart >= 0) { ShowPracticeScore(completed); return; }
             var sheet = Result(GameText.Get("text.mission_complete_405e76"), "good",
                 GameText.Get("mission.completed_title", journey.Stage, All[completed].Title));
             string[] recaps =
@@ -1058,8 +1065,6 @@ namespace JalanKita
                 ContinueCheckpoint, "big primary");
             if (!journey.Finished) AddButton(actions, GameText.Get("text.retry_from_checkpoint"), Retry, "big quiet");
             AddButton(actions, GameText.Get("text.menu"), BackToMenu, "big quiet");
-            AddLabel(sheet, journey.Finished ? practiceStart >= 0 ? GameText.Get("text.enter_practice_results_esc_menu") : GameText.Get("text.enter_final_quiz_esc_menu")
-                : GameText.Get("text.enter_continue_r_retry_checkpoint_esc_menu"), "result-keys");
         }
 
         void ContinueCheckpoint()

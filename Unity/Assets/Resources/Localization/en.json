@@ -2916,6 +2916,54 @@
     {
       "key": "selection.journey",
       "value": "Saved journey · 10 checkpoints"
+    },
+    {
+      "key": "rating.result",
+      "value": "{0}/3 stars · {1} mistakes · {2} safety violations"
+    },
+    {
+      "key": "rating.best",
+      "value": "Best: {0}/3 stars"
+    },
+    {
+      "key": "rating.criteria",
+      "value": "1 star: finish. 2 stars: finish with no safety violations. 3 stars: finish with no recorded mistakes. Empty stars mean no star earned yet."
+    },
+    {
+      "key": "rating.disclaimer",
+      "value": "Prototype game rating, not an official assessment or legal severity classification. Incomplete exercise actions are not classified as safety violations; other detected rules are."
+    },
+    {
+      "key": "rating.independent",
+      "value": "Practice stars are saved separately; your journey progress is unchanged."
+    },
+    {
+      "key": "rating.continue",
+      "value": "Continue from checkpoint"
+    },
+    {
+      "key": "rating.recovery",
+      "value": "Continue from the checkpoint keeps your counted mistakes. Restart practice starts a fresh attempt."
+    },
+    {
+      "key": "rating.retry",
+      "value": "Retry this level"
+    },
+    {
+      "key": "rating.next",
+      "value": "Next practice level"
+    },
+    {
+      "key": "rating.restart_mission",
+      "value": "Restart mission"
+    },
+    {
+      "key": "rating.recovery_mission",
+      "value": "Continue recovers from this checkpoint and keeps counted mistakes. Restart mission begins a fresh scored run from the start."
+    },
+    {
+      "key": "rating.recovery_journey",
+      "value": "Continue and retry recover from this checkpoint. Your journey mistake history is retained."
     }
   ]
 }

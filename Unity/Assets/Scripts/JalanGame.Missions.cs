@@ -139,9 +139,11 @@ namespace JalanKita
         {
             SetPage(Page.Progress);
             var activity = journey.Activity;
+            if(journey.Finished) PracticeScore.RecordMission(mode,activity,journey.Save);
             bool scenario = activity.Kind == MissionKind.Scenario;
             AddLabel(dialog, journey.Finished ? scenario ? GameText.Get("text.mission_complete") : GameText.Get("text.test_complete") : GameText.Get("text.progress_saved"), "kicker");
             AddLabel(dialog, activity.Title, "heading");
+            if(journey.Finished) AddScoreSummary(dialog,journey.Save.mistakes,PracticeScore.Load(mode,"mission-"+activity.Id).bestStars);
             AddLabel(dialog, journey.Finished ? scenario ? GameText.Get("text.destination_reached_safely") : GameText.Get("text.latest_attempt_passed")
                 : GameText.Get("text.continue_or_choose_another_activity"), "copy");
             AddLabel(dialog, GameText.Get("missions.attempts", journey.Save.attempts, journey.MistakeCount), "copy");

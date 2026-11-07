@@ -283,6 +283,16 @@ namespace JalanKita
             ResetEncounter();
         }
 
+        // Recovery is deliberately from the current checkpoint, never from inside a collision/barrier.
+        // Unlike a fresh attempt, it preserves all counted violations for feedback and rating.
+        public void ContinueAfterFailure()
+        {
+            if (!Failure.HasValue) return;
+            Save.retryPending = false;
+            ResetEncounter();
+            Persist();
+        }
+
         void ResetEncounter()
         {
             Traffic = new TrafficRoster(unchecked(trafficSeed + Save.variant * 7919));
