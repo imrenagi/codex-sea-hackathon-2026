@@ -518,6 +518,7 @@ namespace JalanKita
 
         void Retry()
         {
+            sound.RetryCue();
             if (PitchComplete) { StartPitchDemo(); return; }
             journey.Retry();
             district.Snap();

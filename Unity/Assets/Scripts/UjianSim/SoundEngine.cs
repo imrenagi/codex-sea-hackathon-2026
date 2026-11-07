@@ -132,14 +132,24 @@ namespace UjianSim.Game
         {
             if (violation)
             {
-                Tone(660, 0, 0.35, Wave.Sine, 0.18);
-                Tone(495, 0.18, 0.5, Wave.Sine, 0.16);
+                // A soft downward phrase leaves room for the explanation.
+                Tone(392, 0, 0.24, Wave.Triangle, 0.12);
+                Tone(330, 0.12, 0.24, Wave.Sine, 0.11);
+                Tone(262, 0.24, 0.32, Wave.Sine, 0.10);
             }
             else
             {
+                Tone(262, 0, 0.55, Wave.Sine, 0.06);
                 double[] notes = { 523, 659, 784, 1047 };
-                for (int i = 0; i < notes.Length; i++) Tone(notes[i], i * 0.11, 0.4, Wave.Triangle, 0.14);
+                for (int i = 0; i < notes.Length; i++) Tone(notes[i], i * 0.10, 0.32, Wave.Triangle, 0.11);
+                Tone(784, 0.30, 0.40, Wave.Sine, 0.06);
             }
+        }
+
+        public void RetryCue()
+        {
+            Tone(440, 0, 0.14, Wave.Sine, 0.07);
+            Tone(587, 0.09, 0.20, Wave.Sine, 0.07);
         }
 
         public void UpdateFrame(float dt, SoundFrame f)
@@ -150,7 +160,7 @@ namespace UjianSim.Game
                 float rpm = Mathf.Abs(f.Speed) / (moto ? 18f : 20f);
                 float b = moto ? 62f : 34f;
                 tEngineFreq = b * (1f + rpm * 2.6f);
-                tEngineCut = 280f + f.Throttle * 900f + rpm * 600f;
+                tEngineCut = (moto ? 460f : 240f) + f.Throttle * (moto ? 1100f : 700f) + rpm * 600f;
                 tEngineGain = (moto ? 0.07f : 0.06f) + f.Throttle * 0.05f;
             }
             else tEngineGain = 0f;
@@ -194,11 +204,12 @@ namespace UjianSim.Game
             }
             else bellTimer = 0f;
 
-            tWind = 0.035f;
+            tWind = f.Motorcycle.HasValue ? 0.018f + Mathf.Clamp01(Mathf.Abs(f.Speed) / 18f) * 0.025f : 0.006f;
             tRain = f.Rain ? 0.05f : 0f;
 
-            // Town ambience: a distant motorcycle passing, or a bird.
-            ambienceTimer -= dt;
+            // Keep menus and feedback quiet for the instructor or presenter.
+            if (f.Motorcycle.HasValue) ambienceTimer -= dt;
+            else ambienceTimer = 2f;
             if (ambienceTimer <= 0f)
             {
                 if (random.NextDouble() < 0.6) Tone(110 + random.NextDouble() * 40, 0, 2.4, Wave.Saw, 0.012, 70);
