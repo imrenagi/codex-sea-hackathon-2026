@@ -35,7 +35,14 @@ namespace JalanKita.EditorTools
             try
             {
                 foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode))) { Verify(game, mode); VerifyMissionSelection(game, mode); }
-                Debug.Log("Result screens passed: both vehicles, all ten cards, pause/resume and checkpoint retry.");
+                VerifyArrowDirections();
+                IntegrationChecks.VerifyUI(game);
+                VerifyMirrorsAndLook(game);
+                SignalChecks.Verify(game);
+                VerifySignalTransitions(game);
+                VerifyDrivingKeyboard(game);
+                VerifyControls(game);
+                Debug.Log("Result flow checks passed: both vehicles, checkpoints, paused mission picker, saves, pitch, maps, keyboard, controls and mirrors.");
             }
             finally { game.enabled = true; Call(game, "ShowMenu"); }
         }
@@ -49,15 +56,7 @@ namespace JalanKita.EditorTools
             SessionState.SetBool(Running, false);
             try
             {
-                game.enabled = false;
-                foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode))) { Verify(game, mode); VerifyMissionSelection(game, mode); }
-                VerifyArrowDirections();
-                IntegrationChecks.VerifyUI(game);
-                VerifyMirrorsAndLook(game);
-                SignalChecks.Verify(game);
-                VerifySignalTransitions(game);
-                VerifyDrivingKeyboard(game);
-                Debug.Log("Result flow checks passed: both vehicles, all ten completion cards, mission selection, saved progress, arrow directions, continuous resume, final quiz and checkpoint retry.");
+                RunInOpenEditor();
                 EditorApplication.Exit(0);
             }
             catch (Exception error)
@@ -87,6 +86,7 @@ namespace JalanKita.EditorTools
                 Call(game, "FixedUpdate");
                 Require(run.Position == position && run.Speed == speed, "Pause preserves driving state");
                 Call(game, "ContinueCheckpoint");
+                AcknowledgeControls(game);
                 Require(run.Position == position && run.Speed == speed, "Continue never teleports or resets speed");
                 Require(Page(game) == (run.Finished ? "After" : "Drive"), "Final completion opens quiz");
                 if (run.Finished) break;
@@ -104,6 +104,7 @@ namespace JalanKita.EditorTools
             Require(root.Q<Label>(className: "stamp")?.text == "PELANGGARAN!", "Violation banner");
             Require(root.Query<VisualElement>(className: "fold").ToList().Count == 2, "Explanation and legal folds");
             Call(game, "Retry");
+            AcknowledgeControls(game);
             Require(Page(game) == "Drive" && run.Stage == 1 && run.Speed == 0
                 && run.Position.y == RouteStage.All[0].End, "Retry uses the saved checkpoint");
             Require(!root.Q("dialog").ClassListContains("result-layout"), "Result styling is cleared");
@@ -125,18 +126,19 @@ namespace JalanKita.EditorTools
                 {
                     Call(game, "JumpToMission", 1);
                     Call(game, "RefreshHud");
-                    var picker = root.Q<Button>("missionPicker");
-                    Require(picker.text.Contains(RouteStage.All[1].Title), "Current mission title is visible");
-                    using (var open = NavigationSubmitEvent.GetPooled()) { open.target=picker; picker.SendEvent(open); }
-                    Require(!root.Q("missionPickerPopup").ClassListContains("hidden"), "Mission title opens picker");
-                    // Exercise the actual Button activation handler, including keyboard support.
-                    var button = root.Q<Button>("mission" + (stage+1).ToString("00"));
-                    Require(button != null && button.focusable, "Mission selector is a button");
-                    Require(button.text.Contains(RouteStage.All[stage].Title) && button.text.StartsWith((stage+1).ToString("00")), "Every choice includes mission number and title");
-                    button.Focus();
-                    using (var submit = NavigationSubmitEvent.GetPooled()) { submit.target=button; button.SendEvent(submit); }
+                    AcknowledgeControls(game);
+                    Call(game, "ShowProgress");
+                    var fold = root.Query<VisualElement>(className: "fold").ToList().Find(f =>
+                        f.Q<Label>(className: "fold-title")?.text == "Latihan dari checkpoint");
+                    Require(fold != null, "Pause contains checkpoint picker");
+                    Submit(fold.Q<Button>(className: "fold-head"));
+                    Require(fold.ClassListContains("open"), "Checkpoint picker opens from pause");
+                    string prefix = (stage + 1).ToString("00") + " · ";
+                    var button = fold.Query<Button>().ToList().Find(b => b.text.StartsWith(prefix));
+                    Require(button != null && button.focusable && button.text.Contains(RouteStage.All[stage].Title), "Practice choice has mission number and title");
+                    Submit(button);
+                    AcknowledgeControls(game);
                     var run = (Journey)Field(game, "journey");
-                    Require(root.Q("missionPickerPopup").ClassListContains("hidden"), "Selecting a mission closes picker");
                     var start = RouteStage.All[Mathf.Max(0, stage-1)];
                     Require(run.Stage == stage && run.Position == start.Checkpoint && run.Heading == start.Heading
                         && run.Speed == 0 && !run.Failure.HasValue, $"Selected mission {stage} resets to its start pose: got {run.Stage}, {run.Position}, {run.Heading}, page {Page(game)}");
@@ -154,6 +156,7 @@ namespace JalanKita.EditorTools
                     Call(game, "AnnounceCheckpoint");
                     Require(root.Q<Label>(className:"checkpoint-saved").text.Contains("Latihan"), "Practice never claims skipped missions saved");
                     Call(game, "ContinueCheckpoint");
+                    AcknowledgeControls(game);
                     Require(Page(game) == (run.Finished ? "Progress" : "Drive"), "Practice finishes without overwriting quiz");
                     Require(PlayerPrefs.GetString(key) == original, "Jump and completion preserve saved journey");
                 }
@@ -300,6 +303,81 @@ namespace JalanKita.EditorTools
             Call(game, "RefreshJaksaHud");
             Require(root.Q("signalPanel").ClassListContains("hidden"), "Exploration does not show stale training signal");
             Call(game, "ShowMenu");
+        }
+
+        static void VerifyControls(JalanGame game)
+        {
+            var root = game.GetComponent<UIDocument>().rootVisualElement;
+            var pageType = typeof(JalanGame).GetNestedType("Page", BindingFlags.NonPublic);
+            var seen = (System.Collections.Generic.HashSet<string>)Field(game, "controlsSeen");
+            Call(game, "ShowMenu");
+            var home = root.Q("dialog").Query<Button>().ToList();
+            Require(home.Count == 3 && home[0].text == "Play" && home[1].text == "Options" && home[2].text == "Exit", "Native home has exactly Play / Options / Exit");
+            Submit(home[1]);
+            Require(Page(game) == "Options", "Options route");
+            var guide = root.Q("dialog").Query<Button>().ToList().Find(b => b.text.Contains("Kontrol berkendara"));
+            Submit(guide);
+            Require(Page(game) == "Controls", "Options opens manual controls");
+            Submit(root.Q<Button>(className: "tutorial-start"));
+            Require(Page(game) == "Options", "Manual controls returns to Options");
+            foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
+            {
+                Set(game, "mode", mode);
+                seen.Clear();
+                Call(game, "StartPitchDemo");
+                Require(Page(game) == "Controls", "First demo enters paused tutorial " + mode);
+                var run = (Journey)Field(game, "journey");
+                var position = run.Position;
+                Call(game, "FixedUpdate");
+                Require(run.Position == position, "Tutorial does not advance learner");
+                Call(game, "CloseControls", false);
+                Require(Page(game) == "Menu" && seen.Count == 0, "Cancel tutorial does not acknowledge it");
+                Call(game, "StartPitchDemo");
+                AcknowledgeControls(game);
+                Require(Page(game) == "Drive", "Accept first guide");
+                Call(game, "ShowProgress");
+                Call(game, "ShowControls", Enum.Parse(pageType, "Progress"), Enum.Parse(pageType, "Drive"), false);
+                Submit(root.Q<Button>(className: "tutorial-start"));
+                Require(Page(game) == "Progress", "Guide returns to pause");
+                Call(game, "ReturnToJourney");
+                Require(Page(game) == "Drive" && (bool)Field(game, "inputReleaseRequired"), "Pause resume restores input release latch");
+                seen.Clear();
+                Set(game, "pitchDemo", false);
+                Set(game, "journey", new Journey(mode, new JourneySave { next = 1 }, persistent: false));
+                Call(game, "Retry");
+                Require(Page(game) == "Controls", "First retry cannot bypass tutorial " + mode);
+                AcknowledgeControls(game);
+                seen.Clear();
+                Call(game, "StartJaksa");
+                Require(Page(game) == "Controls", "Exploration has its own first guide");
+                AcknowledgeControls(game);
+                Call(game, "ShowJaksaPause");
+                Call(game, "ShowControls", Enum.Parse(pageType, "JaksaPause"), Enum.Parse(pageType, "Jaksa"), false);
+                Submit(root.Q<Button>(className: "tutorial-start"));
+                Require(Page(game) == "JaksaPause", "Exploration help returns to pause");
+            }
+        }
+
+        internal static void AcknowledgeControls(JalanGame game)
+        {
+            if (Page(game) != "Controls") return;
+            var root = game.GetComponent<UIDocument>().rootVisualElement;
+            var start = root.Q<Button>(className: "tutorial-start");
+            Require(start != null, "Controls exposes a focused continue action");
+            var run = (Journey)Field(game, "journey");
+            var position = run.Position;
+            Call(game, "FixedUpdate");
+            Require(run.Position == position, "Tutorial freezes simulation");
+            Submit(start);
+            Require(Page(game) != "Controls" && (bool)Field(game, "inputReleaseRequired"), "Accepting guide requires release before driving");
+        }
+
+        static void Submit(Button button)
+        {
+            button.Focus();
+            using var submit = NavigationSubmitEvent.GetPooled();
+            submit.target = button;
+            button.SendEvent(submit);
         }
 
         static object Field(JalanGame game, string name) => typeof(JalanGame).GetField(name, Private).GetValue(game);
