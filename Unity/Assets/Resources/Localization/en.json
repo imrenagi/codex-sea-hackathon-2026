@@ -2908,6 +2908,14 @@
     {
       "key": "credits.hackathon",
       "value": "Built for SEA x OpenAI Hackathon"
+    },
+    {
+      "key": "selection.rules",
+      "value": "Rules to watch"
+    },
+    {
+      "key": "selection.journey",
+      "value": "Saved journey · 10 checkpoints"
     }
   ]
 }

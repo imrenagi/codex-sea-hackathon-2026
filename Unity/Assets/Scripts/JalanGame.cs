@@ -473,47 +473,11 @@ namespace JalanKita
             practiceChooser = practice;
             PrepareMenuScene();
             SetPage(Page.PlayChooser);
-            var content = MenuBody();
-            AddLabel(content, GameText.Get(practice ? "home.practice" : "text.choose_your_journey"), "heading");
-            var modes = Element(content, "row chooser-vehicles");
+            AddLabel(dialog, GameText.Get(practice ? "home.practice" : "text.choose_your_journey"), "heading");
+            var modes = Element(dialog, "row chooser-vehicles");
             AddChooserVehicle(modes, VehicleMode.Car, GameText.Get("text.car_a5cdf0"), DrivingGlyph.Kind.Steering);
             AddChooserVehicle(modes, VehicleMode.Motorcycle, GameText.Get("text.motorcycle_965701"), DrivingGlyph.Kind.Motorcycle);
-            var levels = Element(content, "chooser-levels");
-            if (practice)
-            {
-                AddLabel(levels, GameText.Get("level.choose.title"), "subhead chooser-summary");
-                AddJourneyLevelChoices(levels);
-                AddButton(content, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
-                return;
-            }
-            // Keep every choice in the same card list instead of hiding modes in nested dropdowns.
-            AddLabel(levels, GameText.Get("text.everyday_missions"), "subhead chooser-summary");
-            AddActivityChoices(levels, MissionKind.Scenario);
-            AddLabel(levels, stored == null ? GameText.Get("text.explore_full_journey")
-                : GameText.Get("text.explore_saved_journey"), "subhead chooser-summary");
-            AddChooserModeCard(levels, "city_sea_labs", GameText.Get("text.sopo_del_free_drive"),
-                GameText.Get("chooser.free_drive.description"), GameText.Get("text.start"), StartJaksa);
-            AddChooserModeCard(levels, "city_bundaran_hi", GameText.Get("text.map_previews_not_playable_yet"),
-                GameText.Get("text.pan_and_zoom_around_6_jakarta_areas_choose_sopo"),
-                GameText.Get("maps.view_preview"), ShowCityMaps);
-            if (stored == null)
-                AddChooserModeCard(levels, "mission_lanes", GameText.Get("text.full_journey_10_stages"),
-                    GameText.Get("chooser.full_journey.description"), GameText.Get("text.start"), StartNew);
-            else
-            {
-                string resume = stored.next == All.Length && stored.after >= 0 ? GameText.Get("text.view_journey_results")
-                    : stored.next > 0 ? GameText.Get("text.continue_journey") : GameText.Get("text.continue_preparation");
-                AddChooserModeCard(levels, "mission_lanes", resume,
-                    GameText.Get("chooser.saved_journey.description"), resume, Resume);
-                AddChooserModeCard(levels, "mission_preparation", GameText.Get("text.restart_journey"),
-                    GameText.Get("text.this_replaces_the_journey_progress_for_this_vehicle"),
-                    confirmNew ? GameText.Get("text.yes_restart_journey") : GameText.Get("text.restart_journey"), () =>
-                    {
-                        if (confirmNew) StartNew();
-                        else { confirmNew = true; ShowPlayChooser(); }
-                    });
-            }
-            AddButton(content, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
+            BuildSelectionBrowser(practice ? PracticeSelections() : PlaySelections(), ShowMenu);
         }
 
         void AddChooserVehicle(VisualElement parent, VehicleMode choice, string title, DrivingGlyph.Kind glyph)
@@ -632,11 +596,8 @@ namespace JalanKita
         {
             CloseCityPreview();
             SetPage(Page.CityMaps);
-            AddLabel(dialog, GameText.Get("text.jakarta_openstreetmap"), "kicker");
             AddLabel(dialog, GameText.Get("text.choose_map"), "heading");
-            AddLabel(dialog, GameText.Get("text.3d_city_previews_about_1_7_1_5_km"), "copy");
-            AddCityMapChoices();
-            AddButton(dialog, GameText.Get("text.main_menu"), ShowMenu, "quiet");
+            BuildSelectionBrowser(CitySelections(), ShowPlayChooser);
         }
 
         void OpenCityMap(int index)
@@ -1277,6 +1238,7 @@ namespace JalanKita
             RefreshHudControls();
             dialog.RemoveFromClassList("rule-card");
             dialog.RemoveFromClassList("result-layout");
+            dialog.RemoveFromClassList("selection-browser-card");
             dialog.Clear();
             ShowVehiclePreview(page == Page.PlayChooser || page == Page.Brief || page == Page.Preflight);
             if (value != Page.Drive && value != Page.Jaksa)

@@ -7,7 +7,6 @@ namespace JalanKita
     public sealed partial class JalanGame
     {
         VehiclePreview vehiclePreview;
-        Slider previewAngle;
         Label previewDescription;
 
         void ShowVehiclePreview(bool visible)
@@ -67,10 +66,6 @@ namespace JalanKita
             }
             previewDescription = AddLabel(panel, "", "objective-detail");
             AddLabel(panel, GameText.Get("vehicles.preview.drag"), "preview-hint");
-            previewAngle = new Slider(GameText.Get("vehicles.preview.angle"), 0, 360) { name = "vehicleAngle" };
-            previewAngle.AddToClassList("volume-control preview-angle");
-            previewAngle.RegisterValueChangedCallback(e => vehiclePreview.SetAngle(e.newValue));
-            panel.Add(previewAngle);
             RefreshVehiclePreview(0);
         }
 
@@ -81,7 +76,6 @@ namespace JalanKita
             var selected = VehicleCatalogue.Selected(mode);
             previewDescription.text = selected.Description;
             root.Q<Image>("vehiclePreview").tooltip = selected.Label + " · " + selected.Description;
-            previewAngle.SetValueWithoutNotify(vehiclePreview.Angle);
             foreach (var choice in root.Q("vehicleShowroom").Query<Button>(className: "vehicle-choice").ToList())
             {
                 bool active = ReferenceEquals(choice.userData, selected);

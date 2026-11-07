@@ -11,23 +11,8 @@ namespace JalanKita
         {
             catalogueKind = kind;
             SetPage(Page.Catalogue);
-            AddLabel(dialog, GameText.Get("missions.choose_activity", mode == VehicleMode.Car ? GameText.Get("text.car") : GameText.Get("text.motorcycle")), "kicker");
-            AddLabel(dialog, kind == MissionKind.Scenario ? GameText.Get("text.everyday_missions") : GameText.Get("level.choose.title"), "heading");
-            AddLabel(dialog, kind == MissionKind.Scenario
-                ? GameText.Get("text.one_goal_several_decisions_retry_difficult_sections_and_try")
-                : GameText.Get("text.choose_a_skill_to_test_results_and_attempts_are"), "copy");
-            var list = new ScrollView(ScrollViewMode.Vertical);
-            list.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
-            list.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
-            list.contentViewport.style.overflow = Overflow.Hidden;
-            list.AddToClassList("mission-list");
-            RevealFocusedChildren(list);
-            dialog.Add(list);
-            AddActivityChoices(list.contentContainer, kind);
-            var actions = Element(dialog, "row actions catalogue-footer");
-            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
-            AddButton(actions, kind == MissionKind.Scenario ? GameText.Get("text.view_skill_tests") : GameText.Get("text.view_everyday_missions"),
-                () => ShowCatalogue(kind == MissionKind.Scenario ? MissionKind.SkillTest : MissionKind.Scenario), "quiet");
+            AddLabel(dialog, GameText.Get(kind == MissionKind.Scenario ? "text.everyday_missions" : "level.choose.title"), "heading");
+            BuildSelectionBrowser(MissionSelections(kind), ShowPlayChooser);
         }
 
         // The primary chooser follows the real saved journey, not the separate skill-test catalogue.
