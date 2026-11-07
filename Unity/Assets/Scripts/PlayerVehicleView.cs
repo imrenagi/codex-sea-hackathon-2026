@@ -52,12 +52,12 @@ namespace JalanKita
             clock += dt;
             float distance = positioned ? Vector3.Distance(position, previousPosition) : 0;
             // Resets and checkpoint teleports must not spin wheels or trigger braking.
-            bool teleport = !positioned || distance > Mathf.Max(2, speedMetresPerSecond * dt * 4);
-            if (!teleport) rolling += distance;
-            if (!teleport && dt > 0 && previousSpeed - speedMetresPerSecond > dt * 2) brakeUntil = clock + .35f;
+            bool teleport = !positioned || distance > Mathf.Max(2, Mathf.Abs(speedMetresPerSecond) * dt * 4);
+            if (!teleport) rolling += speedMetresPerSecond < 0 ? -distance : distance;
+            if (!teleport && dt > 0 && Mathf.Abs(previousSpeed) - Mathf.Abs(speedMetresPerSecond) > dt * 2) brakeUntil = clock + .35f;
             if (teleport) { rolling = 0; brakeUntil = 0; }
             float wheelbase = mode == VehicleMode.Car ? 2.5f : 1.255f;
-            float turn = !teleport && dt > 0 && speedMetresPerSecond > .2f
+            float turn = !teleport && dt > 0 && Mathf.Abs(speedMetresPerSecond) > .2f
                 ? Mathf.Clamp(Mathf.Atan(wheelbase * Mathf.DeltaAngle(previousHeading, headingDegrees) * Mathf.Deg2Rad / dt / speedMetresPerSecond) * Mathf.Rad2Deg, -30, 30) : 0;
             float acceleration = !teleport && dt > 0 ? (speedMetresPerSecond - previousSpeed) / dt : 0;
             float lateral = !teleport && dt > 0 ? speedMetresPerSecond * Mathf.DeltaAngle(previousHeading, headingDegrees) * Mathf.Deg2Rad / dt : 0;
@@ -68,7 +68,7 @@ namespace JalanKita
                 : Mathf.Clamp(lateral * .45f, -2.4f, 2.4f), settle);
             previousPosition = position; previousSpeed = speedMetresPerSecond; previousHeading = headingDegrees; positioned = true;
             if (modernCar != null)
-                modernCar.Present(position, headingDegrees, speedMetresPerSecond, dt, headlight, indicator, clock < brakeUntil);
+                modernCar.Present(position, headingDegrees, speedMetresPerSecond, dt, headlight, indicator, clock < brakeUntil, signedSpeed: true);
             Root.transform.rotation = Quaternion.Euler(0, headingDegrees, 0) * Quaternion.Euler(bodyPitch, 0, bodyRoll);
             foreach (var p in steering) p.Part.localRotation = Quaternion.AngleAxis(turn, p.Axis) * p.Rest;
             foreach (var p in wheels) p.Part.localRotation = Quaternion.AngleAxis(rolling / p.Radius * Mathf.Rad2Deg, p.Axis) * p.Rest;
