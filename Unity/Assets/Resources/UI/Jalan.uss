@@ -188,3 +188,12 @@
 .volume-control .unity-base-field__label { color: #e9e6df; min-width: 115px; }
 .volume-control .unity-base-slider__tracker { background-color: #45474a; }
 .volume-control .unity-base-slider__dragger { background-color: #f3f1ec; }
+
+.sheet .rule-source { font-size: 15px; color: #eee8dc; }
+.compact .scrim { padding: 10px; }
+.compact .dialog { padding: 16px 20px; }
+.compact .hero { font-size: 50px; }
+.compact .result-layout { padding: 8px 0; }
+.compact .stamp { font-size: 50px; border-width: 4px; padding: 0 16px; }
+.compact .stamp-caption { margin-top: 15px; font-size: 16px; }
+.compact .sheet { margin-top: 12px; padding: 12px 14px 10px; }

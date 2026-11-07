@@ -45,6 +45,8 @@ namespace JalanKita
             sound = SoundEngine.Create(transform);
             root = GetComponent<UIDocument>().rootVisualElement;
             root.AddToClassList("jalan-root");
+            root.RegisterCallback<GeometryChangedEvent>(change =>
+                root.EnableInClassList("compact", change.newRect.height < 700 || change.newRect.width < 1000));
             root.pickingMode = PickingMode.Ignore;
             hud = root.Q("hud");
             var mirrors = new VisualElement { name="mirrors", pickingMode=PickingMode.Ignore };
