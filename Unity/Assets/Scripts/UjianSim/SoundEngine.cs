@@ -78,6 +78,10 @@ namespace UjianSim.Game
         public bool Muted { get; private set; }
         public float Volume { get; private set; } = 1f;
         public bool AmbienceEnabled { get; private set; } = true;
+        long renderedFrames;
+        public long RenderedFrames => System.Threading.Interlocked.Read(ref renderedFrames);
+        volatile float outputPeak;
+        public float OutputPeak => outputPeak;
 
         public static SoundEngine Create(Transform parent)
         {
@@ -89,6 +93,8 @@ namespace UjianSim.Game
             source.clip = AudioClip.Create("silence", sr, 1, sr, false);
             source.loop = true;
             source.spatialBlend = 0f;
+            source.priority = 0;
+            source.volume = 1f;
             source.playOnAwake = false;
             var engine = go.AddComponent<SoundEngine>();
             engine.silentClip = source.clip;
@@ -217,11 +223,12 @@ namespace UjianSim.Game
             else ringTimer = 0f;
 
             // Siren: a wail sweeping up and down every 2.4 s, louder as the ambulance closes in.
-            float near = float.IsInfinity(f.SirenDist) ? 0f : Mathf.Max(0f, 1f - f.SirenDist / 160f);
+            float near = float.IsInfinity(f.SirenDist) ? 0f : Mathf.Clamp01(1f - f.SirenDist / 220f);
             sirenPhase += dt;
             float sweep = 0.5f - 0.5f * Mathf.Cos(sirenPhase * Mathf.PI * 2f / 2.4f);
             tSirenFreq = 650f + 650f * sweep;
-            tSirenGain = 0.09f * near * near;
+            tSirenGain = 0.24f * near;
+            tEngineGain *= 1f - .55f * near;
 
             // Horn: a car's twin tone is lower than a motorcycle's single small horn.
             bool m = f.Motorcycle == true;
@@ -288,6 +295,7 @@ namespace UjianSim.Game
 #if !(UNITY_WEBGL && !UNITY_EDITOR)
         void OnAudioFilterRead(float[] data, int channels)
         {
+            float peak=0;
             double dt = 1.0 / rate;
             // Smoothing per sample: about 50–100 ms like setTargetAtTime in the web build.
             float slow = Coef(2f), mid = Coef(10f), fast = Coef(40f);
@@ -357,9 +365,12 @@ namespace UjianSim.Game
                 }
 
                 float outSample = Mathf.Clamp((float)s * master, -1f, 1f);
+                peak=Mathf.Max(peak,Mathf.Abs(outSample));
                 for (int ch = 0; ch < channels; ch++) data[i + ch] = outSample;
                 now += dt;
             }
+            System.Threading.Interlocked.Add(ref renderedFrames,data.Length/channels);
+            outputPeak=peak;
         }
 #endif
     }

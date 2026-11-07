@@ -81,6 +81,11 @@ namespace JalanKita
                 if (signal == 0) { if (run.Indicator != 0) run.ToggleIndicator(run.Indicator); }
                 else run.ToggleIndicator(signal);
             }
+            if (run.CityTraffic != null)
+            {
+                Vector2 forward=new(Mathf.Sin(run.Heading*Mathf.Deg2Rad),Mathf.Cos(run.Heading*Mathf.Deg2Rad));
+                remaining=Mathf.Min(remaining,run.CityTraffic.GapAhead(run.Position,forward,run.Mode==VehicleMode.Car?2.1f:1)-3);
+            }
             float desired = Mathf.Min(cruise, Mathf.Sqrt(2 * 5.1f * Mathf.Max(0, remaining)));
             var target = Boulevard.LookAhead(path, run.Position, 4);
             float steer = VehicleSteering.Pursue(run, target);

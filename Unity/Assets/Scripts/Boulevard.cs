@@ -129,6 +129,7 @@ namespace JalanKita
             BoulevardPedestrian = walk >= 0 && walk < 13
                 ? stage == 5 ? Boulevard.World(stage, -12 + walk * 1.85f, -14)
                 : Boulevard.World(stage, stage == 6 ? -14 : 14, -12 + walk * 1.85f) : null;
+            StepCityTraffic(dt);
             float exit = Vector2.Dot(Position - Boulevard.Center(stage), Boulevard.Exit(stage));
             float outgoingLane = Vector2.Dot(Position - Boulevard.Center(stage), new Vector2(Boulevard.Exit(stage).y, -Boulevard.Exit(stage).x));
             bool inside = Mathf.Abs(p.x) <= 17 && Mathf.Abs(p.y) <= 17;
@@ -183,11 +184,13 @@ namespace JalanKita
             if (Stage == 8)
             {
                 Tick(ref railTime, dt, Position.y >= 745);
+                StepCityTraffic(dt);
                 if (RailWarning && oldNose.y < Boulevard.RailLine && Nose.y >= Boulevard.RailLine) Fail(Rule.Railway);
                 if (RailWarning && Nose.y >= 797 && Position.y <= 804) Fail(Rule.Railway);
                 if (Position.y >= 850 && !Failure.HasValue) Advance();
                 return;
             }
+            StepCityTraffic(dt);
             if (Mathf.Abs(Position.x + 189) < 1.8f && Mathf.Abs(Position.y - 914) < 4.6f) Fail(Rule.Collision);
             if (emergencyTime < 0 && Position.y >= 924)
             {
@@ -202,6 +205,7 @@ namespace JalanKita
                 emergencyBlocked = blocked ? emergencyBlocked + dt : 0;
                 if (emergencyBlocked >= 3) Fail(Rule.Emergency);
                 float next = ambulance.y + 16.1f * dt;
+                next = Mathf.Min(next, ambulance.y + Mathf.Max(0, CityTraffic.GapAhead(ambulance,Vector2.up,2.2f)-2));
                 if (blocked) next = Mathf.Min(next, Position.y - 6);
                 Ambulance = new Vector2(ambulance.x, next);
                 if (Mathf.Abs(Position.x - ambulance.x) < 1.8f && Mathf.Abs(Position.y - ambulance.y) < 4) Fail(Rule.Collision);

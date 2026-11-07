@@ -186,10 +186,11 @@ namespace JalanKita
         bool phoneResolved;
         readonly bool persistent;
 
-        public Journey(VehicleMode mode, JourneySave save, bool persistent = true)
+        public Journey(VehicleMode mode, JourneySave save, bool persistent = true, int trafficSeed = 1)
         {
             Mode = mode; Save = save;
             this.persistent = persistent;
+            this.trafficSeed = trafficSeed;
             Retry();
         }
 
@@ -201,6 +202,7 @@ namespace JalanKita
             steering.Reset();
             Throttle = 0;
             Speed = wrongWay = overSpeed = 0;
+            ResetCityTraffic();
             ResetBoulevard();
             Indicator = lane = 0;
             rightSignalAge = leftSignalAge = 0;
@@ -406,6 +408,7 @@ namespace JalanKita
         {
             Save.next++;
             ResetBoulevard();
+            if (Stage == 5) ResetCityTraffic();
             if (persistent) Save.Store(Mode);
             CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = null;
         }
