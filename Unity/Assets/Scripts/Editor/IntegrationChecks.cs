@@ -40,7 +40,7 @@ namespace JalanKita.EditorTools
             }
         }
 
-        [MenuItem("Jalan Kita/Verify combined simulation")]
+        [MenuItem("RoadSense/Verify combined simulation")]
         public static void RunSimulation()
         {
             using var preferences = new SavedPreferences();

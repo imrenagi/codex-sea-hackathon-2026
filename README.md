@@ -1,6 +1,6 @@
 # RoadSense
 
-An Indonesian road-safety learning prototype by **We Will Handle**, built in Unity **6000.3.27f1**. Open `Unity/Assets/Scenes/KampungKenanga.unity` and enter Play mode, or build with `Jalan Kita/Build macOS` / `Build WebGL`.
+An Indonesian road-safety learning prototype by **We Will Handle**, built in Unity **6000.3.27f1**. Open `Unity/Assets/Scenes/RoadSense.unity` and enter Play mode, or build with `RoadSense/Build macOS` / `Build WebGL`.
 
 ## Experiences
 

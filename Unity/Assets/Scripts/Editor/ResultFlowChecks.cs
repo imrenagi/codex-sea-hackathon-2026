@@ -26,7 +26,7 @@ namespace JalanKita.EditorTools
             EditorApplication.EnterPlaymode();
         }
 
-        [MenuItem("Jalan Kita/Verify Result Screens (Play mode)")]
+        [MenuItem("RoadSense/Verify Result Screens (Play mode)")]
         public static void RunInOpenEditor()
         {
             var game = UnityEngine.Object.FindFirstObjectByType<JalanGame>();

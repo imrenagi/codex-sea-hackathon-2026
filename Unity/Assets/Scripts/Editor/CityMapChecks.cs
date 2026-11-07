@@ -6,7 +6,7 @@ namespace JalanKita.EditorTools
 {
     public static class CityMapChecks
     {
-        [MenuItem("Jalan Kita/Verify City Maps")]
+        [MenuItem("RoadSense/Verify City Maps")]
         public static void Run()
         {
             var square = new[] { new CityPoint { x = 0, z = 0 }, new CityPoint { x = 10, z = 0 },

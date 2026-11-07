@@ -15,7 +15,7 @@ namespace JalanKita.EditorTools
         const string Base="Assets/Resources/Traffic/";
         static readonly string Output=Path.GetFullPath("Builds/TrafficEvidence");
         static void Require(bool ok,string message){if(!ok)throw new InvalidOperationException("TRAFFIC: "+message);}
-        [MenuItem("Jalan Kita/Prepare traffic vehicles")]
+        [MenuItem("RoadSense/Prepare traffic vehicles")]
         public static void Prepare()
         {
             AssetDatabase.Refresh();
@@ -82,7 +82,7 @@ namespace JalanKita.EditorTools
             }
             Require(signals.Count(r=>view.Root.transform.InverseTransformPoint(Center(r)).x<0)==4,"Left/right lamp geometry balance");
         }
-        [MenuItem("Jalan Kita/Verify traffic integration")]
+        [MenuItem("RoadSense/Verify traffic integration")]
         public static void Run()
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);

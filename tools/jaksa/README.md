@@ -21,7 +21,7 @@ Authored low- and mid-rise buildings fill unmapped gaps without moving mapped fo
 - `JaksaDrive.cs`: independent exploration driving state, selected player vehicle and cameras; maintained by the vehicle/traffic workstream.
 - `Editor/JaksaChecks.cs`: texture import settings and shader-variant materials, eight renders (including both spawn cameras), all-five-vehicle traversal, curb containment, braking, camera, reset and original-route checks. It also rejects infill buildings in the driving corridor.
 
-Run **Jalan Kita → Prepare and verify Sea office** after regenerating textures or geometry. Previews go to `Unity/Builds/SeaOfficePreview`. Use **Build macOS** for the main app. The environment is assembled when exploration is selected, rather than stored as a separate editable Unity scene.
+Run **RoadSense → Prepare and verify Sea office** after regenerating textures or geometry. Previews go to `Unity/Builds/SeaOfficePreview`. Use **Build macOS** for the main app. The environment is assembled when exploration is selected, rather than stored as a separate editable Unity scene.
 
 `import_sopodel.py` explicitly refreshes the Sopo Del OSM extract. Review its output and update provenance before using another map revision. The game itself makes no network requests. The script retains original OSM IDs.
 

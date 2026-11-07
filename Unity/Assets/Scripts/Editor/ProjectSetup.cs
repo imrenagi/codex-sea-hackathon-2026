@@ -13,7 +13,7 @@ namespace JalanKita.EditorTools
 {
     public static class ProjectSetup
     {
-        public const string ScenePath = "Assets/Scenes/KampungKenanga.unity";
+        public const string ScenePath = "Assets/Scenes/RoadSense.unity";
 
         public static void CreateProjectAssets()
         {
@@ -102,7 +102,7 @@ namespace JalanKita.EditorTools
             EditorUtility.SetDirty(panel);
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-            var game = new GameObject("Jalan Kita");
+            var game = new GameObject("RoadSense");
             var doc = game.AddComponent<UIDocument>();
             doc.panelSettings = panel;
             doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Resources/UI/Jalan.uxml");
@@ -149,7 +149,7 @@ namespace JalanKita.EditorTools
             return asset;
         }
 
-        [MenuItem("Jalan Kita/Build WebGL")]
+        [MenuItem("RoadSense/Build WebGL")]
         public static void BuildWeb()
         {
             var args = System.Environment.GetCommandLineArgs();
@@ -165,7 +165,7 @@ namespace JalanKita.EditorTools
             ApplyWebBranding(destination);
         }
 
-        [MenuItem("Jalan Kita/Build macOS")]
+        [MenuItem("RoadSense/Build macOS")]
         public static void BuildMac()
         {
 #if UNITY_EDITOR_OSX
