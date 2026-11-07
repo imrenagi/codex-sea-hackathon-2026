@@ -2900,6 +2900,14 @@
     {
       "key": "home.practice",
       "value": "Practice"
+    },
+    {
+      "key": "credits.codex",
+      "value": "Built with Codex"
+    },
+    {
+      "key": "credits.hackathon",
+      "value": "Built for SEA x OpenAI Hackathon"
     }
   ]
 }
