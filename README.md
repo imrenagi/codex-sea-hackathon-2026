@@ -64,3 +64,11 @@ then exits with the check result. Existing player saves are preserved.
 The extended route checks cover both vehicles, turns, red lights and motorcycle stop boxes, pedestrian priority, protected-right signals, railway warnings, ambulance obstruction, retry headings, and upgrading old saves. The trigger distances and signal/rail timings are simulation choices. [Boulevard.cs](Unity/Assets/Scripts/Boulevard.cs) shares junction geometry with [BoulevardView.cs](Unity/Assets/Scripts/BoulevardView.cs).
 
 Audio reuses Ujian SIM’s synthesized `SoundEngine` and WebGL audio bridge: separate car/motor engines responding to speed and throttle, indicator relay clicks, horn, phone ringtone, success/violation chimes, town ambience, approaching ambulance siren, and railway warning bell. The previous temporary siren/bell loops are removed. Mute is available in the menu/pause screen or with M and is remembered locally.
+
+## Jakarta map previews
+
+From the main menu choose **Jelajahi peta Jakarta**, then Morrissey, Bundaran HI, Sea Labs, Semanggi, Monas, or Bundaran Senayan. Each area covers approximately 1.7 × 1.5 km, three times the original linear extent. Use WASD/arrows to pan, +/- to zoom, R to reset, and Esc to return to the selector. The existing Kampung Kenanga lessons and saved progress remain separate.
+
+These are OSM-based city previews, not playable lesson routes. Building heights and road widths may be estimated; facade colors and windows are illustrative. Source ways are clipped to the preview area. Tunnels are omitted; positive road layers receive approximate elevation. OSM coverage is incomplete and does not guarantee surveyed geometry. © OpenStreetMap contributors, ODbL: https://www.openstreetmap.org/copyright
+
+Only the selected area is generated. Geometry is batched into meshes under the 16-bit vertex limit rather than creating thousands of building objects. **Jalan Kita → Verify City Maps** checks the six datasets and geometry helpers. Runtime/editor verification must be run once Unity 6000.3.27f1 is available.

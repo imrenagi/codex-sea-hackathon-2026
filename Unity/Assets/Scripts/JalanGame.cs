@@ -10,11 +10,13 @@ namespace JalanKita
     [RequireComponent(typeof(UIDocument))]
     public sealed class JalanGame : MonoBehaviour
     {
-        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After }
+        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, CityMaps, CityPreview }
 
         District district;
         SoundEngine sound;
         bool blinkWas;
+        GameObject lessonRoot;
+        CityMapPreview cityPreview;
         Journey journey;
         Journey learner;
         JourneySave stored;
@@ -34,7 +36,9 @@ namespace JalanKita
         {
             Application.targetFrameRate = 60;
             Application.runInBackground = true;
-            district = new District(transform);
+            lessonRoot = new GameObject("Lesson district");
+            lessonRoot.transform.SetParent(transform, false);
+            district = new District(lessonRoot.transform);
             sound = SoundEngine.Create(transform);
             root = GetComponent<UIDocument>().rootVisualElement;
             root.AddToClassList("jalan-root");
@@ -86,6 +90,13 @@ namespace JalanKita
                 var toggle = root.Q<Button>("soundToggle");
                 if (toggle != null) toggle.text = sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)";
             }
+            if (page == Page.CityPreview)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape)) ShowCityMaps();
+                else cityPreview?.Step(Time.unscaledDeltaTime);
+                return;
+            }
+            if (page == Page.CityMaps && Input.GetKeyDown(KeyCode.Escape)) { ShowMenu(); return; }
             if (learner != null)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.R))
@@ -144,8 +155,9 @@ namespace JalanKita
         void LateUpdate()
         {
             if (journey == null) return;
-            district.Present(journey, hood, Time.unscaledDeltaTime, page == Page.Drive);
             UpdateSound(Time.unscaledDeltaTime);
+            if (page == Page.CityPreview) return;
+            district.Present(journey, hood, Time.unscaledDeltaTime, page == Page.Drive);
             if (page == Page.Drive) RefreshHud();
         }
 
@@ -173,6 +185,7 @@ namespace JalanKita
 
         void ShowMenu()
         {
+            CloseCityPreview();
             practiceStart = -1;
             learner = null;
             progress.text = "Kemajuan  [Tab]";
@@ -210,10 +223,65 @@ namespace JalanKita
                 }, "quiet");
                 if (confirmNew) AddLabel(dialog, "Ini mengganti progres yang tersimpan untuk kendaraan ini.", "copy");
             }
+            AddButton(actions, "Jelajahi peta Jakarta", ShowCityMaps, "quiet");
             if (Application.platform != RuntimePlatform.WebGLPlayer)
                 AddButton(actions, "Keluar", Application.Quit, "quiet");
             AddSoundControls(dialog);
         }
+
+        void CloseCityPreview()
+        {
+            cityPreview?.Dispose();
+            cityPreview = null;
+            lessonRoot.SetActive(true);
+        }
+
+        void ShowCityMaps()
+        {
+            CloseCityPreview();
+            SetPage(Page.CityMaps);
+            AddLabel(dialog, "JAKARTA / OPENSTREETMAP", "kicker");
+            AddLabel(dialog, "Pilih peta", "heading");
+            AddLabel(dialog, "Pratinjau kota 3D, sekitar 1,7 × 1,5 km per area. Belum berisi misi atau simulasi lalu lintas.", "copy");
+            var list = Element(dialog, "section");
+            for (int i = 0; i < CityMapData.Ids.Length; i++)
+            {
+                int index = i;
+                AddButton(list, CityMapData.Names[i], () => OpenCityMap(index), "option");
+            }
+            AddButton(dialog, "Kembali ke latihan", ShowMenu, "quiet");
+        }
+
+        void OpenCityMap(int index)
+        {
+            try
+            {
+                var map = CityMapData.Load(CityMapData.Ids[index]);
+                CloseCityPreview();
+                lessonRoot.SetActive(false);
+                cityPreview = new CityMapPreview(transform, map);
+                SetPage(Page.CityPreview);
+                AddLabel(dialog, CityMapData.Names[index], "heading");
+                AddLabel(dialog, "PRATINJAU PETA · BUKAN RUTE LATIHAN", "kicker");
+                AddLabel(dialog, "WASD / panah: geser · + / −: zoom · R: reset", "copy");
+                AddLabel(dialog, "Bangunan dan jalan dari OSM. Tinggi/lebar sebagian perkiraan; bukan model survei. Utara ke depan.", "copy");
+                AddLabel(dialog, "© OpenStreetMap contributors · ODbL", "rule-source");
+                var actions = Element(dialog, "row actions");
+                AddButton(actions, "+", () => cityPreview.Zoom(-.2f), "quiet");
+                AddButton(actions, "−", () => cityPreview.Zoom(.2f), "quiet");
+                AddButton(actions, "Reset", () => cityPreview.Reset(), "quiet");
+                AddButton(actions, "Pilih peta [Esc]", ShowCityMaps, "primary");
+                AddButton(actions, "Sumber OSM", () => Application.OpenURL("https://www.openstreetmap.org/copyright"), "quiet");
+            }
+            catch (Exception error)
+            {
+                ShowCityMaps();
+                AddLabel(dialog, "Peta belum dapat dibuka: " + error.Message, "copy negative");
+                Debug.LogException(error);
+            }
+        }
+
+        void OnDestroy() => cityPreview?.Dispose();
 
         void SelectMode(VehicleMode value)
         {
@@ -619,6 +687,7 @@ namespace JalanKita
             Show(overlay, page != Page.Drive);
             overlay.EnableInClassList("landing", page == Page.Menu);
             dialog.EnableInClassList("landing-card", page == Page.Menu);
+            overlay.EnableInClassList("city-preview", page == Page.CityPreview);
             dialog.RemoveFromClassList("rule-card");
             dialog.RemoveFromClassList("result-layout");
             dialog.Clear();
