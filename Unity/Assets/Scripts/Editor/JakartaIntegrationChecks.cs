@@ -44,6 +44,7 @@ namespace JalanKita.EditorTools
             Require(UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Count(x=>x.isActiveAndEnabled)==1,label+": exactly one listener");
             Require(UnityEngine.Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Count(x=>x.isActiveAndEnabled&&x.targetTexture==null)==1,label+": exactly one main camera");
             Require(RenderSettings.sun&&RenderSettings.sun.isActiveAndEnabled,label+": active daylight");
+            Require(UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None).Count(x=>x.isActiveAndEnabled&&x.type==LightType.Directional)==1,label+": exactly one sunlight source");
         }
         public static void VerifyUI(JalanGame game)
         {

@@ -61,7 +61,8 @@ namespace JalanKita
             sun.type=LightType.Directional;sun.transform.rotation=Quaternion.Euler(54,-28,0);sun.intensity=1.5f;sun.color=new Color(1,.97f,.91f);sun.shadows=LightShadows.Soft;sun.shadowBias=.08f;sun.shadowNormalBias=.45f;
             sky=new Material(Shader.Find("Skybox/Procedural")){name="Landmark sky"};sky.SetColor("_SkyTint",new Color(.56f,.66f,.76f));sky.SetColor("_GroundColor",new Color(.47f,.52f,.49f));sky.SetFloat("_AtmosphereThickness",.7f);sky.SetFloat("_Exposure",1.1f);
             var volume=new GameObject("Landmark atmosphere").AddComponent<Volume>();volume.transform.SetParent(Root.transform,false);volume.isGlobal=true;volume.priority=3;volume.profile=ScriptableObject.CreateInstance<VolumeProfile>();
-            volume.profile.Add<Tonemapping>().mode.Override(TonemappingMode.ACES);volume.profile.Add<ColorAdjustments>().saturation.Override(-5);
+            volume.profile.Add<Tonemapping>().mode.Override(TonemappingMode.ACES);
+            var colour=volume.profile.Add<ColorAdjustments>();colour.saturation.Override(-5);colour.postExposure.Override(.35f);
             Activate();
         }
         Material Mat(string name,string hex,string texture=null,float smooth=.12f,float metal=0)
@@ -76,6 +77,7 @@ namespace JalanKita
             Root.SetActive(true);RenderSettings.skybox=sky;RenderSettings.sun=sun;RenderSettings.ambientMode=AmbientMode.Trilight;
             RenderSettings.ambientSkyColor=new Color(.7f,.77f,.82f);RenderSettings.ambientEquatorColor=new Color(.47f,.5f,.49f);RenderSettings.ambientGroundColor=new Color(.27f,.29f,.24f);
             RenderSettings.fog=true;RenderSettings.fogMode=FogMode.Linear;RenderSettings.fogColor=new Color(.71f,.78f,.81f);RenderSettings.fogStartDistance=Place==JakartaPlace.Monas?650:320;RenderSettings.fogEndDistance=Place==JakartaPlace.Monas?1400:850;
+            FidelityLighting.Activate(sun);
         }
         static Vector3 V(Vector2 p,float y=0)=>new(p.x,y,p.y);
         void Strip(Material material,Vector2 a,Vector2 b,float width,float y)

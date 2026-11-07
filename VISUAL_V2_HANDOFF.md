@@ -31,7 +31,13 @@ legal explanations, maps, UI, saves and motorcycle body/lettering assets are ret
 
 Near detailed cars are 62–65k imported triangles; far LODs are 18–20k. Opaque glass
 and simplified interiors remain. Editor renders/checks do not establish native FPS.
-Native build and combined landmark acceptance follow the coordinated integration.
+Both HI and Monas now use the same sun/sky/exposure settings, retaining their scene
+roots, water and reflection logic. All seven vehicles pass both landmark routes;
+JakartaIntegrationChecks passes location switching, pause, focus loss, keyboard,
+saved progress, mirror teardown and exactly one active sun. A combined 1600×900
+batch render benchmark (including forced water reflection/readback) measured median
+8.26 ms for HI and 12.88 ms for Monas; this is not a native FPS measurement.
+Native build acceptance follows the coordinated integration.
 
 Generators: `tools/fidelity/vehicles.py` (Blender, original traffic source pack) and
 `tools/fidelity/surfaces.py`. Source meshes are under `assets/fidelity_vehicles`.

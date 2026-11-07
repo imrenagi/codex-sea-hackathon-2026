@@ -30,6 +30,13 @@ namespace JalanKita.EditorTools
             LightingChecks();
             ResultFlowChecks.Run();
         }
+        public static void Combined()
+        {
+            Run();
+            LandmarkChecks.Run();
+            LandmarkChecks.RenderReview();
+            Debug.Log("FIDELITY_COMBINED_PASSED core simulation, original locations and both landmark routes/render benchmarks");
+        }
         public static void LightingChecks()
         {
             using var preferences = new IntegrationChecks.SavedPreferences();
