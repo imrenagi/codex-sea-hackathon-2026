@@ -2,6 +2,14 @@
   "locale": "en",
   "entries": [
     {
+      "key": "mission.continue_next",
+      "value": "Continue to mission {0}"
+    },
+    {
+      "key": "mission.up_next",
+      "value": "Up next: Mission {0} · {1}"
+    },
+    {
       "key": "brand.name",
       "value": "RoadSense"
     },

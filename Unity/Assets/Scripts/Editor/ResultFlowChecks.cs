@@ -11,6 +11,7 @@ namespace JalanKita.EditorTools
     public static class ResultFlowChecks
     {
         const string Running = "JalanKita.ResultFlowChecks";
+        const string ContinuationOnly = Running + ".ContinuationOnly";
         const BindingFlags Private = BindingFlags.NonPublic | BindingFlags.Instance;
 
         static ResultFlowChecks()
@@ -21,6 +22,14 @@ namespace JalanKita.EditorTools
         public static void Run()
         {
             JourneyChecks.Run();
+            EditorSceneManager.OpenScene(ProjectSetup.ScenePath);
+            SessionState.SetBool(Running, true);
+            EditorApplication.EnterPlaymode();
+        }
+
+        public static void RunContinuation()
+        {
+            SessionState.SetBool(ContinuationOnly, true);
             EditorSceneManager.OpenScene(ProjectSetup.ScenePath);
             SessionState.SetBool(Running, true);
             EditorApplication.EnterPlaymode();
@@ -57,7 +66,15 @@ namespace JalanKita.EditorTools
             SessionState.SetBool(Running, false);
             try
             {
-                RunInOpenEditor();
+                if (SessionState.GetBool(ContinuationOnly, false))
+                {
+                    SessionState.SetBool(ContinuationOnly, false);
+                    using var preferences = new IntegrationChecks.SavedPreferences();
+                    game.enabled = false;
+                    foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode))) Verify(game, mode);
+                    Debug.Log("JOURNEY_CONTINUATION_PASSED: all ten mission buttons, both vehicles, final quiz, pause and retry.");
+                }
+                else RunInOpenEditor();
                 EditorApplication.Exit(0);
             }
             catch (Exception error)
@@ -86,7 +103,14 @@ namespace JalanKita.EditorTools
                 Require(root.Q<Label>(className: "stamp")?.text == GameText.Get("text.mission_complete_405e76"), "Success banner");
                 Call(game, "FixedUpdate");
                 Require(run.Position == position && run.Speed == speed, "Pause preserves driving state");
-                Call(game, "ContinueCheckpoint");
+                var next = root.Q<Button>("continue-mission");
+                Require(next != null && next.ClassListContains("primary"), "Completion exposes primary continuation button");
+                Require(next.text == (run.Finished ? GameText.Get("text.final_quiz_5f0543")
+                    : GameText.Get("mission.continue_next", completed + 1)), "Continuation names the next mission or final quiz");
+                if (!run.Finished)
+                    Require(root.Query<Label>().ToList().Exists(label => label.text ==
+                        GameText.Get("mission.up_next", completed + 1, RouteStage.All[completed].Title)), "Completion previews the next task");
+                Submit(next);
                 AcknowledgeControls(game);
                 Require(run.Position == position && run.Speed == speed, "Continue never teleports or resets speed");
                 Require(Page(game) == (run.Finished ? "After" : "Drive"), "Final completion opens quiz");

@@ -1060,9 +1060,15 @@ namespace JalanKita
             AddLabel(body, practiceStart >= 0 ? GameText.Get("text.practice_complete_your_journey_progress_stays_saved")
                 : GameText.Get("mission.checkpoint_saved", journey.Stage, All.Length,
                     journey.Finished ? GameText.Get("text.entire_route_complete") : GameText.Get("text.continue_along_the_same_road")), "checkpoint-saved");
+            if (!journey.Finished)
+            {
+                AddLabel(body, GameText.Get("mission.up_next", journey.Stage + 1, All[journey.Stage].Title), "result-label");
+                AddLabel(body, All[journey.Stage].Instruction, "sheet-text");
+            }
             var actions = Element(sheet, "sheet-actions");
-            var next = AddButton(actions, journey.Finished ? practiceStart >= 0 ? GameText.Get("text.practice_results") : GameText.Get("text.final_quiz_5f0543") : GameText.Get("text.continue_journey"),
+            var next = AddButton(actions, journey.Finished ? practiceStart >= 0 ? GameText.Get("text.practice_results") : GameText.Get("text.final_quiz_5f0543") : GameText.Get("mission.continue_next", journey.Stage + 1),
                 ContinueCheckpoint, "big primary");
+            next.name = "continue-mission";
             if (!journey.Finished) AddButton(actions, GameText.Get("text.retry_from_checkpoint"), Retry, "big quiet");
             AddButton(actions, GameText.Get("text.menu"), BackToMenu, "big quiet");
         }
