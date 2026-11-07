@@ -42,7 +42,7 @@ namespace JalanKita
             new("Arus utama masih melintas", "Saat keluar dari jalan yang lebih kecil, beri hak utama pada lalu lintas di jalan utama.",
                 "Tahan rem sebelum persimpangan. Tunggu kendaraan melintas dan pastikan jalan lapang.", "Pasal 113 ayat (1) huruf b"),
             new("Pejalan kaki masih menyeberang", "Pejalan kaki mendapat prioritas saat menyeberang di tempat penyeberangan.",
-                "Tunggu di belakang zebra cross sampai pejalan kaki selesai menyeberang.", "Pasal 106 ayat (2) dan Pasal 131 ayat (2)"),
+                "Tunggu di belakang zebra cross sampai pejalan kaki melewati jalurmu dan tidak ada yang mendekat ke jalurmu.", "Pasal 106 ayat (2) dan Pasal 131 ayat (2)"),
             new("Masuk lajur lawan arah", "Pengemudi menggunakan jalur jalan sebelah kiri.",
                 "Kembali ke sisi kiri garis tengah dan tetap di kiri pada jalan dua arah.", "Pasal 108 ayat (1)"),
             new("Masuk dari arah yang dilarang", "Rambu dilarang masuk menutup akses dari arah ini.",
@@ -68,11 +68,11 @@ namespace JalanKita
             new("Penumpang belum dijemput", "Tujuan perjalanan ini adalah menjemput penumpang lalu bergabung kembali dengan aman.",
                 "Berhenti di teluk jemput, tekan Jemput [F], kemudian beri sein kanan dan tunggu celah aman.", "Latihan"),
             new("Berbelok tanpa lampu sein", "Sebelum berbelok, amati lalu lintas dan beri isyarat sesuai arah belokan.",
-                "Nyalakan Q sebelum belok kiri atau E sebelum belok kanan. Tunggu pejalan kaki selesai menyeberang.", "Pasal 112 ayat (1)"),
+                "Nyalakan Q sebelum belok kiri atau E sebelum belok kanan. Dahulukan pejalan kaki sampai jalur belokanmu aman.", "Pasal 112 ayat (1)"),
             new("Lajur tidak sesuai arah", "Ikuti panah lajur dan jangan melintasi garis lajur utuh menjelang persimpangan.",
                 "Pilih lajur sebelum marka utuh: kiri untuk belok kiri, tengah untuk lurus, kanan untuk belok kanan.", "Pasal 106 ayat (4) huruf a–b"),
             new("Panah kanan belum hijau", "Lampu hijau untuk lurus bukan izin untuk belok kanan pada persimpangan dengan isyarat terpisah.",
-                "Berhenti di lajur kanan. Tunggu panah kanan hijau dan pastikan zebra cross kosong.", "Pasal 106 ayat (4) huruf c"),
+                "Berhenti di lajur kanan. Tunggu panah kanan hijau dan pastikan jalur belokan aman dari pejalan kaki.", "Pasal 106 ayat (4) huruf c"),
             new("Mobil memasuki ruang henti motor", "Mobil melewati garis henti belakang saat lampu merah dan masuk kotak merah khusus motor.",
                 "Mobil berhenti di garis sebelum kotak merah. Motor boleh maju ke garis depan, tetapi tetap menunggu isyarat yang berlaku.", "Pasal 106 ayat (4) huruf b–c"),
             new("Menerobos perlintasan kereta", "Kendaraan wajib berhenti saat peringatan berbunyi atau palang mulai menutup, dan mendahulukan kereta api.",
@@ -109,7 +109,7 @@ namespace JalanKita
             new("Arah & lajur", "JALAN MAWAR", "Ikuti arah panah. Beri sein dan pindah ke lajur kanan saat aman.", 298),
             new("Kecepatan & fokus", "ZONA SEKOLAH", "Kurangi kecepatan sebelum rambu 30 km/j.", 382),
             new("Lurus di jalan besar", "JALAN THAMRIN", "Pilih lajur tengah sebelum marka utuh. Tunggu hijau dan pejalan kaki.", new Vector2(-5.4f, 550)),
-            new("Belok kiri & pejalan kaki", "THAMRIN – DIPONEGORO", "Pilih lajur paling kiri, nyalakan Q, lalu tunggu hijau dan zebra kosong.", new Vector2(-70, 631), 270),
+            new("Belok kiri & pejalan kaki", "THAMRIN – DIPONEGORO", "Pilih lajur paling kiri, nyalakan Q, lalu tunggu hijau dan jalur belokan aman dari pejalan kaki.", new Vector2(-70, 631), 270),
             new("Belok kanan terlindung", "DIPONEGORO – AHMAD YANI", "Pilih lajur kanan sebelum marka utuh. Nyalakan E dan tunggu panah kanan hijau.", new Vector2(-181.8f, 720)),
             new("Perlintasan kereta api", "PERLINTASAN AHMAD YANI", "Berhenti saat bel berbunyi. Tunggu kereta lewat dan palang terbuka penuh.", new Vector2(-185.4f, 850)),
             new("Beri jalan ambulans", "JALAN RUMAH SAKIT", "Lewati angkot di lajur tengah. Saat sirene terdengar, beri jalan ke kiri dengan sein.", new Vector2(-189, 1040))
@@ -411,7 +411,7 @@ namespace JalanKita
             }
             if (Stage == 2)
             {
-                if (Crosses(oldFront, RouteStage.Zebra - 2) && Pedestrian.HasValue) Fail(Rule.Pedestrian);
+                if (Crosses(oldFront, RouteStage.Zebra - 2) && PedestrianBlocksPath) Fail(Rule.Pedestrian);
                 CheckJunction(oldFront, RouteStage.MainJunction);
             }
             if (Stage == 3 && oneWay)
@@ -466,7 +466,7 @@ namespace JalanKita
                 else overSpeed = 0;
                 if (IsSchool)
                 {
-                    if (Crosses(oldFront, CrossingZebra - 2) && Pedestrian.HasValue) Fail(Rule.Pedestrian);
+                    if (Crosses(oldFront, CrossingZebra - 2) && PedestrianBlocksPath) Fail(Rule.Pedestrian);
                     if (z >= 313) Checkpoint(1);
                     if (z >= Mission.SchoolPhoneCheckpoint) Checkpoint(2);
                 }
@@ -474,6 +474,8 @@ namespace JalanKita
                 if (z >= RouteStage.PhoneEnd && PhoneRinging) ResolvePhone(false);
             }
 
+            if(Pedestrian.HasValue && PedestrianClearance.Touches(Pedestrian.Value,Position,Heading,Mode))
+                Fail(Rule.Pedestrian);
             if (!Failure.HasValue && z >= StageEnd) Advance();
         }
 

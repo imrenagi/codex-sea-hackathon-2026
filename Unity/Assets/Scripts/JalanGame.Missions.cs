@@ -132,7 +132,7 @@ namespace JalanKita
                 prompt = journey.Front < RouteStage.SchoolLimit ? "Jam pulang sekolah. Perhatikan rambu 30 dan penyeberangan."
                     : "Periksa penyeberangan sebelum melanjutkan.";
                 target = journey.CrossingZebra - 2;
-                if (journey.Pedestrian.HasValue) signal = "PEJALAN KAKI MENYEBERANG";
+                if (journey.PedestrianBlocksPath) signal = "PEJALAN KAKI MENYEBERANG";
             }
             if (journey.IsMarket)
             {
