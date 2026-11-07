@@ -14,7 +14,9 @@ namespace JalanKita
         readonly Light previousSun;
         readonly AmbientMode previousAmbientMode;
         readonly Color previousAmbientLight;
+        static readonly Vector3 ViewOffset = new(0, .85f, -.65f);
         Vector3 focus;
+        float mapHeight;
         float distance = 1400;
         public CityMapPreview(Transform parent, CityMapData map)
         {
@@ -90,6 +92,7 @@ namespace JalanKita
                 }
                 if (signedArea<0) Array.Reverse(clipped);
                 float height=Mathf.Clamp(building.height,1,1000);
+                mapHeight = Mathf.Max(mapHeight, height);
                 uint hash=2166136261;
                 foreach (char c in building.osmId ?? "") hash=(hash^c)*16777619;
                 var buildings=facades[(int)(hash%(uint)facades.Length)];
@@ -123,7 +126,7 @@ namespace JalanKita
                 (height>18 ? tallRoofs : roofs).Polygon(roof);
             }
             foreach (var facade in facades) facade.Flush();
-            roofs.Flush(); tallRoofs.Flush(); roofTrim.Flush(); windows.Flush(); MoveCamera();
+            roofs.Flush(); tallRoofs.Flush(); roofTrim.Flush(); windows.Flush(); Reset();
             }
             catch { Dispose(); throw; }
         }
@@ -160,9 +163,36 @@ namespace JalanKita
             if (Input.GetKeyDown(KeyCode.R)) Reset();
             MoveCamera();
         }
-        public void Zoom(float amount) { distance=Mathf.Clamp(distance*Mathf.Exp(amount),100,5000); MoveCamera(); }
-        public void Reset() { focus=Vector3.zero; distance=1400; MoveCamera(); }
-        void MoveCamera() { camera.transform.position=focus+new Vector3(0,.85f,-.65f)*distance; camera.transform.LookAt(focus); }
+        float OverviewDistance()
+        {
+            Vector3 forward = -ViewOffset.normalized;
+            Vector3 up = Vector3.Cross(forward, Vector3.right);
+            float tanVertical = Mathf.Tan(camera.fieldOfView * .5f * Mathf.Deg2Rad);
+            float tanHorizontal = tanVertical * Mathf.Max(.1f, camera.aspect);
+            float required = 100;
+            foreach (float x in new[] { -864f, 864f })
+                foreach (float z in new[] { -735f, 735f })
+                    foreach (float y in new[] { 0f, mapHeight })
+                    {
+                        var corner = new Vector3(x, y - mapHeight * .5f, z);
+                        float depth = Vector3.Dot(corner, forward);
+                        required = Mathf.Max(required, Mathf.Abs(corner.x) / tanHorizontal - depth,
+                            Mathf.Abs(Vector3.Dot(corner, up)) / tanVertical - depth);
+                    }
+            return required * 1.08f / ViewOffset.magnitude;
+        }
+        public void Zoom(float amount)
+        {
+            distance = Mathf.Clamp(distance * Mathf.Exp(amount), 100, Mathf.Max(5000, OverviewDistance() * 1.2f));
+            MoveCamera();
+        }
+        public void Reset() { focus = new Vector3(0, mapHeight * .5f, 0); distance = OverviewDistance(); MoveCamera(); }
+        void MoveCamera()
+        {
+            camera.farClipPlane = Mathf.Max(12000, distance * ViewOffset.magnitude + 3000);
+            camera.transform.position = focus + ViewOffset * distance;
+            camera.transform.LookAt(focus);
+        }
         public void Dispose()
         {
             if (root) { root.SetActive(false); UnityEngine.Object.Destroy(root); }
