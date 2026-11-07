@@ -197,3 +197,11 @@
 .compact .stamp { font-size: 50px; border-width: 4px; padding: 0 16px; }
 .compact .stamp-caption { margin-top: 15px; font-size: 16px; }
 .compact .sheet { margin-top: 12px; padding: 12px 14px 10px; }
+
+.dialog { max-height: 100%; }
+.dialog-scroll { flex-grow: 1; flex-shrink: 1; min-height: 0; max-height: 100%; }
+.dialog-scroll .unity-scroll-view__content-container > * { flex-shrink: 0; }
+.dialog-scroll .unity-scroller--vertical { width: 8px; margin-left: 8px; }
+.dialog-scroll .unity-scroller__low-button, .dialog-scroll .unity-scroller__high-button { display: none; }
+.dialog-scroll .unity-base-slider__tracker { background-color: rgba(255,255,255,0.07); border-radius: 4px; }
+.dialog-scroll .unity-base-slider__dragger { background-color: rgba(255,255,255,0.32); border-radius: 4px; }
