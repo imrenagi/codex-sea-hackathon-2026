@@ -30,11 +30,13 @@ namespace JalanKita
         const float CrossingStartX = -5.9f, CrossingEndX = 5.9f;
         readonly Vector2?[] crossingPedestrians = new Vector2?[CrossingPedestrianCount];
         readonly float[] crossingWalking = new float[CrossingPedestrianCount];
+        readonly float[] crossingGaitTime = new float[CrossingPedestrianCount];
 
         // Rendered people outlive the crossing hazard: they wait on the far sidewalk
         // instead of vanishing the moment their centre clears the road.
         public Vector2? CrossingPedestrian(int index) => crossingPedestrians[index];
         public float CrossingPedestrianWalking(int index) => crossingWalking[index];
+        public float CrossingPedestrianGaitTime(int index) => crossingGaitTime[index];
         public bool PedestriansHaveCleared => zebraTime >= 0 && !Pedestrian.HasValue;
 
         void UpdateCrossingPedestrians(float crossingZ, float pace)
@@ -43,12 +45,25 @@ namespace JalanKita
             for (int i = 0; i < CrossingPedestrianCount; i++)
             {
                 float walkingTime = Mathf.Max(0, zebraTime - .2f - i * .4f);
-                float x = Mathf.Min(CrossingEndX, CrossingStartX + walkingTime * pace);
-                var position = new Vector2(x * PedestrianDirection, crossingZ + (i - 1) * .8f);
-                crossingPedestrians[i] = position;
-                // Ease into an idle pose at the curb; no walking-in-place after arrival.
-                crossingWalking[i] = walkingTime > 0 ? Mathf.Clamp01((CrossingEndX - x) / .45f) : 0;
-                if (x < CrossingEndX && !Pedestrian.HasValue) Pedestrian = position;
+                float personalPace = pace * (i == 0 ? .96f : i == 1 ? 1.045f : 1f);
+                float phase = (trafficSeed & 255) * .02454f + i * 2.17f;
+                // Integrate gentle pace changes analytically: deterministic across frame
+                // rates, with strictly forward speed (at least 91% of personal pace).
+                float distance = personalPace * (walkingTime
+                    + .065f / .95f * (Mathf.Cos(phase) - Mathf.Cos(.95f * walkingTime + phase))
+                    + .025f / 1.7f * (Mathf.Cos(phase * .63f) - Mathf.Cos(1.7f * walkingTime + phase * .63f)));
+                distance = Mathf.Clamp(distance, 0, CrossingEndX - CrossingStartX);
+                float progress = distance / (CrossingEndX - CrossingStartX);
+                float x = CrossingStartX + distance;
+                // A few centimetres of actual path variation, tapered at both curbs.
+                float drift = .045f * (Mathf.Sin(.85f * walkingTime + phase) - Mathf.Sin(phase))
+                    * Mathf.Sin(progress * Mathf.PI);
+                crossingPedestrians[i] = new Vector2(x * PedestrianDirection, crossingZ + (i - 1) * .8f + drift);
+                crossingGaitTime[i] = distance / 1.65f + i * .57f;
+                // Ease into the stride and settle at the curb rather than walking in place.
+                crossingWalking[i] = Mathf.SmoothStep(0, 1, walkingTime / .18f)
+                    * Mathf.Clamp01((CrossingEndX - x) / .45f);
+                if (x < CrossingEndX && !Pedestrian.HasValue) Pedestrian = crossingPedestrians[i];
             }
         }
 
@@ -58,7 +73,7 @@ namespace JalanKita
             for (int i = 0; i < CrossingPedestrianCount; i++)
             {
                 crossingPedestrians[i] = null;
-                crossingWalking[i] = 0;
+                crossingWalking[i] = crossingGaitTime[i] = 0;
             }
         }
 

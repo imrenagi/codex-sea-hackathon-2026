@@ -488,7 +488,7 @@ namespace JalanKita
                 float pavement = Mathf.Lerp(0, .125f, Mathf.InverseLerp(4.67f, 5.5f, Mathf.Abs(position.Value.x)));
                 pedestrians[i].Draw(World(position.Value) + Vector3.up * pavement,
                     run.PedestrianDirection * 90, run.ElapsedTime + i * .57f,
-                    run.CrossingPedestrianWalking(i), false);
+                    run.CrossingPedestrianWalking(i), false, run.CrossingPedestrianGaitTime(i));
             }
             Pose(laneCar, run.Traffic.Lane, run.LaneTraffic, 0, dt);
             Pose(spurCar, run.Traffic.Spur, run.SpurTraffic, 180, dt);

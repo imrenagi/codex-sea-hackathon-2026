@@ -237,6 +237,7 @@ namespace JalanKita
         public bool ChangedRight { get; private set; }
         public bool ReturnedLeft { get; private set; }
         public bool CrossedZebra => Front > CrossingZebra + 2;
+        public bool MainRoadEncounterStarted => priorityTime >= 0;
         public int LightPhase => lightTime < 0 || lightTime % 22 < 8 ? 0 : lightTime % 22 < 19 ? 2 : 1;
 
         float stopTime, lightTime, zebraTime, priorityTime, laneTime, wrongWay, overSpeed;

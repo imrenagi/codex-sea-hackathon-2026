@@ -327,9 +327,9 @@ namespace JalanKita
             Tint("M_Pants", school ? "855254" : everydayPants);
         }
 
-        public void Draw(Vector3 position, float yaw, float time, float walking, bool gesture)
+        public void Draw(Vector3 position, float yaw, float time, float walking, bool gesture, float? gaitTime = null)
         {
-            float gait = time * 6.1f, swing = Mathf.Sin(gait), stride = Mathf.Clamp01(walking);
+            float gait = (gaitTime ?? time) * 6.1f, swing = Mathf.Sin(gait), stride = Mathf.Clamp01(walking);
             thighL.Set(-25 * swing * stride); thighR.Set(25 * swing * stride);
             shinL.Set((5 + 37 * Mathf.Max(0, Mathf.Cos(gait + .3f))) * stride);
             shinR.Set((5 + 37 * Mathf.Max(0, -Mathf.Cos(gait + .3f))) * stride);
@@ -338,7 +338,7 @@ namespace JalanKita
             foreL.Set(-12 - 12 * stride);
             foreR.Set(gesture ? -55 - 12 * Mathf.Sin(time * 2.1f) : -12 - 12 * stride);
             if (torso) torso.localRotation = Quaternion.AngleAxis(stride > .1f ? swing * 3 : Mathf.Sin(time * .8f) * 7, torsoUp) * torsoRest;
-            float bob = (Mathf.Cos(gait * 2) + 1) * .014f * stride;
+            float bob = (Mathf.Cos(gait * 2) + 1) * .011f * size * stride;
             Root.transform.SetPositionAndRotation(position + Vector3.up * bob, Quaternion.Euler(0, yaw, 0));
         }
 
