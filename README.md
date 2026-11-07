@@ -15,6 +15,31 @@ Seven player choices are available: hatchback, family MPV, city car, sedan, **mo
 
 The local village activities and Sopo Del retain their deterministic bicycle controller and damped chase camera. The full journey, route practice, and pitch demo retain the upstream steering contract. Both controllers keep vehicle heading when the steering wheels return to centre. NPC traffic uses persistent cosmetic seeds, physical footprints, wheel/lamp animation, and reduced-detail models. Player models retain animated lamps/wheels, rider equipment, boarding visibility, and practical LODs.
 
+## Pitch demo
+
+For the presenting laptop, fetch and check out `codex/demo-ready`. It contains the same consolidated code as PR #1; the individual improvement PRs are superseded by that PR.
+
+Choose **Mobil** or **Motor**, then **Demo singkat · Hak utama**. This opens Pasar Bunga directly. The demo uses a separate session and leaves saved progress unchanged.
+
+1. Use **F2** on the main menu to enter the demo, or choose its button. Hold **W** toward the occupied zebra crossing to show a violation. Release the key when the feedback opens.
+2. Show the explanation, correct action, and visible legal citation. **Lihat cara benar** plays the existing driving coach. **Tab** returns to the feedback.
+3. Press **R** to retry. Use **Space** to stop before the crossing. Wait for the pedestrian. At the next intersection, stop before the yield line and give way to cross traffic. **Lihat cara benar** is the live backup for this full sequence.
+4. Finish at the green checkpoint. The demo ends with its actual mistake count. **Ulangi demo** starts a fresh session.
+
+| Pitch segment | Time |
+| --- | --- |
+| Problem | 45 seconds |
+| Approach | 30 seconds |
+| Game demo | 90 seconds |
+| Legal sources and learning loop | 45 seconds |
+| Prototype scope | 45 seconds |
+| Next steps | 45 seconds |
+| Transitions and retry buffer | 60 seconds |
+
+The map preview is optional. Limit it to 15 seconds within the prototype section. Keep a recording of the rehearsed demo on the presenting laptop.
+
+Before presenting, use Unity **6000.3.27f1** on the other laptop. Check the demo in both vehicle modes at **1280 × 720**. Try violation, retry, **Lihat cara benar**, pause/resume, completion, replay, and return to the saved journey. Confirm that the earlier save is unchanged. Build and rehearse on that laptop. This change has not been built or tested locally.
+
 ## Controls
 
 | Input | Action |
@@ -36,7 +61,7 @@ The local village activities and Sopo Del retain their deterministic bicycle con
 | R | Retry the current checkpoint or restart exploration |
 | D on feedback | Show the correct driving demonstration |
 
-Map previews use WASD/arrows to pan, +/- to zoom, R to reset, and Esc to choose another map.
+Map previews use WASD/arrows to pan, +/- or the mouse wheel to zoom, R to fit the full map, and Esc to choose another map. A north marker shows orientation. Decorative window detail is capped at 24,000 quads near the selected location; roads and building geometry remain visible throughout the area.
 
 ## Saved progress
 
