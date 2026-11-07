@@ -1,0 +1,8 @@
+VEHICLE_LOD beat-red: 67964 -> 37871 triangles including occupants
+VEHICLE_LOD beat-blue: 28700 -> 23916 triangles including occupants
+Vehicle checks passed: all 7 selectable models, category, materials, meter scale, BeAT forward axes, wheel motion, LODs and occupant states.
+LETTERING_LAMP_PASS beat-red side=-1 changed=1406 wrong_side=0
+LETTERING_LAMP_PASS beat-red side=1 changed=773 wrong_side=0
+LETTERING_LAMP_PASS beat-blue side=-1 changed=324 wrong_side=0
+LETTERING_LAMP_PASS beat-blue side=1 changed=264 wrong_side=0
+MOTOR_BEBEK_LETTERING_VERIFIED /private/tmp/jalan-traffic-integration/Unity/Builds/LetteringEvidence

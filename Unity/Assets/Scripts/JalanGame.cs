@@ -628,6 +628,7 @@ namespace JalanKita
 
         void Retry()
         {
+            sound.RetryCue();
             if (PitchComplete) { StartPitchDemo(); return; }
             journey.Retry();
             district.Snap();
@@ -679,7 +680,9 @@ namespace JalanKita
             AddSoundControls(dialog);
         }
 
-        void AddSoundControls(VisualElement parent)
+        void AddSoundControls(VisualElement parent) => Fold(parent, "Suara & presentasi", AddSoundControlsBody);
+
+        void AddSoundControlsBody(VisualElement parent)
         {
             var button = AddButton(parent, sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)", null, "quiet tiny");
             button.name = "soundToggle";
@@ -688,6 +691,23 @@ namespace JalanKita
                 sound.SetMuted(!sound.Muted);
                 button.text = sound.Muted ? "Suara: mati (M)" : "Suara: aktif (M)";
             };
+            var ambience = AddButton(parent, sound.AmbienceEnabled ? "Ambience: aktif" : "Ambience: mati", null, "quiet tiny");
+            ambience.clicked += () =>
+            {
+                sound.SetAmbience(!sound.AmbienceEnabled);
+                ambience.text = sound.AmbienceEnabled ? "Ambience: aktif" : "Ambience: mati";
+            };
+            AddLabel(parent, "Matikan ambience saat presentasi. Sirene dan peringatan tetap terdengar.", "copy");
+            var volume = new Slider(0, 100) { name = "masterVolume", value = sound.Volume * 100 };
+            volume.label = "Volume: " + Mathf.RoundToInt(volume.value) + "%";
+            volume.AddToClassList("volume-control");
+            volume.RegisterValueChangedCallback(change =>
+            {
+                sound.SetVolume(change.newValue / 100f);
+                volume.label = "Volume: " + Mathf.RoundToInt(change.newValue) + "%";
+            });
+            parent.Add(volume);
+            AddButton(parent, "Coba suara", () => sound.Chime(false), "quiet tiny");
             AddLabel(parent, "H: klakson · M: aktif/nonaktif suara", "copy");
         }
 

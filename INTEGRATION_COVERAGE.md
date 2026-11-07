@@ -32,3 +32,7 @@ The city branch was rebased onto ef1fb13 as 9ede07a; its tree delta is the alrea
 - Higher-fidelity environment: isolated next milestone; no shared runtime changes.
 
 Core gates passed: cleancompile, RunSimulation, ResultFlowChecks.Run. Independent native QA pending.
+
+## Follow-on checkpoint (before newer main9a757d8)
+
+Integrated the six pinned street/audio deltas (210e1d6,8688df1,2eec310,81c44da,db3b571,3c4a216), with local sidewalk dimensions/materials and separate passenger market retained. Imported SHA-guarded four-FBX motor-bebek lettering patch, retaining all metadata/materials. Added exact landing/material/tactile/two-market assertions and persisted-volume/ambience/critical-audio assertions. Combined simulation and play-mode flow gates passed on this checkpoint. Newer unmerged feature branches remain queued; newer main9a757d8 boulevard-traffic/mirrors delta is next mandatory reconciliation before publication.

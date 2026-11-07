@@ -198,3 +198,8 @@
 .menu-scroll .unity-scroll-view__content-container > * { flex-shrink: 0; }
 .city-preview { justify-content: flex-end; align-items: flex-start; background-color: transparent; }
 .city-preview .dialog { width: 510px; background-color: rgba(16,19,24,.93); }
+
+.volume-control { margin-top: 10px; min-height: 28px; }
+.volume-control .unity-base-field__label { color: #e9e6df; min-width: 115px; }
+.volume-control .unity-base-slider__tracker { background-color: #45474a; }
+.volume-control .unity-base-slider__dragger { background-color: #f3f1ec; }

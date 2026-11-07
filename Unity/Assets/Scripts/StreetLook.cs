@@ -186,7 +186,7 @@ namespace JalanKita
             {
                 for (float z = -24; z < 382; z += 2)
                 {
-                    if (Junction(z, 6.5f)) continue;
+                    if (Junction(z, 6.5f) || Mathf.Abs(z - RouteStage.Zebra) < 3) continue;
                     if (side > 0 && z > RouteStage.SpurStart - 3 && z < RouteStage.SpurEnd + 3) continue;
                     if (side < 0 && (z > Mission.PickupStart - 1 && z < Mission.PickupEnd + 2
                         || z > RouteStage.PhoneStart + 1 && z < RouteStage.PhoneEnd + 3)) continue;

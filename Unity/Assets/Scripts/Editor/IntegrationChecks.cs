@@ -48,6 +48,7 @@ namespace JalanKita.EditorTools
             StreetLookChecks.MotionChecks();
             TrafficChecks.Run(); // Includes vehicle, missions, full route, steering, sound and exploration checks.
             CityMapChecks.Run();
+            VerifyCrossingGeometry();
             foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode))) VerifyVillagePhone(mode);
             Require(VehicleCatalogue.All.Length == 7, "All seven selectable vehicles retained");
             Require(VehicleCatalogue.All.Where(v => v.Beat).All(v => v.Label.Contains("motor bebek") && !v.Label.Contains("BeAT")), "Requested visible vehicle wording");
@@ -85,6 +86,30 @@ namespace JalanKita.EditorTools
                 Require(PlayerPrefs.GetString(oldKey) == original, "Explicit v2 save preserves legacy raw JSON");
             }
             Debug.Log("INTEGRATED_SAVE_MIGRATION_PASSED 30 mode/schema/mission combinations; exact rule counters and immutable legacy values.");
+        }
+
+        static void VerifyCrossingGeometry()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.NewScene(UnityEditor.SceneManagement.NewSceneSetup.EmptyScene);
+            var host = new GameObject("Combined crossing checks");
+            try
+            {
+                new District(host.transform);
+                var ramps = host.GetComponentsInChildren<MeshFilter>().Where(m => m.name == "Landasan penyeberangan").ToArray();
+                Require(ramps.Length == 2, "Both sides have crossing landings");
+                foreach (var ramp in ramps)
+                {
+                    Require(ramp.GetComponent<Renderer>().sharedMaterial != null, "Landing material exists with local StreetLook paving");
+                    var vertices = ramp.sharedMesh.vertices.Select(ramp.transform.TransformPoint).ToArray();
+                    Require(vertices.All(v => Mathf.Abs(v.x) >= 4.66f && Mathf.Abs(v.x) <= 5.51f), "Ramp uses retained sidewalk width");
+                    Require(vertices.Min(v => v.y) < .01f && vertices.Max(v => v.y) >= .12f, "Ramp joins street to sidewalk");
+                }
+                Require(host.GetComponentsInChildren<Transform>().Any(t => t.name.StartsWith("Pasar Bunga ·")), "Flower market frontage retained");
+                Require(host.GetComponentsInChildren<Transform>().Any(t => t.name == "Teluk jemput pasar"), "Separate passenger market retained");
+                Require(host.GetComponentsInChildren<Transform>().Any(t => t.name == "Pola taktil penyeberangan"), "Tactile paving retained");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(host); }
+            Debug.Log("INTEGRATED_CROSSING_GEOMETRY_PASSED landing materials/dimensions, tactile paving, two distinct market areas.");
         }
 
         static void VerifyVillagePhone(VehicleMode mode)

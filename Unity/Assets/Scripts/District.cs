@@ -50,6 +50,7 @@ namespace JalanKita
             SetupLight();
             BuildRoad();
             BuildBuildings();
+            BuildFlowerMarket();
             BuildSigns();
             BuildMissionScenery();
             streetLook.StreetDetails();
@@ -137,7 +138,9 @@ namespace JalanKita
                         Transform curbParent = side == -1 && z >= Mission.PickupStart && z <= Mission.PickupEnd
                             ? marketCurb.transform : null;
                         Mark("Garis tepi", side * 4.39f, z, .12f, 4.02f, parent: curbParent);
-                        Box("Trotoar", new Vector3(side * 5.5f, .035f, z), new Vector3(1.5f, .18f, 4.02f),
+                        bool landing = Mathf.Abs(z - Zebra) < 4;
+                        float pavingZ = landing ? z + (z < Zebra ? -1 : 1) : z;
+                        Box("Trotoar", new Vector3(side * 5.5f, .035f, pavingZ), new Vector3(1.5f, .18f, landing ? 2 : 4.02f),
                             (z / 4) % 2 == 0 ? "c4b499" : "cdbea4", curbParent);
                     }
                     else if (side == 1)
@@ -147,6 +150,7 @@ namespace JalanKita
                 }
             }
 
+            BuildCrossingLandings();
             Mark("Garis henti STOP", -2.35f, StopLine, 4.45f, .32f);
             Mark("Garis henti APILL", -2.35f, LightLine, 4.45f, .32f);
             for (int i = -5; i <= 5; i++) Mark("Zebra cross", i * .8f, Zebra, .43f, 3.35f);
@@ -187,6 +191,39 @@ namespace JalanKita
             }
         }
 
+        void BuildCrossingLandings()
+        {
+            foreach (int side in Side)
+            {
+                float x0 = side * 4.67f, x1 = side * 5.5f;
+                var vertices = new[] {
+                    new Vector3(x0, .005f, Zebra - 2), new Vector3(x0, .005f, Zebra + 2),
+                    new Vector3(x1, .125f, Zebra + 2), new Vector3(x1, .125f, Zebra - 2) };
+                var mesh = new Mesh { name = "Landasan penyeberangan" };
+                mesh.vertices = vertices;
+                mesh.triangles = side > 0 ? new[] { 0, 1, 2, 0, 2, 3 } : new[] { 0, 2, 1, 0, 3, 2 };
+                var uv = new Vector2[4];
+                for (int i = 0; i < vertices.Length; i++) uv[i] = new Vector2(vertices[i].x, vertices[i].z) * .5f;
+                mesh.uv = uv;
+                mesh.RecalculateNormals(); mesh.RecalculateBounds(); mesh.RecalculateTangents();
+                var ramp = new GameObject("Landasan penyeberangan");
+                ramp.transform.SetParent(scenery.transform, false);
+                ramp.AddComponent<MeshFilter>().sharedMesh = mesh;
+                ramp.AddComponent<MeshRenderer>().sharedMaterial = streetLook.BoxMaterial("Trotoar penyeberangan");
+                Box("Trotoar penyeberangan", new Vector3(side * 5.875f, .035f, Zebra),
+                    new Vector3(.75f, .18f, 4), "c4b499");
+            }
+            var paving = new MeshBuilder();
+            foreach (int side in Side)
+                for (int row = 0; row < 3; row++)
+                    for (int dot = 0; dot < 8; dot++)
+                    {
+                        Vector3 center = new(side * (5.65f + row * .14f), .136f, Zebra - 1.4f + dot * .4f);
+                        paving.Box(center - new Vector3(.045f, .01f, .045f), center + new Vector3(.045f, .01f, .045f));
+                    }
+            paving.Build("Pola taktil penyeberangan", scenery.transform, Material("d6aa56"), false);
+        }
+
         void BuildBuildings()
         {
             var rng = new System.Random(11);
@@ -196,9 +233,11 @@ namespace JalanKita
                 for (int z = -20; z < 388; z += 7)
                 {
                     if (NearJunction(z, 10) || (side < 0 && (z > 300 && z < 375 || z > 244 && z < 283 || z > 43 && z < 61))) continue;
+                    if (side < 0 && z > Zebra + 2 && z < Zebra + 23) continue;
                     float edge = side == 1 && z > SpurStart - 4 && z < SpurEnd + 5 ? 12 : 8.9f;
                     if ((z + 20) % 28 == 14)
                     {
+                        if (Mathf.Abs(z - Zebra) < 22) continue;
                         Model("Tree_Shade_0", new Vector3(side * (edge + 1.2f), 0, z), z * 31);
                         continue;
                     }
@@ -236,6 +275,58 @@ namespace JalanKita
                 float x = (i % 2 == 0 ? -1 : 1) * rng.Next(16, 41);
                 if (!NearJunction(z, 5)) Model("Tree_Shade_0", new Vector3(x, 0, z), i * 33);
             }
+        }
+
+        void BuildFlowerMarket()
+        {
+            // Keep the sidewalk and crossing clear; batch decorative geometry by material.
+            var batches = new Dictionary<string, MeshBuilder>();
+            void Detail(string color, Vector3 center, Vector3 size)
+            {
+                if (!batches.TryGetValue(color, out var mesh))
+                    batches.Add(color, mesh = new MeshBuilder());
+                mesh.Box(center - size * .5f, center + size * .5f);
+            }
+
+            SurfaceBox("Pelataran Pasar Bunga", new Vector3(-9.1f, .025f, Zebra + 12),
+                new Vector3(3.3f, .16f, 14), "Paving");
+            string[] petals = { "edbc59", "cf6d79", "f7efe1" };
+            for (int stall = 0; stall < 2; stall++)
+            {
+                float z = Zebra + 7 + stall * 7;
+                string fabric = stall == 0 ? "407e78" : "bb6849";
+                for (int stripe = 0; stripe < 8; stripe++)
+                {
+                    string color = stripe % 2 == 0 ? fabric : "f7efe1";
+                    float az = z - 1.75f + stripe * .5f;
+                    Detail(color, new Vector3(-9.1f, 2.55f, az), new Vector3(2.9f, .12f, .5f));
+                    Detail(color, new Vector3(-7.65f, 2.4f, az), new Vector3(.1f, .3f, .5f));
+                }
+                foreach (float x in new[] { -10.4f, -7.8f })
+                    foreach (float offset in new[] { -1.8f, 1.8f })
+                        Detail("6e503c", new Vector3(x, 1.3f, z + offset), new Vector3(.09f, 2.4f, .09f));
+
+                Detail("9b7551", new Vector3(-8.3f, .87f, z), new Vector3(1.1f, .2f, 3.4f));
+                Detail("6e503c", new Vector3(-8.3f, .5f, z), new Vector3(.8f, .65f, 3.1f));
+                for (int pot = 0; pot < 6; pot++)
+                {
+                    float pz = z - 1.35f + pot * .54f;
+                    float height = pot % 2 == 0 ? 1.45f : 1.62f;
+                    Detail("bb6849", new Vector3(-8.1f, 1.1f, pz), new Vector3(.3f, .28f, .3f));
+                    Detail("507357", new Vector3(-8.1f, (1.18f + height) * .5f, pz),
+                        new Vector3(.035f, height - 1.18f, .035f));
+                    Detail("507357", new Vector3(-8.1f, 1.32f, pz), new Vector3(.32f, .08f, .16f));
+                    string flower = petals[(pot + stall) % petals.Length];
+                    Detail(flower, new Vector3(-8.1f, height, pz), new Vector3(.34f, .1f, .14f));
+                    Detail(flower, new Vector3(-8.1f, height, pz), new Vector3(.14f, .1f, .34f));
+                    Detail("edbc59", new Vector3(-8.1f, height + .055f, pz), new Vector3(.1f, .03f, .1f));
+                }
+
+                Detail("9b7551", new Vector3(-9.8f, .3f, z), new Vector3(.7f, .35f, 2.3f));
+                Detail("507357", new Vector3(-9.8f, .6f, z), new Vector3(.6f, .4f, 2.1f));
+            }
+            foreach (var batch in batches)
+                batch.Value.Build("Pasar Bunga · " + batch.Key, scenery.transform, Material(batch.Key));
         }
 
         void BuildSigns()
@@ -424,6 +515,8 @@ namespace JalanKita
                 {
                     bool opening = side < 0 && z > PhoneStart && z < PhoneEnd
                         || side > 0 && z > SpurStart - 3 && z < SpurEnd + 3;
+                    if (Mathf.Abs(z - Zebra) < 22)
+                    { lastPole = null; continue; }
                     if (NearJunction(z, 9) || opening) continue;
                     Model(z % 3 == 0 ? "Tree_Palm" : "Tree_Shade_1", new Vector3(side * 6.1f, .13f, z), z * 13);
                     Vector3 pole = new(side * 7.1f, .13f, z + 5);
