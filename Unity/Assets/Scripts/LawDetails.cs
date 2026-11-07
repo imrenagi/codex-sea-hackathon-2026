@@ -7,7 +7,7 @@ namespace JalanKita
         public const string Amendment = "https://peraturan.bpk.go.id/Details/337869/uu-no-1-tahun-2026";
         public readonly string Meaning, Sanction;
         LawDetails(string meaning,string sanction) { Meaning=meaning; Sanction=sanction; }
-        static string Fine(string article,string amount) => article+" · Denda paling banyak Rp"+amount+".";
+        static string Fine(string article,string amount) => article+" · Maximum fine: Rp"+amount+".";
         public static LawDetails For(Rule rule) => rule switch
         {
             Rule.SeatBelt => new("Drivers and passengers seated beside the driver in vehicles with four or more wheels must wear seat belts.",Fine("Pasal 289","250.000")),
