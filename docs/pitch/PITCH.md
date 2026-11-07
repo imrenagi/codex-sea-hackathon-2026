@@ -2,14 +2,14 @@
 
 Read the pitch paragraphs aloud. The demo section contains actions and points to emphasize, not a script. Timing assumes about 135–140 spoken words per minute, with short pauses. Finish by 5:45, leaving 15 seconds spare. Do not read the preparation notes aloud.
 
-| Time | Section | Duration |
-|---|---|---|
-| 0:00–1:25 | Frustration and the testing gap | 1:25 |
-| 1:25–2:15 | National cost and RoadSense | 0:50 |
-| 2:15–4:20 | Live demo: pedestrian and junction priority | 2:05 |
-| 4:20–4:50 | Built with Codex | 0:30 |
-| 4:50–5:45 | Proposed uses and closing | 0:55 |
-| 5:45–6:00 | Spare time | 0:15 |
+| Time      | Section                                     | Duration |
+| --------- | ------------------------------------------- | -------- |
+| 0:00–1:25 | Frustration and the testing gap             | 1:25     |
+| 1:25–2:15 | National cost and RoadSense                 | 0:50     |
+| 2:15–4:20 | Live demo: pedestrian and junction priority | 2:05     |
+| 4:20–4:50 | Built with Codex                            | 0:30     |
+| 4:50–5:45 | Proposed uses and closing                   | 0:55     |
+| 5:45–6:00 | Spare time                                  | 0:15     |
 
 ## 0:00–1:25 | The frustration
 
@@ -20,8 +20,6 @@ A rider cuts into your lane. A pedestrian tries to cross, but nobody stops. At a
 These riders may have a licence. But do they know when to give way?
 
 Passing a driving test does not always mean someone is ready for real traffic. That is the gap we want to close.
-
-The old motorcycle test was known for zig-zags and figure-eight tracks. Those were replaced in 2023. But the question remains: how well does passing a controlled course prepare someone to give way at a busy crossing or junction?
 
 We want driving preparation to reflect real road situations. The motorcycle test checks skills like braking and turning. On the road, riders also need to notice people, know who goes first, and make safe decisions. We want them to practise those decisions before they drive in real traffic.
 
@@ -41,14 +39,14 @@ So we built **RoadSense**: a driving game where people learn the rules by practi
 
 **Mission:** **Demo singkat · Hak utama — Pasar Bunga**, using **Motor**. This single mission covers a pedestrian crossing and giving way at a junction. Start with the game loaded; open the mission from the menu or press F2.
 
-| Time | What to show | What to emphasize |
-|---|---|---|
-| 2:15–2:30 | Approach the occupied crossing and deliberately fail to give way. | The game checks an actual driving decision: whether the rider lets someone cross safely. |
-| 2:30–2:50 | Show the violation card, **YANG BENAR**, and the legal citation. | Immediate feedback: what went wrong, what to do instead, and the law behind it. Give the judges time to read. |
-| 2:50–3:10 | Select **Lihat cara benar**. Show the coach stopping and waiting, then return to the feedback. | Learners can see the correct action in the same situation. |
-| 3:10–3:45 | Retry manually. Stop before the crossing, wait for a clear path, then continue. | The learner must perform the correct action themselves. |
-| 3:45–4:10 | At the junction, give way to traffic on the main road, then reach the green checkpoint. | Who goes first depends on the situation. Show the second right-of-way decision without changing missions. |
-| 4:10–4:20 | Show the completion card and actual session result. | The complete experience: make a mistake, understand it, watch, retry, and finish. The result is practice evidence, not proof of safer real-world driving. |
+| Time      | What to show                                                                                   | What to emphasize                                                                                                                                         |
+| --------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2:15–2:30 | Approach the occupied crossing and deliberately fail to give way.                              | The game checks an actual driving decision: whether the rider lets someone cross safely.                                                                  |
+| 2:30–2:50 | Show the violation card, **YANG BENAR**, and the legal citation.                               | Immediate feedback: what went wrong, what to do instead, and the law behind it. Give the judges time to read.                                             |
+| 2:50–3:10 | Select **Lihat cara benar**. Show the coach stopping and waiting, then return to the feedback. | Learners can see the correct action in the same situation.                                                                                                |
+| 3:10–3:45 | Retry manually. Stop before the crossing, wait for a clear path, then continue.                | The learner must perform the correct action themselves.                                                                                                   |
+| 3:45–4:10 | At the junction, give way to traffic on the main road, then reach the green checkpoint.        | Who goes first depends on the situation. Show the second right-of-way decision without changing missions.                                                 |
+| 4:10–4:20 | Show the completion card and actual session result.                                            | The complete experience: make a mistake, understand it, watch, retry, and finish. The result is practice evidence, not proof of safer real-world driving. |
 
 **Keep the demo focused:** one mission, one deliberate mistake, one explanation, one retry. Briefly explain each point while driving; let the game do most of the talking. Move to Codex at 4:20.
 
