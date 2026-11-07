@@ -163,7 +163,7 @@ namespace JalanKita
             {
                 bool crossing = stage == 5 ? n.y >= -16 && p.y <= -11
                     : Vector2.Dot(Nose - Boulevard.Center(stage), Boulevard.Exit(stage)) >= 11 && exit <= 17;
-                if (crossing || Vector2.Distance(Nose, BoulevardPedestrian.Value) < 1.8f) Fail(Rule.Pedestrian);
+                if (crossing && BoulevardPedestrianBlocksPath || PedestrianClearance.Touches(BoulevardPedestrian.Value,Position,Heading,Mode)) Fail(Rule.Pedestrian);
             }
             if (exit > 20 && Mathf.Abs(outgoingLane - Boulevard.Lane(stage)) > 1.8f) Fail(Rule.MovementLane);
             if (exit >= Vector2.Dot(RouteStage.All[stage].Checkpoint - Boulevard.Center(stage), Boulevard.Exit(stage)) && enteredJunction && !Failure.HasValue) Advance();
