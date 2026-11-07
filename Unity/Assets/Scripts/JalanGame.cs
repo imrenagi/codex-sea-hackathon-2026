@@ -232,6 +232,7 @@ namespace JalanKita
             AddButton(actions, "Jelajahi peta Jakarta", ShowCityMaps, "quiet");
             if (Application.platform != RuntimePlatform.WebGLPlayer)
                 AddButton(actions, "Keluar", Application.Quit, "quiet");
+            AddControlsHelp(dialog);
             AddSoundControls(dialog);
         }
 
@@ -567,7 +568,21 @@ namespace JalanKita
             var actions = Element(dialog, "row actions");
             if (!journey.Finished) AddButton(actions, "Kembali berkendara", ReturnToJourney, "primary");
             AddButton(actions, "Menu utama", BackToMenu, journey.Finished ? "primary" : "quiet");
+            AddControlsHelp(dialog);
             AddSoundControls(dialog);
+        }
+
+        static void AddControlsHelp(VisualElement parent)
+        {
+            Fold(parent, "Kontrol berkendara", help =>
+            {
+                AddLabel(help, "W / ↑: gas · S / ↓ / Space: rem · A / D / ← / →: setir", "copy");
+                AddLabel(help, "Q / E: sein kiri / kanan · L: lampu motor · C: kamera", "copy");
+                AddLabel(help, "F / G: abaikan / jawab telepon · H: klakson · M: suara", "copy");
+                AddLabel(help, "Tab / Esc: jeda · R: ulang dari checkpoint", "copy");
+                AddLabel(help, "Di layar pelanggaran: R untuk coba lagi, D untuk peragaan cara benar.", "copy");
+                AddLabel(help, "Menu: F2 untuk demo singkat. Tab memilih tombol, Enter menjalankannya.", "copy");
+            });
         }
 
         void ToggleSound()
@@ -735,6 +750,7 @@ namespace JalanKita
             }
             instruction.text = prompt;
             if (stage < 5) detail.text = (signal.Length == 0 ? "" : signal + "   /   ") + Mathf.Max(0, Mathf.RoundToInt(target - journey.Front)) + " M";
+            Show(root.Q("missionHint"), !pitchDemo);
             routeCount.text = pitchDemo ? "DEMO · HAK UTAMA" : practiceStart >= 0 ? "LATIHAN MISI  " + (stage+1).ToString("00") + " / " + All.Length.ToString("00")
                 : "CHECKPOINT  " + stage.ToString("00") + " / " + All.Length.ToString("00");
             for (int i = 0; i < routeSteps.Length; i++)
