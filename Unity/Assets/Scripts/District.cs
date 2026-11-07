@@ -102,10 +102,17 @@ namespace JalanKita
                     if (!opening)
                     {
                         Mark("Garis tepi", side * 4.39f, z, .12f, 4.02f);
-                        SurfaceBox("Trotoar", new Vector3(side * 6.1f, .035f, z), new Vector3(2.7f, .18f, 4.02f), "Paving");
+                        bool landing = Mathf.Abs(z - Zebra) < 4;
+                        float pavingZ = landing ? z + (z < Zebra ? -1 : 1) : z;
+                        SurfaceBox("Trotoar", new Vector3(side * 6.1f, .035f, pavingZ),
+                            new Vector3(2.7f, .18f, landing ? 2 : 4.02f), "Paving");
                         for (int k = 0; k < 4; k++)
+                        {
+                            float curbZ = z - 1.5f + k;
+                            if (Mathf.Abs(curbZ - Zebra) < 2) continue;
                             Box("Kanstin hitam putih", new Vector3(side * 4.78f, .06f, z - 1.5f + k),
                                 new Vector3(.22f, .22f, 1), k % 2 == 0 ? "eeeeea" : "25272b");
+                        }
                         if (z % 12 == 0)
                             Box("Drainase", new Vector3(side * 4.56f, .016f, z), new Vector3(.3f, .025f, .65f), "2b2d2f");
                     }
@@ -116,6 +123,7 @@ namespace JalanKita
                 }
             }
 
+            BuildCrossingLandings();
             Mark("Garis henti STOP", -2.35f, StopLine, 4.45f, .32f);
             Mark("Garis henti APILL", -2.35f, LightLine, 4.45f, .32f);
             for (int i = -5; i <= 5; i++) Mark("Zebra cross", i * .8f, Zebra, .43f, 3.35f);
@@ -142,6 +150,39 @@ namespace JalanKita
                     Box("Puncak checkpoint", new Vector3(x, 1.46f, z), new Vector3(.29f, .21f, .29f), color);
                 }
             }
+        }
+
+        void BuildCrossingLandings()
+        {
+            foreach (int side in Side)
+            {
+                float x0 = side * 4.67f, x1 = side * 5.5f;
+                var vertices = new[] {
+                    new Vector3(x0, .005f, Zebra - 2), new Vector3(x0, .005f, Zebra + 2),
+                    new Vector3(x1, .125f, Zebra + 2), new Vector3(x1, .125f, Zebra - 2) };
+                var mesh = new Mesh { name = "Landasan penyeberangan" };
+                mesh.vertices = vertices;
+                mesh.triangles = side > 0 ? new[] { 0, 1, 2, 0, 2, 3 } : new[] { 0, 2, 1, 0, 3, 2 };
+                var uv = new Vector2[4];
+                for (int i = 0; i < vertices.Length; i++) uv[i] = new Vector2(vertices[i].x, vertices[i].z) * .5f;
+                mesh.uv = uv;
+                mesh.RecalculateNormals(); mesh.RecalculateBounds(); mesh.RecalculateTangents();
+                var ramp = new GameObject("Landasan penyeberangan");
+                ramp.transform.SetParent(scenery.transform, false);
+                ramp.AddComponent<MeshFilter>().sharedMesh = mesh;
+                ramp.AddComponent<MeshRenderer>().sharedMaterial = surfaces["Paving"];
+                SurfaceBox("Trotoar penyeberangan", new Vector3(side * 6.475f, .035f, Zebra),
+                    new Vector3(1.95f, .18f, 4), "Paving");
+            }
+            var paving = new MeshBuilder();
+            foreach (int side in Side)
+                for (int row = 0; row < 3; row++)
+                    for (int dot = 0; dot < 8; dot++)
+                    {
+                        Vector3 center = new(side * (5.65f + row * .14f), .136f, Zebra - 1.4f + dot * .4f);
+                        paving.Box(center - new Vector3(.045f, .01f, .045f), center + new Vector3(.045f, .01f, .045f));
+                    }
+            paving.Build("Pola taktil penyeberangan", scenery.transform, Material("d6aa56"), false);
         }
 
         void BuildBuildings()
