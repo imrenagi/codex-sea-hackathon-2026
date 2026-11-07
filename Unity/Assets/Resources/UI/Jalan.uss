@@ -44,10 +44,14 @@
     color: #e9e6df; padding: 10px 13px; border-radius: 7px;
     font-size: 13px;
 }
-.cluster { min-width: 160px; align-items: center; }
-.speed { font-size: 43px; -unity-font-style: bold; -unity-text-align: middle-center; }
+.cluster { width: 190px; align-items: center; padding: 16px 20px; border-radius: 14px; }
+.speed { font-size: 56px; color: #ffffff; -unity-font-style: bold; -unity-text-align: middle-center; }
 .speed-alert { color: #e5484d; }
-.unit { margin-left: 6px; color: #a9a6a0; }
+.unit { font-size: 13px; color: #a9a6a0; margin-top: -8px; }
+.indicators { flex-direction: row; margin-top: 6px; }
+.indicators .icon { width: 28px; height: 22px; color: rgba(255,255,255,0.25); margin: 0 8px; }
+.indicators .icon.on { color: #52e07f; }
+.indicators .icon.lamp.on { color: #8fd0ff; }
 .toast {
     position: absolute; top: 142px; align-self: center;
     background-color: #2fae64; color: #ffffff; padding: 9px 20px;

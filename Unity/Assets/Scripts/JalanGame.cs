@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UjianSim.Game;
 using static JalanKita.RouteStage;
 
 namespace JalanKita
@@ -21,7 +22,8 @@ namespace JalanKita
         float toastUntil;
         int quizIndex, quizScore;
         VisualElement root, hud, dialog, overlay, phone;
-        Label location, title, instruction, detail, speed, vehicle, routeCount, toast;
+        Label location, title, instruction, detail, speed, routeCount, toast;
+        HudIcon signalLeft, signalRight, headlight;
         Button progress;
         readonly Label[] routeSteps = new Label[All.Length];
 
@@ -42,7 +44,13 @@ namespace JalanKita
             instruction = root.Q<Label>("instruction");
             detail = root.Q<Label>("detail");
             speed = root.Q<Label>("speed");
-            vehicle = root.Q<Label>("vehicleState");
+            var indicators = root.Q("indicators");
+            signalLeft = new HudIcon(HudIcon.Shape.Left) { name = "signalLeft" };
+            headlight = new HudIcon(HudIcon.Shape.Headlight) { name = "headlight" };
+            signalRight = new HudIcon(HudIcon.Shape.Right) { name = "signalRight" };
+            indicators.Add(signalLeft);
+            indicators.Add(headlight);
+            indicators.Add(signalRight);
             routeCount = root.Q<Label>("routeCount");
             toast = root.Q<Label>("toast");
             for (int i = 0; i < routeSteps.Length; i++)
@@ -488,14 +496,12 @@ namespace JalanKita
                 routeSteps[i].EnableInClassList("step-done", i < stage);
                 routeSteps[i].EnableInClassList("step-current", i == stage);
             }
-            speed.text = Mathf.RoundToInt(journey.Kph).ToString("00");
+            speed.text = Mathf.RoundToInt(journey.Kph).ToString();
             speed.EnableInClassList("speed-alert", stage == 4 && journey.Front >= SchoolLimit && journey.Kph > 30.75f);
-            vehicle.text = journey.Indicator switch
-            {
-                -1 => "‹  SEIN KIRI",
-                1 => "SEIN KANAN  ›",
-                _ => mode == VehicleMode.Car ? "MOBIL" : journey.Headlight ? "MOTOR · LAMPU NYALA" : "MOTOR · LAMPU MATI"
-            };
+            bool blink = Time.unscaledTime % .7f < .42f;
+            signalLeft.On = journey.Indicator == -1 && blink;
+            signalRight.On = journey.Indicator == 1 && blink;
+            headlight.On = journey.Mode == VehicleMode.Motorcycle && journey.Headlight;
             Show(phone, journey.PhoneRinging && learner == null);
             Show(toast, Time.unscaledTime < toastUntil);
         }

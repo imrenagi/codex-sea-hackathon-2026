@@ -18,12 +18,10 @@
             <ui:Label name="toast" class="label toast hidden" picking-mode="Ignore" />
             <ui:VisualElement class="row split bottom-row" picking-mode="Ignore">
                 <ui:Label text="W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    C Kamera    R Ulang" class="label controls" />
-                <ui:VisualElement class="panel cluster">
-                    <ui:VisualElement class="row" picking-mode="Ignore">
-                        <ui:Label name="speed" text="00" class="label speed" />
-                        <ui:Label text="km/j" class="label unit" />
-                    </ui:VisualElement>
-                    <ui:Label name="vehicleState" class="label kicker" />
+                <ui:VisualElement class="panel cluster" picking-mode="Ignore">
+                    <ui:Label name="speed" text="0" class="label speed" />
+                    <ui:Label text="km/jam" class="label unit" />
+                    <ui:VisualElement name="indicators" class="indicators" picking-mode="Ignore" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="phone" class="panel phone hidden">
