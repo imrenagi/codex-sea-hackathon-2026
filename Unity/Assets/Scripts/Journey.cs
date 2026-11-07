@@ -537,7 +537,7 @@ namespace JalanKita
                 Tick(ref zebraTime, dt, z >= RouteStage.Zebra - 19);
                 Tick(ref priorityTime, dt, z >= RouteStage.YieldLine - 20);
                 PedestrianDirection = Save.mistakes[(int)Rule.Pedestrian] % 2 == 0 ? 1 : -1;
-                UpdateCrossingPedestrians(RouteStage.Zebra, 1.65f);
+                UpdateCrossingPedestrians(RouteStage.Zebra, 2.45f);
                 CrossDirection = Save.mistakes[(int)Rule.Junction] % 2 == 0 ? -1 : 1;
                 CrossTraffic = CrossingCar(priorityTime, RouteStage.MainJunction, CrossDirection);
             }

@@ -42,7 +42,7 @@ namespace JalanKita
             Pedestrian = null;
             for (int i = 0; i < CrossingPedestrianCount; i++)
             {
-                float walkingTime = Mathf.Max(0, zebraTime - .65f - i * .85f);
+                float walkingTime = Mathf.Max(0, zebraTime - .2f - i * .4f);
                 float x = Mathf.Min(CrossingEndX, CrossingStartX + walkingTime * pace);
                 var position = new Vector2(x * PedestrianDirection, crossingZ + (i - 1) * .8f);
                 crossingPedestrians[i] = position;
