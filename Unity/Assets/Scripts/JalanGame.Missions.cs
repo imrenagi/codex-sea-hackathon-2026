@@ -141,23 +141,29 @@ namespace JalanKita
             var activity = journey.Activity;
             if(journey.Finished) PracticeScore.RecordMission(mode,activity,journey.Save);
             bool scenario = activity.Kind == MissionKind.Scenario;
-            AddLabel(dialog, journey.Finished ? scenario ? GameText.Get("text.mission_complete") : GameText.Get("text.test_complete") : GameText.Get("text.progress_saved"), "kicker");
-            AddLabel(dialog, activity.Title, "heading");
-            if(journey.Finished) AddScoreSummary(dialog,journey.Save.mistakes,PracticeScore.Load(mode,"mission-"+activity.Id).bestStars);
-            AddLabel(dialog, journey.Finished ? scenario ? GameText.Get("text.destination_reached_safely") : GameText.Get("text.latest_attempt_passed")
+            var sheet = journey.Finished
+                ? Result(GameText.Get(scenario ? "text.mission_complete" : "text.test_complete"), "good", activity.Title) : null;
+            VisualElement content = sheet != null ? ResultBody(sheet) : dialog;
+            if (!journey.Finished)
+            {
+                AddLabel(content, GameText.Get("text.progress_saved"), "kicker");
+                AddLabel(content, activity.Title, "heading");
+            }
+            if(journey.Finished) AddScoreSummary(content,journey.Save.mistakes,PracticeScore.Load(mode,"mission-"+activity.Id).bestStars);
+            AddLabel(content, journey.Finished ? scenario ? GameText.Get("text.destination_reached_safely") : GameText.Get("text.latest_attempt_passed")
                 : GameText.Get("text.continue_or_choose_another_activity"), "copy");
-            AddLabel(dialog, GameText.Get("missions.attempts", journey.Save.attempts, journey.MistakeCount), "copy");
+            AddLabel(content, GameText.Get("missions.attempts", journey.Save.attempts, journey.MistakeCount), "copy");
             if (journey.Finished)
-                AddLabel(dialog, GameText.Get("missions.best_result", journey.Save.bestMistakes, journey.Save.completions), "objective-detail");
-            var note = Element(dialog, "note");
+                AddLabel(content, GameText.Get("missions.best_result", journey.Save.bestMistakes, journey.Save.completions), "objective-detail");
+            var note = Element(content, "note");
             AddLabel(note, journey.Finished ? GameText.Get("text.skills_practiced") : GameText.Get("text.practice_focus"), "kicker");
             AddLabel(note, activity.Focus, "copy");
             var errors = Enumerable.Range(0, Lesson.All.Length).Where(i => journey.Save.mistakes[i] > 0)
                 .OrderByDescending(i => journey.Save.mistakes[i]).Take(2).ToArray();
             foreach (int i in errors) AddLabel(note, journey.Save.mistakes[i] + "×  " + Lesson.All[i].Title, "objective-detail");
             if (journey.Finished && errors.Length == 0) AddLabel(note, GameText.Get("text.completed_this_session_without_mistakes"), "objective-detail");
-            AddControlsHelp(dialog);
-            var actions = Element(dialog, "row actions");
+            AddControlsHelp(content);
+            var actions = Element(sheet ?? content, sheet != null ? "sheet-actions" : "row actions");
             if (!journey.Finished) AddButton(actions, GameText.Get("text.continue"), () =>
             {
                 if (journey.Stage == 0) ShowPreflight();
@@ -165,9 +171,9 @@ namespace JalanKita
                 else ReturnToJourney();
             }, "primary");
             else AddButton(actions, scenario ? GameText.Get("text.retry_with_a_variation") : GameText.Get("text.retry_test"),
-                () => StartMission(activity, journey.Save, restart: true), "primary");
-            AddButton(actions, scenario ? GameText.Get("text.choose_mission") : GameText.Get("text.choose_test"), () => ShowCatalogue(activity.Kind), "quiet");
-            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
+                () => StartMission(activity, journey.Save, restart: true), "big primary");
+            AddButton(actions, scenario ? GameText.Get("text.choose_mission") : GameText.Get("text.choose_test"), () => ShowCatalogue(activity.Kind), journey.Finished ? "big quiet" : "quiet");
+            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, journey.Finished ? "big quiet" : "quiet");
         }
 
         void RefreshMissionPrompt(ref string prompt, ref string signal, ref float target)

@@ -99,20 +99,26 @@ namespace JalanKita
         void ShowHiProgress()
         {
             SetPage(Page.JaksaPause);
-            var content = ScrollDialog();
-            AddLabel(content, hiObjective.Complete ? GameText.Get("hi.completed") : hiObjective.Failed ? GameText.Get("hi.try_again") : GameText.Get("hi.paused"), "kicker");
-            AddLabel(content, HiTitle, "heading");
+            var sheet = HiEnded
+                ? Result(GameText.Get(hiObjective.Complete ? "hi.completed" : "hi.try_again"),
+                    hiObjective.Complete ? "good" : "bad", HiTitle) : null;
+            var content = sheet != null ? ResultBody(sheet) : ScrollDialog();
+            if (!HiEnded)
+            {
+                AddLabel(content, GameText.Get("hi.paused"), "kicker");
+                AddLabel(content, HiTitle, "heading");
+            }
             AddLabel(content, hiObjective.Complete ? GameText.Get("hi.success") : hiObjective.Failed ? hiObjective.FailureReason : hiObjective.Instruction, "copy");
             AddLabel(content, GameText.Get("hi.result_counts", hiRecord.attempts, hiRecord.completions, hiRecord.failures), "copy");
             var note = Element(content, "note");
             AddLabel(note, GameText.Get("text.practice_focus"), "kicker"); AddLabel(note, HiFocus, "copy");
             AddLabel(content, GameText.Get("hi.save_note"), "objective-detail");
             AddControlsHelp(content);
-            var actions = Element(content, "row actions");
+            var actions = Element(sheet ?? content, sheet != null ? "sheet-actions" : "row actions");
             if (!HiEnded) AddButton(actions, GameText.Get("text.continue"), () => EnterHumanDrive(Page.Jaksa), "primary");
-            AddButton(actions, GameText.Get("hi.retry"), () => { ResetExplore(); EnterHumanDrive(Page.Jaksa); }, HiEnded ? "primary" : "quiet");
-            AddButton(actions, GameText.Get("hi.choose"), LeaveHiForCatalogue, "quiet");
-            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
+            AddButton(actions, GameText.Get("hi.retry"), () => { ResetExplore(); EnterHumanDrive(Page.Jaksa); }, HiEnded ? "big primary" : "quiet");
+            AddButton(actions, GameText.Get("hi.choose"), LeaveHiForCatalogue, HiEnded ? "big quiet" : "quiet");
+            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, HiEnded ? "big quiet" : "quiet");
         }
         void LeaveHiForCatalogue()
         {

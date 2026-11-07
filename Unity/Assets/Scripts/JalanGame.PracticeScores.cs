@@ -36,14 +36,16 @@ namespace JalanKita
             { PracticeScore.Record(mode,id,counts); lastScoredJourney=journey; lastScoredStage=stage; }
             completedPracticeStage=stage;
             SetPage(Page.Checkpoint);
-            var content=ScrollDialog();
-            AddLabel(content,GameText.Get("level.checkpoint.title",stage+1,RouteStage.All[stage].Title),"heading");
+            var sheet=Result(GameText.Get("text.mission_complete_405e76"),"good",
+                GameText.Get("level.checkpoint.title",stage+1,RouteStage.All[stage].Title));
+            var content=ResultBody(sheet);
             AddScoreSummary(content,counts,PracticeScore.Load(mode,id).bestStars);
-            var actions=Element(content,"row actions");
-            AddButton(actions,GameText.Get("rating.retry"),()=>JumpToMission(stage),"primary");
-            if(stage+1<RouteStage.All.Length) AddButton(actions,GameText.Get("rating.next"),()=>JumpToMission(stage+1),"quiet");
-            AddButton(actions,GameText.Get("home.practice"),ShowPracticeChooser,"quiet");
-            AddButton(actions,GameText.Get("text.main_menu"),BackToMenu,"quiet");
+            var actions=Element(sheet,"sheet-actions");
+            bool hasNext=stage+1<RouteStage.All.Length;
+            if(hasNext) AddButton(actions,GameText.Get("rating.next"),()=>JumpToMission(stage+1),"big primary");
+            AddButton(actions,GameText.Get("rating.retry"),()=>JumpToMission(stage),"big quiet");
+            AddButton(actions,GameText.Get("home.practice"),ShowPracticeChooser,hasNext ? "big quiet" : "big primary");
+            AddButton(actions,GameText.Get("text.main_menu"),BackToMenu,"big quiet");
         }
         void ShowTutorialScore(VisualElement parent)
         {

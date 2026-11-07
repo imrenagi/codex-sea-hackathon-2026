@@ -159,20 +159,21 @@
 .negative { color: var(--rs-danger); }
 
 /* Keep feedback readable while leaving the next action and recovery controls visible. */
-.result-layout {
-    width: 100%; max-height: 100%; padding: 20px 0;
+.dialog.result-layout {
+    width: 100%; max-height: 100%; padding: 40px 24px 20px;
     align-items: center; background-color: rgba(0,0,0,0); border-width: 0;
 }
-.result-head { align-items: center; flex-shrink: 0; max-width: 100%; }
+.result-head { align-items: center; flex-shrink: 0; max-width: 100%; padding-top: 28px; }
 .stamp {
-    font-size: 32px; -unity-font-style: bold; -unity-text-align: middle-center;
-    padding: 6px 18px; border-width: 2px; border-radius: 8px;
-    letter-spacing: .5px; white-space: normal;
+    font-size: 64px; -unity-font-style: bold; -unity-text-align: middle-center;
+    padding: 8px 26px; border-width: 5px; border-radius: 16px;
+    letter-spacing: 1px; white-space: nowrap; max-width: 100%;
+    rotate: -6deg; margin-bottom: 34px;
     transition-duration: 0.18s; transition-timing-function: ease-out;
 }
 .stamp.pre { opacity: 0.75; }
 .stamp.bad { background-color: #ffe9e6; border-color: #e5484d; color: #e5484d; }
-.stamp.good { background-color: #235d43; border-color: #7fe0a4; color: #ffffff; }
+.stamp.good { background-color: #1db45d; border-color: #ffffff; color: #ffffff; }
 .stamp.warn { background-color: #563812; border-color: #e8b21a; color: #fff3d5; }
 .stamp-caption {
     background-color: rgba(16,19,24,0.92); border-radius: 10px;
@@ -239,8 +240,9 @@
 .compact .scrim { padding: 10px; }
 .compact .dialog { padding: 16px 20px; }
 .compact .hero { font-size: 44px; }
-.compact .result-layout { padding: 8px 0; }
-.compact .stamp { font-size: 28px; border-width: 2px; padding: 4px 14px; }
+.compact .dialog.result-layout { padding: 18px 16px 8px; }
+.compact .result-head { padding-top: 20px; }
+.compact .stamp { font-size: 42px; border-width: 4px; padding: 6px 18px; margin-bottom: 24px; }
 .compact .stamp-caption { margin-top: 7px; font-size: 18px; }
 .compact .sheet { margin-top: 12px; padding: 12px 14px 10px; }
 
@@ -486,24 +488,7 @@
 .compact .button.chooser-start { margin-bottom: 20px; }
 .compact .play-card .button.exit-action { margin-top: 20px; }
 
-/* Feedback shares one quiet surface; severity is a label, not a full-screen color. */
 .dialog.landing-card { background-color: transparent; border-width: 0; border-radius: 0; }
-.dialog.result-layout {
-    width: 640px; max-width: 100%; max-height: 92%; padding: 24px 26px;
-    align-items: stretch; background-color: rgba(25,30,34,.98);
-    border-width: 1px; border-color: var(--rs-line); border-radius: 6px;
-}
-.result-head { align-items: flex-start; }
-.stamp { font-size: 23px; padding: 0; border-width: 0; border-radius: 0; letter-spacing: 1px; -unity-text-align: middle-left; }
-.stamp.bad { background-color: transparent; color: var(--rs-danger); }
-.stamp.good { background-color: transparent; color: var(--rs-success); }
-.stamp.warn { background-color: transparent; color: #dfbf87; }
-.stamp-caption { background-color: transparent; border-radius: 0; padding: 0; margin-top: 8px; font-size: 26px; color: var(--rs-text); -unity-text-align: middle-left; }
-.sheet {
-    width: 100%; padding: 16px 0 0; margin-top: 18px; background-color: transparent;
-    border-width: 0; border-top-width: 1px; border-radius: 0;
-}
-.sheet.good, .sheet.bad, .sheet.warn { border-color: var(--rs-line); }
 .kind { border-radius: 3px; padding: 4px 7px; font-size: 12px; }
 .kind.legal { background-color: #46322e; color: #edb7ac; }
 .kind.advice { background-color: #453c2d; color: #e3c899; }
@@ -519,10 +504,6 @@
 .fold-body { padding: 10px 12px 14px; }
 .button.big { border-width: 1px; border-radius: 4px; }
 .sheet-actions { margin-top: 16px; }
-.compact .dialog.result-layout { padding: 18px 20px; max-height: 96%; }
-.compact .stamp { font-size: 21px; padding: 0; border-width: 0; }
-.compact .stamp-caption { font-size: 23px; margin-top: 6px; }
-.compact .sheet { margin-top: 12px; padding: 12px 0 0; }
 
 /* Preserve the upstream interactive vehicle showroom. */
 .mission-list .unity-scroller__slider { flex-grow: 1; }
