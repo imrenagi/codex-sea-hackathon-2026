@@ -54,6 +54,7 @@ namespace JalanKita.EditorTools
                 VerifyArrowDirections();
                 IntegrationChecks.VerifyUI(game);
                 VerifyMirrorsAndLook(game);
+                JakartaIntegrationChecks.VerifyUI(game);
                 Debug.Log("Result flow checks passed: both vehicles, all ten completion cards, mission selection, saved progress, arrow directions, continuous resume, final quiz and checkpoint retry.");
                 EditorApplication.Exit(0);
             }

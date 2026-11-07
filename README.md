@@ -62,3 +62,17 @@ Original authoring packs remain under `assets/`; runtime resources and metadata 
 `INTEGRATION_COVERAGE.md` records the source/feature/test matrix; `INTEGRATION_SNAPSHOT.json`, `STREETLOOK_HANDOFF.json`, and `TRAFFIC_HANDOFF.json` preserve source provenance and handoff hashes.
 
 The integrated HUD has three rear-view mirrors, with mirror rendering paused outside driving. Boulevard traffic follows lanes and signals, waits for pedestrians/trains, and interacts with the ambulance. Audio settings group master volume, mute, ambience and preview controls; disabling ambience retains horn, rail, phone and siren warnings. See INTEGRATION_VERIFICATION.md for completed source gates and remaining native QA.
+
+
+Jakarta exploration now includes Sopo Del, Bundaran HI and Monas in the main game's
+**Jelajahi Jakarta** menu. Select a car or motorcycle on the main menu, then choose
+one of the three playable areas. All seven vehicle models, traffic, pedestrians,
+mirrors, engine audio and existing training activities are retained. C cycles chase,
+driver and landmark cameras in HI/Monas; Esc opens pause and **Pindah lokasi**.
+The areas are separate routes rather than a continuous drive between districts.
+
+HI and Monas have animated reflective water, fountains and spatial water ambience.
+Mute, volume and ambience settings also control fountain sound. Pause freezes the
+water, spray, traffic and pedestrians. Landmarks and small architectural details are
+approximations; map attribution and provenance are in
+`Unity/Assets/Resources/JakartaLandmarks/NOTICE.txt`.
