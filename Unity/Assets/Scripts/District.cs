@@ -37,6 +37,7 @@ namespace JalanKita
             BuildSigns();
             BuildStreetProps();
             BuildBoulevard();
+            BuildCheckpointMarkers();
             StaticBatchingUtility.Combine(scenery);
 
             car = Model("Car_City", Vector3.zero, 0, actors);
@@ -142,6 +143,42 @@ namespace JalanKita
                     Box("Puncak checkpoint", new Vector3(x, 1.46f, z), new Vector3(.29f, .21f, .29f), color);
                 }
             }
+        }
+
+        void BuildCheckpointMarkers()
+        {
+            var boards = new MeshBuilder();
+            var numbers = new MeshBuilder();
+            int[] digits = { 63, 6, 91, 79, 102, 109, 125, 7, 127, 111 };
+            Vector2[] segments = { new(0, .25f), new(.14f, .13f), new(.14f, -.13f),
+                new(0, -.25f), new(-.14f, -.13f), new(-.14f, .13f), new(0, 0) };
+            for (int i = 0; i < All.Length; i++)
+            {
+                float heading = All[i].Heading;
+                var rotation = Quaternion.Euler(0, heading, 0);
+                var position = World(All[i].Checkpoint) + rotation * Vector3.left * 3.57f;
+                if (i >= 5)
+                    position = i == 6
+                        ? new Vector3(All[i].Checkpoint.x, 0, Boulevard.Center(6).y - 12.4f)
+                        : new Vector3(Boulevard.Center(i == 5 ? 5 : 7).x - 12.4f, 0, All[i].Checkpoint.y);
+                boards.OrientedBox(position + Vector3.up * 1.2f, new Vector3(.08f, 2.4f, .08f), heading);
+                boards.OrientedBox(position + Vector3.up * 2.45f, new Vector3(.9f, .75f, .08f), heading);
+                for (int digit = 0; digit < 2; digit++)
+                {
+                    int value = digit == 0 ? (i + 1) / 10 : (i + 1) % 10;
+                    for (int part = 0; part < segments.Length; part++)
+                    {
+                        if ((digits[value] & (1 << part)) == 0) continue;
+                        var local = new Vector3((digit == 0 ? -.21f : .21f) + segments[part].x,
+                            2.45f + segments[part].y, -.055f);
+                        bool horizontal = part == 0 || part == 3 || part == 6;
+                        numbers.OrientedBox(position + rotation * local,
+                            horizontal ? new Vector3(.23f, .045f, .025f) : new Vector3(.045f, .2f, .025f), heading);
+                    }
+                }
+            }
+            boards.Build("Nomor checkpoint · papan", scenery.transform, Material("25272b"));
+            numbers.Build("Nomor checkpoint · angka", scenery.transform, Material("f7efe1"), false);
         }
 
         void BuildBuildings()
