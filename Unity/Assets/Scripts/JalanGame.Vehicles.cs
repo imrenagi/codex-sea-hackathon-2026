@@ -9,7 +9,6 @@ namespace JalanKita
         VehiclePreview vehiclePreview;
         Slider previewAngle;
         Label previewName, previewDescription;
-        Button previewAuto;
 
         void ShowVehiclePreview(bool visible)
         {
@@ -39,7 +38,7 @@ namespace JalanKita
                     ConsumeDrivingKey(e);
             });
             panel.Add(image);
-            // Model selection stays beside its preview, before optional rotation controls.
+            // Model selection stays beside its preview; drag or arrow keys control rotation.
             var choices = Element(panel, "vehicle-choices");
             foreach (var choice in VehicleCatalogue.All.Where(v => v.Mode == mode))
             {
@@ -57,11 +56,6 @@ namespace JalanKita
             previewAngle.AddToClassList("volume-control preview-angle");
             previewAngle.RegisterValueChangedCallback(e => vehiclePreview.SetAngle(e.newValue));
             panel.Add(previewAngle);
-            var controls = Element(panel, "row preview-controls");
-            AddButton(controls, GameText.Get("vehicles.preview.left"), () => vehiclePreview.Rotate(-45), "quiet tiny");
-            previewAuto = AddButton(controls, "", () => vehiclePreview.AutoRotate = !vehiclePreview.AutoRotate, "quiet tiny");
-            previewAuto.name = "vehicleAutoRotate";
-            AddButton(controls, GameText.Get("vehicles.preview.right"), () => vehiclePreview.Rotate(45), "quiet tiny");
             RefreshVehiclePreview(0);
         }
 
@@ -72,7 +66,6 @@ namespace JalanKita
             var selected = VehicleCatalogue.Selected(mode);
             previewName.text = selected.Label; previewDescription.text = selected.Description;
             previewAngle.SetValueWithoutNotify(vehiclePreview.Angle);
-            previewAuto.text = vehiclePreview.AutoRotate ? GameText.Get("vehicles.preview.pause") : GameText.Get("vehicles.preview.rotate");
             foreach (var choice in root.Q("vehicleShowroom").Query<Button>(className: "vehicle-choice").ToList())
             {
                 bool active = ReferenceEquals(choice.userData, selected);
