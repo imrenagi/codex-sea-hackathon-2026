@@ -6,7 +6,7 @@ namespace JalanKita
 {
     public sealed partial class JalanGame
     {
-        enum ActionKind { Retry, Back, Home, Play, Next, Check, Practice, Options, Sound, Muted, External }
+        enum ActionKind { Retry, Back, Home, Play, Next, Check, Practice, Options, Sound, Muted, External, Mission, Credits, Exit, Gallery }
         static Button AddActionButton(VisualElement parent, ActionKind icon, string text, Action action, string classes)
         {
             var button = AddButton(parent, text, action, classes);
@@ -98,6 +98,23 @@ namespace JalanKita
                         if (Kind == ActionKind.Muted) { Path(.65f,.36f,.88f,.64f); Path(.88f,.36f,.65f,.64f); }
                         else { pen.BeginPath(); pen.Arc(P(.49f,.5f), .34f*w, -50f,50f); pen.Stroke(); }
                         break;
+                    case ActionKind.Mission:
+                        Path(.24f,.88f,.24f,.14f);
+                        Path(.24f,.17f,.79f,.17f,.66f,.35f,.79f,.53f,.24f,.53f);
+                        break;
+                    case ActionKind.Credits:
+                        Circle(.37f);
+                        Path(.5f,.43f,.5f,.7f);
+                        Path(.5f,.28f,.5f,.29f);
+                        break;
+                    case ActionKind.Exit:
+                        Path(.48f,.17f,.18f,.17f,.18f,.83f,.48f,.83f);
+                        Path(.4f,.5f,.87f,.5f);
+                        Path(.66f,.29f,.87f,.5f,.66f,.71f);
+                        break;
+                    case ActionKind.Gallery:
+                        Path(.16f,.26f,.5f,.08f,.84f,.26f,.84f,.73f,.5f,.92f,.16f,.73f,.16f,.26f);
+                        Path(.16f,.26f,.5f,.46f,.84f,.26f); Path(.5f,.46f,.5f,.92f); break;
                     case ActionKind.External:
                         Path(.43f,.2f,.18f,.2f,.18f,.82f,.8f,.82f,.8f,.57f);
                         Path(.48f,.52f,.84f,.16f); Path(.58f,.16f,.84f,.16f,.84f,.42f); break;

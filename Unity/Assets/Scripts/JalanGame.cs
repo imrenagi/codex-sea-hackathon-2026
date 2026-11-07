@@ -10,7 +10,7 @@ namespace JalanKita
     [RequireComponent(typeof(UIDocument))]
     public sealed partial class JalanGame : MonoBehaviour
     {
-        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, Controls, PlayChooser, Options, TutorialBrake, Credits, VehicleSelect }
+        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, Controls, PlayChooser, Options, TutorialBrake, Credits, VehicleSelect, Gallery }
 
         District district;
         GameObject trainingRoot;
@@ -192,6 +192,7 @@ namespace JalanKita
 
         void Update()
         {
+            if (page == Page.Gallery) { if (Input.GetKeyDown(KeyCode.Escape)) ShowMenu(); return; }
             if (page == Page.TutorialBrake)
             {
                 if (Input.GetKeyDown(KeyCode.Escape)) ResumeDemoTutorial();
@@ -349,6 +350,7 @@ namespace JalanKita
 
         void LateUpdate()
         {
+            if (page == Page.Gallery) { PresentAssetGallery(); return; }
             if (journey == null) return;
             if (page == Page.Menu)
             {
@@ -460,11 +462,12 @@ namespace JalanKita
             AddLabel(dialog, GameText.Get("home.subtitle"), "home-tagline");
             var actions = Element(dialog, "home-actions");
             AddActionButton(actions, ActionKind.Play, GameText.Get("home.play"), ShowPracticeChooser, "primary home-action");
-            AddButton(actions, GameText.Get("home.mission"), ShowPlayChooser, "quiet home-action");
+            AddActionButton(actions, ActionKind.Mission, GameText.Get("home.mission"), ShowPlayChooser, "quiet home-action");
+            AddActionButton(actions, ActionKind.Gallery, "Gallery", ShowAssetGallery, "quiet home-action");
             AddActionButton(actions, ActionKind.Options, GameText.Get("home.options"), ShowOptions, "quiet home-action");
-            AddButton(actions, GameText.Get("credits.title"), ShowCreditsPage, "quiet home-action");
+            AddActionButton(actions, ActionKind.Credits, GameText.Get("credits.title"), ShowCreditsPage, "quiet home-action");
             if (Application.platform != RuntimePlatform.WebGLPlayer)
-                AddButton(actions, GameText.Get("home.exit"), Application.Quit, "quiet home-action");
+                AddActionButton(actions, ActionKind.Exit, GameText.Get("home.exit"), Application.Quit, "quiet home-action");
         }
 
         System.Action journeyChooserBack;
@@ -523,7 +526,7 @@ namespace JalanKita
             AddLabel(content, GameText.Get("home.options"), "heading");
             AddLabel(content, GameText.Get("text.sound_controls"), "menu-section-title");
             AddSoundControlsBody(content);
-            AddControlsHelp(content);
+            AddActionButton(content, ActionKind.Retry, GameText.Get("text.replay_demo_tutorial"), StartEntryTutorial, "quiet help-action");
             AddActionButton(content, ActionKind.Home, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
         }
 
@@ -700,7 +703,7 @@ namespace JalanKita
         }
 
         void OnDestroy()
-        { StopHomeShowcase(Page.Menu, tearingDown: true); CloseHi(); vehiclePreview?.Dispose(); cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
+        { CloseAssetGallery(); StopHomeShowcase(Page.Menu, tearingDown: true); CloseHi(); vehiclePreview?.Dispose(); cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
 
         void SelectMode(VehicleMode value)
         {
@@ -1045,7 +1048,6 @@ namespace JalanKita
                 SetActionIcon(ambience, sound.AmbienceEnabled ? ActionKind.Sound : ActionKind.Muted);
                 ambience.text = sound.AmbienceEnabled ? GameText.Get("text.ambience_on") : GameText.Get("text.ambience_off");
             };
-            AddLabel(parent, GameText.Get("text.turn_off_ambience_for_presentations_sirens_and_warnings_remain"), "copy");
             var volume = new Slider(0, 100) { name = "masterVolume", value = sound.Volume * 100 };
             volume.label = GameText.Get("options.volume", Mathf.RoundToInt(volume.value));
             volume.AddToClassList("volume-control");
@@ -1055,8 +1057,6 @@ namespace JalanKita
                 volume.label = GameText.Get("options.volume", Mathf.RoundToInt(change.newValue));
             });
             parent.Add(volume);
-            AddButton(parent, GameText.Get("text.test_sound"), () => sound.Chime(false), "quiet tiny");
-            AddLabel(parent, GameText.Get("text.h_horn_m_toggle_sound"), "copy");
         }
 
         void ReturnToJourney()
@@ -1258,6 +1258,8 @@ namespace JalanKita
 
         void SetPage(Page value)
         {
+            if (page == Page.Gallery) CloseAssetGallery();
+            dialog.RemoveFromClassList("asset-gallery-card");
             if (page == Page.Menu && value != Page.Menu) StopHomeShowcase(value);
             heldLook=0;
             root.focusController?.focusedElement?.Blur();
