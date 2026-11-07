@@ -60,6 +60,8 @@ namespace JalanKita
                 frame.Add(image);
                 AddLabel(frame,new[] { "SPION KIRI","SPION TENGAH","SPION KANAN" }[i],"mirror-caption");
             }
+            root.Q<Image>("signalZoom").image=district.Signals.Texture;
+            root.Q<Image>("signalArrowZoom").image=district.Signals.ArrowTexture;
             dialog = root.Q("dialog");
             overlay = root.Q("overlay");
             phone = root.Q("phone");
@@ -458,7 +460,7 @@ namespace JalanKita
         }
 
         void OnDestroy()
-        { cityPreview?.Dispose(); district?.Mirrors.Dispose(); jaksa?.Mirrors.Dispose(); }
+        { cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
 
         void SelectMode(VehicleMode value)
         {
@@ -560,9 +562,15 @@ namespace JalanKita
             if (lesson.HasSource) AddLabel(body, lesson.Regulation + " · " + lesson.Citation, "rule-source");
             Fold(body, "Kenapa ini penting?", content =>
                 AddLabel(content, Why(rule), "sheet-text"));
-            if (lesson.HasSource) Fold(body, "Dasar hukum", content =>
+            if (lesson.HasSource) Fold(body, "Dasar hukum dan sanksi", content =>
             {
+                var law = LawDetails.For(rule);
                 AddLabel(content, lesson.Regulation + " · " + lesson.Citation, "sheet-text");
+                AddLabel(content, law.Meaning, "sheet-text");
+                AddLabel(content, "SANKSI", "result-label");
+                AddLabel(content, law.Sanction, "sheet-text penalty");
+                AddLabel(content, "Angka di atas adalah batas maksimum, bukan tarif tilang tetap. UU 1/2026 Pasal II ayat (3)–(4) menghapus ancaman kurungan terkait; nominal denda UU LLAJ tetap.", "sheet-text legal-note");
+                AddButton(content, "Penyesuaian pidana 2026", () => Application.OpenURL(LawDetails.Amendment), "quiet");
                 AddButton(content, "Buka sumber resmi", () => Application.OpenURL(lesson.Url), "quiet");
                 if (rule == Rule.Stop) AddButton(content, "Peraturan rambu", () => Application.OpenURL(Lesson.Signs), "quiet");
                 if (rule == Rule.Signal) AddButton(content, "Peraturan lampu", () => Application.OpenURL(Lesson.Signals), "quiet");
@@ -573,7 +581,7 @@ namespace JalanKita
             if (journey.Stage > 0) AddButton(actions, "Lihat cara benar", StartDemonstration, "big quiet");
             AddButton(actions, "Menu", BackToMenu, "big quiet");
             AddLabel(sheet, journey.Stage > 0
-                ? "R: coba lagi dari checkpoint · D: lihat cara benar · Esc: menu"
+                ? "Gulir untuk rincian · R: checkpoint · D: cara benar · Esc: menu"
                 : "R: ulangi persiapan · Esc: menu", "result-keys");
             retry.schedule.Execute(retry.Focus).StartingIn(550);
         }
@@ -802,6 +810,22 @@ namespace JalanKita
 
         void RefreshHud()
         {
+            var signals=district.Signals;
+            Show(root.Q("signalPanel"),signals.Visible);
+            if(signals.Visible)
+            {
+                string[] names={"MERAH","KUNING","HIJAU"};
+                void State(string id,int phase,string prefix)
+                {
+                    var label=root.Q<Label>(id); label.text=prefix+names[phase];
+                    for(int i=0;i<3;i++) label.EnableInClassList(new[] { "signal-red","signal-amber","signal-green" }[i],phase==i);
+                }
+                State("signalMain",signals.MainPhase,signals.HasArrow?"LURUS / KIRI: ":"");
+                State("signalRight",signals.ArrowPhase,"BELOK KANAN: ");
+                Show(root.Q("signalRight"),signals.HasArrow);
+                Show(root.Q("signalArrowZoom"),signals.HasArrow);
+                root.Q<Label>("signalHint").text=journey.Stage==7?"Belok kanan hanya saat panah hijau. Tetap dahulukan pejalan kaki.":"Hijau: tetap dahulukan pejalan kaki dan pastikan jalan kosong.";
+            }
             int stage = journey.Stage;
             float z = journey.Position.y;
             location.text = learner == null ? All[stage].Location : "PERAGAAN  /  " + All[stage].Location;

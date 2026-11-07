@@ -30,6 +30,7 @@ namespace JalanKita
         readonly StreetLook streetLook;
         readonly DrivingCamera followCamera = new();
         public readonly DrivingMirrors Mirrors;
+        public readonly IntersectionSignals Signals;
         readonly GameObject routeLighting;
         readonly Atmosphere routeAtmosphere;
         bool routeLook;
@@ -42,6 +43,7 @@ namespace JalanKita
             streetLook = new StreetLook(scenery.transform);
             actors = new GameObject("Traffic and player").transform;
             actors.SetParent(parent);
+            Signals = new IntersectionSignals(parent);
             schoolScenery = new GameObject("Penyeberangan sekolah");
             marketScenery = new GameObject("Teluk jemput pasar");
             marketCurb = new GameObject("Trotoar pasar pada rute biasa");
@@ -341,6 +343,9 @@ namespace JalanKita
             Model("Sign_Speed30", new Vector3(-5.45f, .12f, SchoolLimit));
             Model("Sign_Speed30", new Vector3(5.45f, .12f, SchoolLimit));
             var light = Model("TrafficLight", new Vector3(-5.35f, .12f, LightLine + .35f), 0, actors);
+            light.transform.localScale = new Vector3(-1,1,1);
+            Signals.EnlargeLenses(light.transform);
+            Signals.Register(1,light.transform,Vector3.forward);
             string[] parts = { "Light_Red", "Light_Amber", "Light_Green" };
             for (int i = 0; i < signal.Length; i++)
             {
@@ -408,10 +413,11 @@ namespace JalanKita
             finishMarker.SetActive(run.Activity != null && run.Stage > 0 && !run.Finished);
             finishMarker.transform.position = new Vector3(0, 0, run.StageEnd);
             for (int i = 0; i < signal.Length; i++)
-                Tint(signal[i], i == run.LightPhase ? signalColors[i] : signalColors[i] * .24f, i == run.LightPhase);
+                foreach(var mat in signal[i].sharedMaterials) IntersectionSignals.Light(mat,i,i==run.LightPhase);
 
             followCamera.Present(camera, point, run.Heading, run.Speed, onMotorcycle, hood, dt, snapCamera, driving ? lookInput : 0);
             Mirrors.Present(run, driving, snapCamera);
+            Signals.Present(run, driving);
             snapCamera = false;
         }
 

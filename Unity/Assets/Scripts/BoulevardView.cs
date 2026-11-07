@@ -123,8 +123,7 @@ namespace JalanKita
                     Model("RoadSymbol_Motorcycle",World(W(-9+lane*3.6f,-22))+Vector3.up*.03f,heading);
                 }
                 // Reuse the original lens materials and protected-right arrow model.
-                SignalModel(stage, arm, "TrafficLight", "M_Light_", W(-11.8f,-18), heading);
-                SignalModel(stage, arm, "TrafficLightArrow", "M_Arrow_", W(-.55f,-18), heading);
+                SignalModel(stage, arm, "TrafficLightArrow", "M_Arrow_", W(-11.8f,-18), heading);
                 SignalModel(stage, arm, "PedLight", "M_Ped_", W(-12,-12), heading+90);
                 Model("Plate_LeftFollowLight",World(W(-11.8f,-18))+Vector3.up*2.7f,heading);
             }
@@ -134,6 +133,15 @@ namespace JalanKita
         {
             var go = Models.Spawn(model,actors,out var mats);
             go.transform.SetPositionAndRotation(World(pos),Quaternion.Euler(0,heading+180,0));
+            if(model=="TrafficLightArrow")
+            {
+                // The original arm and glyphs extend left in this imported orientation.
+                // Mirror the entire rig from the kerb so the arrow sits over the right lane.
+                var scale=go.transform.localScale; scale.x*=-1; go.transform.localScale=scale;
+                Signals.EnlargeLenses(go.transform);
+                boulevardLights.Add((stage,arm,"M_Light_",mats));
+                if(arm==0) Signals.Register(stage,go.transform,World(Boulevard.Forward(stage)));
+            }
             boulevardLights.Add((stage,arm,prefix,mats));
         }
 
@@ -170,11 +178,11 @@ namespace JalanKita
             foreach (var item in boulevardLights)
             {
                 int phase = item.prefix == "M_Light_" ? run.CitySignal(item.stage,item.arm)
-                    : item.stage == run.Stage && item.arm%2==0 ? item.prefix == "M_Arrow_" ? run.ArrowPhase
+                    : item.stage == run.Stage && item.arm%2==0 ? item.prefix == "M_Arrow_" ? run.Stage==7 ? run.ArrowPhase : 0
                     : run.BoulevardPedestrian.HasValue ? 2 : 0 : 0;
                 string[] colors = { "Red","Amber","Green" };
                 for (int i=0;i<3;i++) if (item.mats.TryGetValue(item.prefix+colors[i],out var mat))
-                    MaterialLibrary.SetGlow(mat,phase==i?3:0);
+                    IntersectionSignals.Light(mat,i,phase==i);
             }
             foreach (var barrier in barriers)
             {
