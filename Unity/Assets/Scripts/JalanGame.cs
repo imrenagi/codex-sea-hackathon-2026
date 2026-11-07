@@ -327,20 +327,11 @@ namespace JalanKita
                 demoTutorial.UpdateReadiness(journey);
                 return;
             }
-            if (PauseForDemoCrossing()) return;
-            if (demoBrakeLatched)
-            {
-                // Keep pedestrians moving while the teaching step holds the vehicle stopped.
-                // LearningControls also blocks scoring/progression while this step owns input.
-                journey.Step(Time.fixedDeltaTime, false, true, 0);
-                demoCrossingReady = journey.Speed == 0 && !journey.Pedestrian.HasValue;
-                return;
-            }
             float steer = (Pressed(KeyCode.D, KeyCode.RightArrow) ? 1 : 0)
                 - (Pressed(KeyCode.A, KeyCode.LeftArrow) ? 1 : 0);
             float previousSpeed = journey.Speed;
-            journey.Step(Time.fixedDeltaTime, !demoBrakeLatched && Pressed(KeyCode.W, KeyCode.UpArrow),
-                demoBrakeLatched || Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), steer);
+            journey.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
+                Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), steer);
             CompleteControlsPractice(previousSpeed);
             if (page != Page.Drive) return;
             if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
@@ -689,6 +680,7 @@ namespace JalanKita
 
         void ShowPitchComplete()
         {
+            RememberEntryTutorialCompletion();
             if (demoFinishedAt < 0) demoFinishedAt = Time.realtimeSinceStartupAsDouble;
             SetPage(Page.Checkpoint);
             var content = ScrollDialog();
@@ -1258,7 +1250,7 @@ namespace JalanKita
             dialog.RemoveFromClassList("rule-card");
             dialog.RemoveFromClassList("result-layout");
             dialog.Clear();
-            ShowVehiclePreview(page == Page.Brief || page == Page.Preflight);
+            ShowVehiclePreview(page == Page.PlayChooser || page == Page.Brief || page == Page.Preflight);
             if (value != Page.Drive && value != Page.Jaksa)
                 dialog.schedule.Execute(() => FocusPage(value)).StartingIn(value == Page.Lesson || value == Page.Checkpoint ? 320 : 60);
         }

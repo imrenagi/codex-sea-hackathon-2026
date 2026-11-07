@@ -10,6 +10,8 @@ namespace JalanKita
         readonly HashSet<string> controlsPracticeStarted = new();
         readonly HashSet<string> exploreBraking = new(), exploreStopped = new();
         const string ControlsCompleteKey = "RoadSense.Onboarding.MovementBrake.v1";
+        const string EntryTutorialCompleteKey = "RoadSense.Tutorial.pasar-bunga-right-of-way.Completed.v1";
+        string completedTutorialScenarioId;
         bool entryTutorial;
         Journey controlsOriginal;
         string controlsPracticeContext;
@@ -30,7 +32,33 @@ namespace JalanKita
 
         TutorialRunner demoTutorial;
 
-        void PlayFromHome() => StartEntryTutorial();
+        void PlayFromHome()
+        {
+            bool completed = PlayerPrefs.GetInt(EntryTutorialCompleteKey, 0) == 1;
+            // The old demo stored whole-scenario success only for the current session.
+            // Its finish timestamp survives the menu; the movement/braking flag does not
+            // establish that the crossing and junction were completed.
+            if (!completed && demoFinishedAt >= 0 &&
+                (string.IsNullOrEmpty(completedTutorialScenarioId) || completedTutorialScenarioId == DemoTutorialScenarios.PasarBunga.Id) &&
+                (demoTutorial == null || demoTutorial.Scenario.Id == DemoTutorialScenarios.PasarBunga.Id))
+            {
+                PlayerPrefs.SetInt(EntryTutorialCompleteKey, 1);
+                PlayerPrefs.Save();
+                completed = true;
+            }
+            if (completed) ShowPlayChooser(true);
+            else StartEntryTutorial();
+        }
+
+        void RememberEntryTutorialCompletion()
+        {
+            if (learner != null || !PitchComplete) return;
+            completedTutorialScenarioId = demoTutorial.Scenario.Id;
+            if (completedTutorialScenarioId != DemoTutorialScenarios.PasarBunga.Id
+                || PlayerPrefs.GetInt(EntryTutorialCompleteKey, 0) == 1) return;
+            PlayerPrefs.SetInt(EntryTutorialCompleteKey, 1);
+            PlayerPrefs.Save();
+        }
 
         void StartEntryTutorial()
         {
