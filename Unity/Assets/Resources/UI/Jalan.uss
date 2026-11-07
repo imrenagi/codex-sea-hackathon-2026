@@ -727,3 +727,49 @@
 .screen .chooser-vehicles { margin-left: 0; margin-right: 0; min-width: 0; }
 .screen .chooser-vehicles > .button.chooser-vehicle { margin-left: 0; margin-right: 8px; }
 .screen .chooser-vehicles > .button.chooser-vehicle:last-child { margin-right: 0; }
+
+
+/* Centered game home: transparent title over the live street, with a calm
+   vertical navigation stack. Only the home changes; dialogs stay unchanged. */
+.screen .landing {
+    align-items: center; justify-content: center; padding: 18px;
+    background-color: rgba(9,15,19,.38);
+}
+.screen .landing .dialog.landing-card {
+    width: 720px; max-width: 100%; height: auto; max-height: 96%;
+    padding: 12px 20px; align-items: center;
+    background-color: transparent; border-width: 0; border-radius: 0;
+}
+.screen .landing .home-logo {
+    width: 620px; max-width: 100%; height: 155px; min-height: 0;
+    flex-shrink: 1; margin: 0; padding: 0;
+}
+.screen .landing .home-wordmark {
+    -unity-text-align: middle-center; color: #ffffff; font-size: 72px;
+    -unity-text-outline-width: 2px; -unity-text-outline-color: rgba(7,13,17,.95);
+}
+.screen .landing .home-tagline {
+    max-width: 560px; margin-top: 8px; font-size: 17px;
+    -unity-text-align: middle-center; color: #ffffff;
+    -unity-text-outline-width: 1px; -unity-text-outline-color: rgba(7,13,17,.9);
+}
+.screen .landing .home-actions { width: 320px; max-width: 100%; margin-top: 24px; }
+.screen .landing .button.home-action {
+    width: 100%; min-height: 44px; margin: 0 0 7px; padding: 7px 16px;
+    -unity-text-align: middle-center; font-size: 17px; border-radius: 5px;
+    border-width: 1px; border-color: rgba(238,233,223,.22);
+    background-color: rgba(21,29,34,.86); color: #eee9df;
+}
+.screen .landing .button.home-action.primary { background-color: #c4aa7c; color: #191e22; border-color: #d4bd94; }
+.screen .landing .button.home-action:hover { background-color: #35434a; border-color: #d4bd94; color: #ffffff; }
+.screen .landing .button.home-action.primary:hover { background-color: #d4bd94; color: #191e22; }
+.screen .landing .button.home-action:focus { border-color: #ffffff; background-color: #35434a; color: #ffffff; }
+.screen .landing .button.home-action.primary:focus { background-color: #d4bd94; color: #191e22; }
+.screen .landing .button.home-action:active { background-color: #4a554f; }
+.screen .landing .button.home-action.primary:active { background-color: #b69a6d; color: #191e22; }
+.screen.compact .landing .dialog.landing-card { padding: 8px 12px; }
+.screen.compact .landing .home-logo { width: 480px; height: 120px; }
+.screen.compact .landing .home-wordmark { font-size: 56px; }
+.screen.compact .landing .home-tagline { font-size: 15px; margin-top: 4px; }
+.screen.compact .landing .home-actions { width: 300px; margin-top: 18px; }
+.screen.compact .landing .button.home-action { min-height: 40px; font-size: 16px; margin-bottom: 6px; }
