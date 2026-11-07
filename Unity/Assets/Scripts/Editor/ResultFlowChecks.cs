@@ -54,6 +54,7 @@ namespace JalanKita.EditorTools
                 VerifyArrowDirections();
                 IntegrationChecks.VerifyUI(game);
                 VerifyMirrorsAndLook(game);
+                VerifyDrivingKeyboard(game);
                 JakartaIntegrationChecks.VerifyUI(game);
                 Debug.Log("Result flow checks passed: both vehicles, all ten completion cards, mission selection, saved progress, arrow directions, continuous resume, final quiz and checkpoint retry.");
                 EditorApplication.Exit(0);
@@ -200,6 +201,53 @@ namespace JalanKita.EditorTools
                 finally { UnityEngine.Object.DestroyImmediate(probe); }
             }
             Require(checkedCount >= 36, "All junction arrow models inspected");
+        }
+
+        static void VerifyDrivingKeyboard(JalanGame game)
+        {
+            var root = game.GetComponent<UIDocument>().rootVisualElement;
+            var progress = root.Q<Button>("progress");
+            var pageType = typeof(JalanGame).GetNestedType("Page", BindingFlags.NonPublic);
+            Set(game, "learner", null);
+            Set(game, "pitchDemo", false);
+            Set(game, "journey", new Journey(VehicleMode.Car, new JourneySave { next = 1 }, persistent: false));
+            foreach (string active in new[] { "Drive", "Jaksa" })
+            {
+                progress.Focus();
+                Call(game, "SetPage", Enum.Parse(pageType, active));
+                Require(root.focusController.focusedElement == null, "Entering driving clears old UI focus");
+                progress.Focus(); // Reproduce retained HUD focus even if another UI path reintroduces it.
+                using (var move = NavigationMoveEvent.GetPooled(Vector2.up))
+                {
+                    move.target = progress;
+                    progress.SendEvent(move);
+                    Require(move.isImmediatePropagationStopped && root.focusController.focusedElement == progress, "Driving W/S/arrows cannot navigate HUD");
+                }
+                using (var key = KeyDownEvent.GetPooled(new Event { type = EventType.KeyDown, keyCode = KeyCode.Space, character = ' ' }))
+                {
+                    key.target = progress;
+                    progress.SendEvent(key);
+                    Require(key.isImmediatePropagationStopped && Page(game) == active,
+                        "Driving Space key cannot activate focused pause button");
+                }
+            }
+            Call(game, "SetPage", Enum.Parse(pageType, "Drive"));
+            Call(game, "ShowProgress");
+            var resume = root.Q("dialog").Query<Button>().ToList().Find(b => b.text == "Kembali berkendara");
+            Require(resume != null, "Paused journey exposes resume button");
+            resume.Focus();
+            using (var move = NavigationMoveEvent.GetPooled(Vector2.up))
+            {
+                move.target = resume;
+                resume.SendEvent(move);
+                Require(!move.isPropagationStopped, "Paused keyboard navigation is available");
+            }
+            using (var submit = NavigationSubmitEvent.GetPooled())
+            {
+                submit.target = resume;
+                resume.SendEvent(submit);
+            }
+            Require(Page(game) == "Drive", "Paused Enter submission resumes driving");
         }
 
         static void VerifyMirrorsAndLook(JalanGame game)
