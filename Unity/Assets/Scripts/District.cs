@@ -25,6 +25,7 @@ namespace JalanKita
         readonly Camera camera;
         readonly Light headlamp;
         public readonly DrivingMirrors Mirrors;
+        public readonly IntersectionSignals Signals;
         float headYaw;
         bool snapCamera = true;
 
@@ -34,6 +35,7 @@ namespace JalanKita
             scenery.transform.SetParent(parent);
             actors = new GameObject("Traffic and player").transform;
             actors.SetParent(parent);
+            Signals = new IntersectionSignals(parent);
             BuildRoad();
             BuildBuildings();
             BuildSigns();
@@ -201,6 +203,9 @@ namespace JalanKita
             Model("Sign_Speed30", new Vector3(-5.45f, .12f, SchoolLimit));
             Model("Sign_Speed30", new Vector3(5.45f, .12f, SchoolLimit));
             var light = Model("TrafficLight", new Vector3(-5.35f, .12f, LightLine + .35f), 0, actors);
+            light.transform.localScale = new Vector3(-1,1,1);
+            Signals.EnlargeLenses(light.transform);
+            Signals.Register(1,light.transform,Vector3.forward);
             string[] parts = { "Light_Red", "Light_Amber", "Light_Green" };
             for (int i = 0; i < signal.Length; i++)
             {
@@ -228,7 +233,7 @@ namespace JalanKita
             Pose(laneCar, run.LaneTraffic, 0);
             Pose(spurCar, run.SpurTraffic, 180);
             for (int i = 0; i < signal.Length; i++)
-                Tint(signal[i], i == run.LightPhase ? signalColors[i] : signalColors[i] * .24f, i == run.LightPhase);
+                foreach(var mat in signal[i].sharedMaterials) IntersectionSignals.Light(mat,i,i==run.LightPhase);
             for (int i = 0; i < indicators.Length; i++)
             {
                 var light = indicators[i];
@@ -263,6 +268,7 @@ namespace JalanKita
             camera.transform.SetPositionAndRotation(Vector3.Lerp(camera.transform.position, eye, blend),
                 Quaternion.Slerp(camera.transform.rotation, view, blend));
             Mirrors.Present(run,driving,snapCamera);
+            Signals.Present(run,driving);
             snapCamera = false;
         }
 

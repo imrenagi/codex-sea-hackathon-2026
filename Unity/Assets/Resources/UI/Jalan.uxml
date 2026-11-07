@@ -16,6 +16,16 @@
                     <ui:Button name="progress" text="Kemajuan  [Tab]" class="button quiet tiny" />
                 </ui:VisualElement>
             </ui:VisualElement>
+            <ui:VisualElement name="signalPanel" class="panel signal-panel hidden" picking-mode="Ignore">
+                <ui:Label text="LAMPU PERSIMPANGAN · LIVE" class="label kicker" />
+                <ui:VisualElement class="row signal-views" picking-mode="Ignore">
+                    <ui:Image name="signalZoom" class="signal-zoom" picking-mode="Ignore" />
+                    <ui:Image name="signalArrowZoom" class="signal-zoom" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:Label name="signalMain" class="label signal-state" />
+                <ui:Label name="signalRight" class="label signal-state" />
+                <ui:Label name="signalHint" class="label signal-hint" />
+            </ui:VisualElement>
             <ui:Label name="toast" class="label toast hidden" picking-mode="Ignore" />
             <ui:VisualElement class="row split bottom-row" picking-mode="Ignore">
                 <ui:VisualElement class="driving-controls" picking-mode="Ignore">
