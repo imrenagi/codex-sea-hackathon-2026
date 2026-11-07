@@ -20,7 +20,31 @@ namespace JalanKita
             if (!asset) throw new InvalidOperationException("Data peta belum tersedia: " + id);
             var map = JsonUtility.FromJson<CityMapData>(asset.text);
             if (map?.buildings == null || map.roads == null) throw new InvalidOperationException("Data peta tidak valid: " + id);
+            if (string.IsNullOrWhiteSpace(map.attribution)) throw new InvalidOperationException("Sumber peta belum tersedia: " + id);
+            foreach (var building in map.buildings)
+            {
+                if (building == null || !Finite(building.height) || building.height <= 0)
+                    throw new InvalidOperationException("Tinggi bangunan tidak valid: " + id);
+                CheckPoints(building.points, 3, id + " / bangunan " + building.osmId);
+            }
+            foreach (var road in map.roads)
+            {
+                if (road == null) throw new InvalidOperationException("Jalan tidak valid: " + id);
+                CheckPoints(road.points, 2, id + " / jalan " + road.osmId);
+                if (float.TryParse(road.layer, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float layer) && (!Finite(layer) || Mathf.Abs(layer) > 1000))
+                    throw new InvalidOperationException("Elevasi jalan tidak valid: " + id + " / " + road.osmId);
+            }
             return map;
+        }
+        static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+        static void CheckPoints(CityPoint[] points, int minimum, string label)
+        {
+            if (points == null || points.Length < minimum)
+                throw new InvalidOperationException("Geometri peta tidak lengkap: " + label);
+            foreach (var point in points)
+                if (!Finite(point.x) || !Finite(point.z) || Mathf.Abs(point.x) > 1000000 || Mathf.Abs(point.z) > 1000000)
+                    throw new InvalidOperationException("Koordinat peta tidak valid: " + label);
         }
     }
     public static class CityMapGeometry
