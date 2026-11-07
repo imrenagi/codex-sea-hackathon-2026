@@ -1,6 +1,8 @@
 # Jakarta exploration integration
 
 Base: fc7ecca28531fa81347ec89a9e7178f24f40f55c. Branch: codex/integrate-jakarta-landmarks.
+Core keyboard fix 0068ab09380d512f2d0fd530a37f276114d5ecc1 is merged unchanged;
+a follow-up extends its DrivingKeyboardActive/entry-focus guards to Page.Landmark.
 Worktree: /Users/rizkyputra/codex-sea-hackathon-2026-jakarta.
 Original dirty project and /tmp/jalan-integrate-demo are untouched.
 Main merge/push and final native app handoff remain with their assigned owners.
@@ -43,13 +45,16 @@ One active main output camera and listener across locations/menu/map transitions
 - JakartaIntegrationChecks.Run: main-menu entry, all three locations, both categories,
   chosen model retention, mirrors bound to active scene, listener/light/camera lifecycle,
   pause, area cache reuse, saved journey unchanged and resume after exploration PASS.
+  Repeated after the shared input fix: focused HUD cannot consume W/S or Space in
+  either landmark and either category. Compilation and new keyboard assertions PASS.
 - ResultFlowChecks.Run: full ten-stage route, both categories, checkpoints/retries,
   scenario selection, pitch isolation, six map transitions, saves and new Jakarta
   integration assertions PASS with the diagnostic fixed-seed fixture described below.
 - RenderReview: all eight views plus raw water-reflection captures reviewed; no shader
   compile errors. Main camera+forced reflection+GPU readback benchmark on Apple M4,
-  1600x900, latest medians HI7.95 ms /Monas16.35 ms, p90 9.93/16.63 ms. This is a
-  batch render benchmark, not live gameplay FPS. Scene mesh vertices roughly
+  1600x900, latest medians HI7.95 ms /Monas16.35 ms, maximum 9.93/16.63 ms. This is a
+  batch render benchmark, not live gameplay FPS. The earlier ten-sample log called
+  the maximum p90; the benchmark label is corrected to max. Scene mesh vertices roughly
   1.01M/1.89M; normal rendering culls distance and offscreen geometry.
 - Native final-build interaction/performance remains for the exclusive native QA
   owner after merging this milestone. No live app was launched by this work.
@@ -79,3 +84,8 @@ Primary logs copied there before handoff. Run using Unity6000.3.27f1 with -batch
 Source changed only: JalanGame.cs menu/update/audio/scene routing hooks, one additive
 ResultFlowChecks call, README, this note; new landmark runtime/checks/assets/importer.
 No existing simulation, vehicles, Sopo Del environment or shared fixture modified.
+The shared keyboard fix is retained with its own commit ancestry and tests.
+The core fixture fix, newer PR milestone and mode-switch signal-panel fix remain
+owned by main integration; merge this branch into that tested base rather than
+replacing its JalanGame.cs. After merging, ensure both keyboard and Jakarta flow
+checks remain called from ResultFlowChecks. Native QA must include the new routes.

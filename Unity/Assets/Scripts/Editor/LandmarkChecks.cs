@@ -113,7 +113,7 @@ namespace JalanKita.EditorTools
                 }
                 Array.Sort(ms);
                 var meshes=drive.Environment.Root.GetComponentsInChildren<MeshFilter>();
-                string note=$"{place}: synchronous 1600x900 main camera + forced 640x360 reflection + GPU readback median {ms[5]:F2} ms, p90 {ms[9]:F2} ms; meshes={meshes.Length}; vertices={meshes.Sum(m=>(long)m.sharedMesh.vertexCount)}; droplets={drive.Environment.Water.DropletCount}. Batch render benchmark, not live game FPS. Runtime reflections limited to changed viewpoints at most 11.1 Hz.\n";
+                string note=$"{place}: synchronous 1600x900 main camera + forced 640x360 reflection + GPU readback median {ms[5]:F2} ms, max {ms[9]:F2} ms; meshes={meshes.Length}; vertices={meshes.Sum(m=>(long)m.sharedMesh.vertexCount)}; droplets={drive.Environment.Water.DropletCount}. Batch render benchmark, not live game FPS. Runtime reflections limited to changed viewpoints at most 11.1 Hz.\n";
                 File.AppendAllText("Builds/LandmarkPreview/performance.txt",note);Debug.Log(note);
                 cam.targetTexture=null;UnityEngine.Object.DestroyImmediate(rt);UnityEngine.Object.DestroyImmediate(sample);
             }

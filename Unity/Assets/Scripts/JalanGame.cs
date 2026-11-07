@@ -102,7 +102,7 @@ namespace JalanKita
             ShowMenu();
         }
 
-        bool DrivingKeyboardActive => page == Page.Drive || page == Page.Jaksa;
+        bool DrivingKeyboardActive => page == Page.Drive || page == Page.Jaksa || page == Page.Landmark;
 
         void BindDrivingKeyboard()
         {
@@ -956,7 +956,7 @@ namespace JalanKita
 
         void SetPage(Page value)
         {
-            if (value == Page.Drive || value == Page.Jaksa)
+            if (value == Page.Drive || value == Page.Jaksa || value == Page.Landmark)
                 root.focusController?.focusedElement?.Blur();
             heldLook=0;
             page = value;

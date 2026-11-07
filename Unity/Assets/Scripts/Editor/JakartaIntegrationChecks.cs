@@ -56,6 +56,16 @@ namespace JalanKita.EditorTools
                     Call(game,"StartLandmark",place);Call(game,"LateUpdate");
                     var drive=(LandmarkDrive)Field(game,"landmark");
                     ActiveScene(game,place.ToString());
+                    var pause=root.Q<Button>("progress");pause.Focus();
+                    using(var move=NavigationMoveEvent.GetPooled(Vector2.up))
+                    {
+                        move.target=pause;pause.SendEvent(move);Require(move.isImmediatePropagationStopped,"Landmark W/S cannot navigate HUD");
+                    }
+                    using(var spaceEvent=KeyDownEvent.GetPooled(new Event{type=EventType.KeyDown,keyCode=KeyCode.Space,character=' '}))
+                    {
+                        spaceEvent.target=pause;pause.SendEvent(spaceEvent);Require(spaceEvent.isImmediatePropagationStopped&&Field(game,"page").ToString()=="Landmark","Landmark Space remains brake with focused HUD");
+                    }
+                    root.focusController.focusedElement?.Blur();
                     Require(drive.Mode==mode&&VehicleCatalogue.Selected(mode).Id==choice.Id,"Vehicle selection preserved");
                     Require(drive.Environment.Root.GetComponentsInChildren<Transform>(true).Any(t=>t.name==choice.Label),"Selected model appears");
                     Require(!root.Q("hud").ClassListContains("hidden")&&root.Q("overlay").ClassListContains("hidden"),"Drive HUD visible");
