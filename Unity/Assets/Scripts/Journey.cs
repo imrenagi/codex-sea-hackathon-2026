@@ -283,6 +283,7 @@ namespace JalanKita
             Speed = wrongWay = overSpeed = Throttle = 0;
             motion.Reset();
             steering.Reset();
+            ResetCityTraffic();
             ResetBoulevard();
             Indicator = lane = 0;
             rightSignalAge = leftSignalAge = 0;
@@ -569,6 +570,7 @@ namespace JalanKita
         {
             Save.next++;
             ResetBoulevard();
+            if (Stage == 5) ResetCityTraffic();
             Save.checkpoint = 0;
             if (Activity != null && Finished)
             {

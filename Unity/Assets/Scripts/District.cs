@@ -29,6 +29,7 @@ namespace JalanKita
         readonly Light headlamp;
         readonly StreetLook streetLook;
         readonly DrivingCamera followCamera = new();
+        public readonly DrivingMirrors Mirrors;
         readonly GameObject routeLighting;
         readonly Atmosphere routeAtmosphere;
         bool routeLook;
@@ -88,6 +89,7 @@ namespace JalanKita
             routeLighting = new GameObject("Full journey lighting");
             routeLighting.transform.SetParent(parent, false);
             routeAtmosphere = new Atmosphere(routeLighting.transform, camera);
+            Mirrors = new DrivingMirrors(parent);
             RestoreAtmosphere();
         }
 
@@ -371,7 +373,7 @@ namespace JalanKita
                 Box("Penanda tujuan", new Vector3(x, 1.1f, 0), new Vector3(.3f, 2.2f, .3f), "fac86a", finishMarker.transform);
         }
 
-        public void Present(Journey run, bool hood, float dt, bool driving = true)
+        public void Present(Journey run, bool hood, float dt, bool driving = true, float lookInput = 0)
         {
             bool useRouteLook = run.UsesRouteSteering;
             if (useRouteLook != routeLook)
@@ -408,7 +410,8 @@ namespace JalanKita
             for (int i = 0; i < signal.Length; i++)
                 Tint(signal[i], i == run.LightPhase ? signalColors[i] : signalColors[i] * .24f, i == run.LightPhase);
 
-            followCamera.Present(camera, point, run.Heading, run.Speed, onMotorcycle, hood, dt, snapCamera);
+            followCamera.Present(camera, point, run.Heading, run.Speed, onMotorcycle, hood, dt, snapCamera, driving ? lookInput : 0);
+            Mirrors.Present(run, driving, snapCamera);
             snapCamera = false;
         }
 

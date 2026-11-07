@@ -1,38 +1,25 @@
-# Integrated demo coverage
+# Integration feature and acceptance matrix
 
-Baseline: local snapshot cb5f851 (2026-11-07 11:39 WIB), upstream ef1fb13, city previews/pitch 9ede07a (rebased from preserved 93d1722). Shared source is not edited. Final StreetLook/Gang and traffic manifests are captured; source is frozen.
+This development milestone combines local snapshot cb5f851, main ef1fb13→9a757d8, city/pitch branch93d1722→9ede07a→d35769e (rebases preserve the same unique city/pitch changes), six bounded street/audio commits, and the final StreetLook/traffic/motor-bebek handoffs. Original shared source, v1 saves and authoring packs remain preserved.
 
-| Feature | Source | Integration target | Verification |
+| Feature | Source | Candidate behavior | Verification |
 |---|---|---|---|
-| Seven player choices, persisted per vehicle class, motor bebek labels; original BeAT IDs, LOD/riders/lamps | Local | All playable modes | VehicleChecks + native QA |
-| Five skill tests, three scenarios, boarding, repeat variations/checkpoints | Local | Existing catalogue, bounded missions | MissionChecks + ScenarioAtmosphereChecks |
-| Sopo Del/Sea exploration, textures/environment, traffic | Local | Separate playable exploration entry | JaksaChecks + TrafficChecks + native QA |
-| RoadVehicleMotion, DrivingCamera, StreetLook/Gang | Local | Village/scenarios/exploration, retained visuals | JourneyChecks + StreetLookChecks; frozen manifest imported |
-| Longer route: village, straight/left/right junctions, railway, ambulance | Main | One complete ten-stage journey | BoulevardChecks + JourneyChecks |
-| VehicleSteering, continuous checkpoint poses | Main | Long-route stages and coach contract | Steering checks + route replay |
-| Signal/headlamp icons, sound/horn/mute, results/foldouts | Main | Unified HUD/results, scenario-safe | ResultFlowChecks + native QA |
-| Clickable checkpoint practice, preserving journey saves | Main ef1fb13 | Full-route HUD only; scenario steps noninteractive | ResultFlowChecks + integration regressions |
-| Correct lane-arrow orientation | Main ef1fb13 | Village and boulevard geometry | ResultFlowChecks |
-| Isolated pitch demo: violation, visible citation, coach, retry, completion/replay | City branch9ede07a (rebased from preserved 93d1722) | Separate no-save session starting at Hak utama | Integration regressions + native QA |
-| Audio listener and atmosphere restoration across modes | Both + city lighting fix | One active listener; restored light/sky after preview | Integration regressions + native QA |
-| Six OSM overview maps | City-preview branch | Clearly labeled non-driving overview menu | CityMapChecks + native QA |
-| Saved progress across old local/upstream formats | Both | Versioned named-rule migration, mode/mission isolation | Migration regressions |
-| Responsive picker/catalogues and pause keyboard navigation | Local | Retain verified UI layout/theme | Native QA at 1280x720 and small window |
-| All upstream/local generated source assets and authoring files | Both | Preserved in candidate; no generation repeated | Hash inventory |
+| Seven player choices / lamps / wheels / rider equipment / LOD | Local + final traffic handoff | All playable modes, independent car/motor preferences | VehicleChecks, traffic lamps/state, exploration checks PASS |
+| motor bebek wording | Explicit user request + SHA-guarded four-FBX patch | Lowercase visible labels and model lettering; internal IDs unchanged | All7model checks PASS; sourceowner lettering and lamp renders PASS |
+| Five tests, three scenarios, boarding, replay/checkpoints/NPCs | Local | Existing bounded catalogues; independent mission progress | Allactivities/bothmodes/variants and64seededtraffic runs PASS |
+| Sopo Del/Sea exploration, gang frontage, textures, camera | Local final handoffs | Separate playable exploration; original controls and traffic retained | All7exploration checks and RoadVehicleMotion PASS |
+| Ten-stage full journey, rail and ambulance | Main | Continuous journey + checkpoint results; upstream steering contract | Fullroute/violation/retry checks PASS |
+| Dynamic boulevard traffic | Main9a757d8 | Seeded mixed traffic across junctions/rail/ambulance | Renamed BoulevardTrafficChecks retained alongside localTrafficChecks;24seededroute cases PASS |
+| Mirrors + left/right look | Main9a757d8 + shared camera adaptation | Three mirrors and Z/X/holdbuttons in both playable scenes; no steering mutation | Playmode binding/look/direction/pause checks PASS; finalnative rendering pending |
+| HUD icons, feedback/foldouts/citations, checkpoint practice | Main + local | Scenario counters cannot launch unrelated practice | Playmode fullroute/practice and scenario guard PASS |
+| Isolated pitch demo | City branch | Actual violations, visible citation, coach, retry, completion and fresh replay | Bothmodes and immutable journey/mission saves PASS |
+| Six OSM overview maps | City branch | Clearly labeled non-driving previews; pan/zoom/reset | Sixdatasets, geometry and playmode transitions PASS |
+| Crossing landing/tactile/sightline/flower market | 2eec310,8688df1,210e1d6 | Retains local sidewalk width/materials and separate passenger market | Constructed geometry/material/two-market assertions PASS; finalvisual QA pending |
+| Pitch audio / master volume / ambience / warning priority | 81c44da→db3b571→3c4a216 + main9a | Persisted settings; grouped audio UI; critical warnings retained | Finite mix, mute, persisted/clamped volume, ambience/criticalaudio assertions PASS |
+| Save compatibility | Both formats | Pure-read v1 migration, stable combined counters, v2 writes only gameplay; oldquiz retained |30schema/mode/mission fixtures + flow isolation PASS |
+| Responsive menu/catalogues and pause focus | Local + integration | Bounded scrolling menu/catalogues, Tab focus, Esc resume | Core native menu/selection positive; full finalnative acceptance pending |
+| Lighting and listener lifecycle | Both + city fix | Exactly one active listener across training/exploration/previews | Playmode sixmaps/exploration/menu transitions PASS |
 
-Order: preserve originals → simulation/save contracts → scene and rendering → combined UI/audio/maps → final handoffs → isolated checks → QA build/UI.
+Exact source hashes and original inputs: INTEGRATION_SNAPSHOT.json, STREETLOOK_HANDOFF.json, TRAFFIC_HANDOFF.json, assets/vehicles/motor_bebek_lettering_patch/patch_manifest.json. The original intermediate commits remain in this repository.
 
-The city branch was rebased onto ef1fb13 as 9ede07a; its tree delta is the already integrated latest main selector/arrow fix. User-visible names are now `motor bebek merah-putih` and `motor bebek biru`; derivative model-lettering resource handoff remains pending.
-
-## Follow-on inputs explicitly pending
-
-- Four derivative body FBXs replacing visible lettering with `motor bebek` (internal IDs/source packs retained).
-- Crossing-landings2eec310, crossing-sightlines8688df1, PasarBunga frontage210e1d6. Preserve separate passenger-pickup market and scenario curbs.
-- Audio chain81c44da→db3b571→3c4a216: result/retry cues, speed wind, persisted mastervolume/preview, persisted ambience preference with critical sounds retained.
-- Higher-fidelity environment: isolated next milestone; no shared runtime changes.
-
-Core gates passed: cleancompile, RunSimulation, ResultFlowChecks.Run. Independent native QA pending.
-
-## Follow-on checkpoint (before newer main9a757d8)
-
-Integrated the six pinned street/audio deltas (210e1d6,8688df1,2eec310,81c44da,db3b571,3c4a216), with local sidewalk dimensions/materials and separate passenger market retained. Imported SHA-guarded four-FBX motor-bebek lettering patch, retaining all metadata/materials. Added exact landing/material/tactile/two-market assertions and persisted-volume/ambience/critical-audio assertions. Combined simulation and play-mode flow gates passed on this checkpoint. Newer unmerged feature branches remain queued; newer main9a757d8 boulevard-traffic/mirrors delta is next mandatory reconciliation before publication.
+Newer unmerged branches are preserved and listed in UPSTREAM_QUEUE.json with local codex/queued-* refs; they are deliberately outside this tested milestone. Higher-fidelity environment is a separate requested milestone. No queued feature is claimed complete.

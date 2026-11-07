@@ -53,6 +53,7 @@ namespace JalanKita.EditorTools
                 foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode))) { Verify(game, mode); VerifyMissionSelection(game, mode); }
                 VerifyArrowDirections();
                 IntegrationChecks.VerifyUI(game);
+                VerifyMirrorsAndLook(game);
                 Debug.Log("Result flow checks passed: both vehicles, all ten completion cards, mission selection, saved progress, arrow directions, continuous resume, final quiz and checkpoint retry.");
                 EditorApplication.Exit(0);
             }
@@ -198,6 +199,30 @@ namespace JalanKita.EditorTools
                 finally { UnityEngine.Object.DestroyImmediate(probe); }
             }
             Require(checkedCount >= 36, "All junction arrow models inspected");
+        }
+
+        static void VerifyMirrorsAndLook(JalanGame game)
+        {
+            var district=(District)Field(game,"district");
+            var root=game.GetComponent<UIDocument>().rootVisualElement;
+            Require(root.Q("mirrors").Query<Image>().ToList().Count==3,"Three live mirror views are bound to HUD");
+            Require(root.Q<Button>("lookLeft")!=null && root.Q<Button>("lookRight")!=null,"Look buttons available");
+            foreach(VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
+            {
+                var run=new Journey(mode,new JourneySave { next=5 },persistent:false);
+                district.Snap();
+                district.Present(run,false,1,true,-1);
+                Require(Camera.main.transform.forward.x < -.8f,"Z looks left without steering the vehicle");
+                district.Present(run,false,1,true,1);
+                Require(Camera.main.transform.forward.x > .8f && run.Heading==0,"X looks right without steering the vehicle");
+                district.Present(run,false,1,true,0);
+                Require(Camera.main.transform.forward.z > .8f,"Releasing look returns forward");
+                foreach(var mirror in district.Mirrors.Cameras)
+                    Require(mirror.targetTexture!=null && mirror.transform.forward.z < -.8f,"Mirrors face behind the vehicle");
+                district.Present(run,false,.02f,false);
+                foreach(var mirror in district.Mirrors.Cameras) Require(!mirror.enabled,"Paused mirrors stop rendering");
+            }
+            Require(UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length==1,"Only the driving camera has an audio listener");
         }
 
         static object Field(JalanGame game, string name) => typeof(JalanGame).GetField(name, Private).GetValue(game);

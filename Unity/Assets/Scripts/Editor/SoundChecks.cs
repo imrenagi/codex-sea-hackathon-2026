@@ -56,6 +56,13 @@ namespace JalanKita.EditorTools
                     }
                     if (peak<.001f) throw new InvalidOperationException("Driving mix is silent");
                 }
+                // The ambulance spawns 70 m behind: it must be clearly audible there,
+                // independently of engine/phone/horn tones from the previous mix.
+                sound.UpdateFrame(.02f,new SoundFrame { SirenDist=70, BellDist=float.PositiveInfinity });
+                for(int i=0;i<30;i++) render.Invoke(sound,new object[] { samples,2 });
+                double energy=0;
+                foreach(float value in samples) energy+=value*value;
+                if(Math.Sqrt(energy/samples.Length)<.035) throw new InvalidOperationException("Approaching ambulance siren is too quiet at 70 m");
                 sound.SetMuted(true);
                 render.Invoke(sound, new object[] { samples, 2 });
                 if (Mathf.Abs(samples[^1])>.0001f) throw new InvalidOperationException("Mute did not silence output");

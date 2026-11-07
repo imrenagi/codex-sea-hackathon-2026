@@ -62,6 +62,7 @@ namespace JalanKita.EditorTools
                     // Drive the chosen lane straight across its stop line; turning is checked at entry.
                     run.Step(.02f,run.Speed<4,run.Speed>4.2f,0);
                 }
+                else if (ready) run.Step(.02f,false,true,0);
                 else DrivingCoach.Step(run,.02f);
             }
             Require(run.Failure==expected,$"{mode}: expected {expected}, got {run.Failure}, stage {run.Stage}, {run.Position}, clock {run.CrossingClock}");

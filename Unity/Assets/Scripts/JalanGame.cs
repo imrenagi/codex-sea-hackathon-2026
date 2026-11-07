@@ -27,6 +27,7 @@ namespace JalanKita
         Page page;
         bool confirmNew, hood;
         float toastUntil;
+        float heldLook;
         int quizIndex, quizScore;
         int practiceStart = -1;
         VisualElement root, hud, dialog, overlay, phone;
@@ -47,6 +48,18 @@ namespace JalanKita
             root.AddToClassList("jalan-root");
             root.pickingMode = PickingMode.Ignore;
             hud = root.Q("hud");
+            var mirrors = new VisualElement { name="mirrors", pickingMode=PickingMode.Ignore };
+            mirrors.AddToClassList("mirrors");
+            hud.Insert(0,mirrors);
+            for(int i=0;i<3;i++)
+            {
+                var frame=Element(mirrors,"mirror mirror-"+new[] { "left","centre","right" }[i]);
+                frame.pickingMode=PickingMode.Ignore;
+                var image=new Image { image=district.Mirrors.Textures[i], scaleMode=ScaleMode.ScaleAndCrop, pickingMode=PickingMode.Ignore };
+                image.AddToClassList("mirror-image");
+                frame.Add(image);
+                AddLabel(frame,new[] { "SPION KIRI","SPION TENGAH","SPION KANAN" }[i],"mirror-caption");
+            }
             dialog = root.Q("dialog");
             overlay = root.Q("overlay");
             phone = root.Q("phone");
@@ -83,7 +96,27 @@ namespace JalanKita
             root.Q<Button>("ignorePhone").clicked += () => ResolvePhone(false);
             root.Q<Button>("answerPhone").clicked += () => ResolvePhone(true);
             root.Q<Button>("pickupPassenger").clicked += PickupPassenger;
+            BindLook(root.Q<Button>("lookLeft"),-1);
+            BindLook(root.Q<Button>("lookRight"),1);
             ShowMenu();
+        }
+
+        void BindLook(Button button,float direction)
+        {
+            button.focusable=false;
+            button.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if(e.button!=0) return;
+                heldLook=direction;
+                button.CapturePointer(e.pointerId);
+                e.StopPropagation();
+            },TrickleDown.TrickleDown);
+            button.RegisterCallback<PointerUpEvent>(e =>
+            {
+                heldLook=0;
+                button.ReleasePointer(e.pointerId);
+            });
+            button.RegisterCallback<PointerCaptureOutEvent>(_=>heldLook=0);
         }
 
         void Update()
@@ -184,15 +217,16 @@ namespace JalanKita
         void LateUpdate()
         {
             if (journey == null) return;
+            float look = Mathf.Clamp(heldLook + (Input.GetKey(KeyCode.X) ? 1 : 0) - (Input.GetKey(KeyCode.Z) ? 1 : 0), -1, 1);
             UpdateSound(Time.unscaledDeltaTime);
             if (page == Page.CityPreview) return;
             if (page == Page.Jaksa || page == Page.JaksaPause)
             {
-                jaksa.Present(Time.unscaledDeltaTime);
+                jaksa.Present(Time.unscaledDeltaTime, page == Page.Jaksa, look);
                 if (page == Page.Jaksa) RefreshJaksaHud();
                 return;
             }
-            district.Present(journey, hood, Time.unscaledDeltaTime, page == Page.Drive);
+            district.Present(journey, hood, Time.unscaledDeltaTime, page == Page.Drive, look);
             if (page == Page.Drive) RefreshHud();
         }
 
@@ -224,6 +258,7 @@ namespace JalanKita
         }
 
         static bool Pressed(KeyCode a, KeyCode b) => Input.GetKey(a) || Input.GetKey(b);
+        void OnApplicationFocus(bool focus) { if(!focus) heldLook=0; }
 
         void ShowMenu()
         {
@@ -235,7 +270,7 @@ namespace JalanKita
             trainingRoot.SetActive(true);
             district.RestoreAtmosphere();
             progress.text = "Kemajuan  [Tab]";
-            root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    C Kamera    R Ulang";
+            root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    C Kamera    Z / X Lihat    R Ulang";
             Show(root.Q("steps"), true);
             stored = JourneySave.Load(mode);
             journey = new Journey(mode, new JourneySave(), persistent: false);
@@ -295,7 +330,7 @@ namespace JalanKita
             jaksa ??= new JaksaDrive(transform);
             jaksa.Reset(mode);
             progress.text = "Jeda / menu  [Esc]";
-            root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    L Lampu motor    C Kamera    Esc Jeda";
+            root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    L Lampu motor    C Kamera    Z / X Lihat    Esc Jeda";
             SetPage(Page.Jaksa);
             Show(root.Q("steps"), false);
             Show(phone, false); Show(toast, false);
@@ -422,7 +457,8 @@ namespace JalanKita
             replay.schedule.Execute(replay.Focus).StartingIn(550);
         }
 
-        void OnDestroy() => cityPreview?.Dispose();
+        void OnDestroy()
+        { cityPreview?.Dispose(); district?.Mirrors.Dispose(); jaksa?.Mirrors.Dispose(); }
 
         void SelectMode(VehicleMode value)
         {
@@ -841,6 +877,7 @@ namespace JalanKita
                 else status = journey.AmbulancePassed ? "AMBULANS SUDAH LEWAT"
                     : journey.Ambulance.HasValue ? "SIRENE · AMBULANS " + Mathf.RoundToInt(Mathf.Abs(journey.AmbulanceGap)) + " M"
                     : "ANGKOT BERHENTI DI LAJUR KIRI";
+                if (stage == 9 && journey.Ambulance.HasValue && sound.Muted) status += " · SUARA MATI (M)";
                 detail.text = status + " · BATAS 50 KM/J";
             }
             RefreshMissionPrompt(ref prompt, ref signal, ref target);
@@ -875,7 +912,11 @@ namespace JalanKita
 
         void SetPage(Page value)
         {
+            heldLook=0;
             page = value;
+            var mirrorImages = root.Q("mirrors").Query<Image>().ToList();
+            var textures = page == Page.Jaksa && jaksa != null ? jaksa.Mirrors.Textures : district.Mirrors.Textures;
+            for (int i = 0; i < mirrorImages.Count; i++) mirrorImages[i].image = textures[i];
             Show(hud, page == Page.Drive || page == Page.Jaksa);
             Show(overlay, page != Page.Drive && page != Page.Jaksa);
             overlay.EnableInClassList("landing", page == Page.Menu);

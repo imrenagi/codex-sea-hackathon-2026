@@ -46,6 +46,7 @@ namespace JalanKita.EditorTools
             using var preferences = new SavedPreferences();
             VerifyMigration();
             StreetLookChecks.MotionChecks();
+            BoulevardTrafficChecks.Run();
             TrafficChecks.Run(); // Includes vehicle, missions, full route, steering, sound and exploration checks.
             CityMapChecks.Run();
             VerifyCrossingGeometry();

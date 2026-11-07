@@ -25,6 +25,7 @@ The local village activities and Sopo Del retain their deterministic bicycle con
 | Q / E | Left / right indicator; press again to cancel |
 | L | Motorcycle headlight |
 | C | Change driving camera |
+| Z / X or hold the look buttons | Look left / right without steering |
 | H | Horn |
 | M | Mute/unmute audio |
 | F | Ignore a phone call, or pick up the market passenger when safely stopped |
@@ -59,3 +60,5 @@ Legal feedback links its cited official sources in the game. Map data is attribu
 Original authoring packs remain under `assets/`; runtime resources and metadata are under `Unity/Assets/Resources`. Preparation utilities are documented under `tools/jaksa`, `tools/traffic`, and `tools/vehicles`. Preserve both high/low-detail geometry and material/texture metadata when transferring assets.
 
 `INTEGRATION_COVERAGE.md` records the source/feature/test matrix; `INTEGRATION_SNAPSHOT.json`, `STREETLOOK_HANDOFF.json`, and `TRAFFIC_HANDOFF.json` preserve source provenance and handoff hashes.
+
+The integrated HUD has three rear-view mirrors, with mirror rendering paused outside driving. Boulevard traffic follows lanes and signals, waits for pedestrians/trains, and interacts with the ambulance. Audio settings group master volume, mute, ambience and preview controls; disabling ambience retains horn, rail, phone and siren warnings. See INTEGRATION_VERIFICATION.md for completed source gates and remaining native QA.

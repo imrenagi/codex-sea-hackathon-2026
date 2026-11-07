@@ -23,6 +23,7 @@ namespace JalanKita
         readonly PlayerVehicleView player;
         readonly Transform actors;
         readonly DrivingCamera followCamera = new();
+        public readonly DrivingMirrors Mirrors;
         readonly RoadVehicleMotion motion = new();
         bool snap = true;
         int trafficSeed = 731;
@@ -45,6 +46,7 @@ namespace JalanKita
             Camera.fieldOfView=64;Camera.nearClipPlane=.08f;Camera.farClipPlane=330;
             Camera.allowHDR=true;Camera.GetUniversalAdditionalCameraData().renderPostProcessing=true;
             DrivingCamera.Configure(Camera);
+            Mirrors = new DrivingMirrors(Street.Root.transform);
             Reset(VehicleMode.Car);
         }
 
@@ -93,13 +95,14 @@ namespace JalanKita
             Position=next;
         }
 
-        public void Present(float dt)
+        public void Present(float dt, bool driving = true, float lookInput = 0)
         {
             bool motorcycle=Mode==VehicleMode.Motorcycle;
             Vector3 p=new(Position.x,.035f,Position.y);Quaternion rot=Quaternion.Euler(0,Heading,0);
             player.Present(Mode,p,Heading,Speed,dt,Headlight,Indicator,true,!Hood);
             Traffic.Present(dt,Position);
-            followCamera.Present(Camera,p,Heading,Speed,motorcycle,Hood,dt,snap);snap=false;
+            followCamera.Present(Camera,p,Heading,Speed,motorcycle,Hood,dt,snap,driving ? lookInput : 0);
+            Mirrors.Present(Mode,Position,Heading,driving,snap);snap=false;
         }
     }
 }

@@ -12,6 +12,10 @@ namespace JalanKita
         readonly List<GameObject> train = new();
         GameObject boulevardWalker, ambulance, angkot;
         Renderer[] ambulanceRenderers;
+        BoulevardTraffic visibleTraffic;
+        readonly List<GameObject> trafficModels = new();
+        readonly List<bool> trafficKinds = new();
+        readonly Stack<GameObject> parkedCars = new(), parkedMotorcycles = new();
 
         void BuildBoulevard()
         {
@@ -159,15 +163,15 @@ namespace JalanKita
 
         void PresentBoulevard(Journey run, bool driving)
         {
+            PresentCityTraffic(run.CityTraffic);
             Pose(boulevardWalker,run.BoulevardPedestrian,run.BoulevardPedestrianHeading);
             Pose(ambulance,run.Ambulance,0);
             bool flash = Time.unscaledTime % .8f < .4f;
             foreach (var item in boulevardLights)
             {
-                int phase = item.stage == run.Stage ? item.prefix == "M_Arrow_" ? run.ArrowPhase
-                    : item.prefix == "M_Ped_" ? run.BoulevardPedestrian.HasValue ? 2 : 0 : run.MainPhase : 0;
-                if (item.arm % 2 == 1 && item.stage == run.Stage)
-                    phase = item.prefix == "M_Light_" && run.MainPhase == 0 && run.ArrowPhase == 0 ? 2 : 0;
+                int phase = item.prefix == "M_Light_" ? run.CitySignal(item.stage,item.arm)
+                    : item.stage == run.Stage && item.arm%2==0 ? item.prefix == "M_Arrow_" ? run.ArrowPhase
+                    : run.BoulevardPedestrian.HasValue ? 2 : 0 : 0;
                 string[] colors = { "Red","Amber","Green" };
                 for (int i=0;i<3;i++) if (item.mats.TryGetValue(item.prefix+colors[i],out var mat))
                     MaterialLibrary.SetGlow(mat,phase==i?3:0);
@@ -191,6 +195,36 @@ namespace JalanKita
                     if (name=="M_Siren_Red" || name=="M_Siren_Blue")
                         MaterialLibrary.SetGlow(mat,(name=="M_Siren_Red"?flash:!flash)?2.5f:0);
                 }
+        }
+
+        void PresentCityTraffic(BoulevardTraffic traffic)
+        {
+            if (!ReferenceEquals(visibleTraffic,traffic))
+            {
+                for(int i=0;i<trafficModels.Count;i++)
+                {
+                    trafficModels[i].SetActive(false);
+                    (trafficKinds[i]?parkedMotorcycles:parkedCars).Push(trafficModels[i]);
+                }
+                trafficModels.Clear();
+                trafficKinds.Clear();
+                visibleTraffic=traffic;
+                if (traffic != null) foreach (var vehicle in traffic.Vehicles)
+                {
+                    var pool=vehicle.Motorcycle?parkedMotorcycles:parkedCars;
+                    var model=pool.Count>0?pool.Pop():Model(vehicle.Motorcycle?"Motorcycle":"Car_City",Vector3.zero,0,actors);
+                    model.name="Lalu lintas jalan besar "+vehicle.Id;
+                    foreach (var renderer in model.GetComponentsInChildren<Renderer>())
+                        foreach (var material in renderer.sharedMaterials)
+                            if (MaterialLibrary.BaseName(material.name)==(vehicle.Motorcycle?"M_MotoPaint":"M_CarPaint"))
+                                material.SetColor("_BaseColor",ColorOf(vehicle.Color));
+                    trafficModels.Add(model);
+                    trafficKinds.Add(vehicle.Motorcycle);
+                }
+            }
+            if (traffic == null) return;
+            foreach (var vehicle in traffic.Vehicles)
+                Pose(trafficModels[vehicle.Id],vehicle.Active?vehicle.Position:null,vehicle.Heading);
         }
     }
 }
