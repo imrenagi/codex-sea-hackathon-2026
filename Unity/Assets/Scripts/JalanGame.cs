@@ -85,6 +85,11 @@ namespace JalanKita
 
         void Update()
         {
+            if (page == Page.Menu && Input.GetKeyDown(KeyCode.F2))
+            {
+                StartPitchDemo();
+                return;
+            }
             if (Input.GetKeyDown(KeyCode.M)) ToggleSound();
             if (page == Page.CityPreview)
             {
@@ -197,7 +202,7 @@ namespace JalanKita
             var modes = Element(dialog, "row section");
             AddButton(modes, "Mobil", () => SelectMode(VehicleMode.Car), mode == VehicleMode.Car ? "selected" : "quiet");
             AddButton(modes, "Motor", () => SelectMode(VehicleMode.Motorcycle), mode == VehicleMode.Motorcycle ? "selected" : "quiet");
-            AddButton(dialog, "Demo singkat · Hak utama", StartPitchDemo, "primary");
+            AddButton(dialog, "Demo singkat · Hak utama [F2]", StartPitchDemo, "primary");
             AddLabel(dialog, "Coba satu situasi, pahami aturannya, lalu ulangi. Progres latihan tetap aman.", "copy");
             Fold(dialog, "Lihat 10 misi perjalanan", list =>
             {
