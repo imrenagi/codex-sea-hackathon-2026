@@ -19,9 +19,9 @@ The local village activities and Sopo Del retain their deterministic bicycle con
 
 For the presenting laptop, fetch and check out `codex/demo-ready`. This alias follows the reviewed RoadSense integration; PR #1 is already merged and new changes use a successor PR.
 
-From the **Play / Options / Exit** home, choose **Play**, choose **Mobil** or **Motor**, then **Demo singkat · Hak utama**. Read the paused first-drive controls guide and press **Enter** on its continue action. This opens Pasar Bunga; the demo leaves saved progress unchanged. **F1** reopens controls, and **Options** contains audio settings. WebGL omits Exit.
+From the **Play / Options / Exit** home, choose **Play**, choose **Mobil** or **Motor**, then **Demo singkat · Hak utama**. Follow the WASD cue, then contextual braking and indicator hints while driving. This opens Pasar Bunga; the demo leaves saved progress unchanged. **F1** opens the paused controls guide, and **Options** contains audio settings. WebGL omits Exit.
 
-1. Use **F2** on the main menu to enter the demo, or choose it from **Play**. Complete the controls guide before driving. Hold **W** toward the occupied zebra crossing to show a violation. Release the key when the feedback opens.
+1. Use **F2** on the main menu to enter the demo, or choose it from **Play**. Follow the initial WASD cue. Hold **W** toward the occupied zebra crossing to show a violation. Release the key when the feedback opens.
 2. Show the explanation, correct action, and visible legal citation. **Lihat contoh** plays the existing driving coach. **Tab** returns to the feedback.
 3. Press **R** to retry. Use **Space** to stop before the crossing. Wait for the pedestrian. At the next intersection, stop before the yield line and give way to cross traffic. **Lihat contoh** is the live backup for this full sequence.
 4. Finish at the green checkpoint. The demo ends with its actual mistake count. **Ulangi demo** starts a fresh session.

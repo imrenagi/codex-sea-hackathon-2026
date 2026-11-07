@@ -8,7 +8,7 @@ Narator menjaga waktu. Operator menjalankan game. Rehearsal sebelum tampil; siap
 |---|---|
 | 00:00–00:40 | Perkenalkan RoadSense: simulasi keselamatan berkendara di Indonesia. Fokus pada pejalan kaki dan arus silang. |
 | 00:40–01:10 | Jelaskan alur: mencoba, menerima feedback, melihat contoh, mencoba kembali. |
-| 01:10–01:25 | Home **Play** → **Mobil** → **Coba demo · Hak utama [F2]**. Jika panduan pertama muncul, pilih **Siap, mulai [Enter]**. Lepas semua tombol sebelum gas. |
+| 01:10–01:25 | Home **Play** → **Mobil** → **Coba demo · Hak utama [F2]**. Ikuti cue WASD awal, lalu petunjuk rem/sein sesuai situasi. F1 membuka panduan lengkap. |
 | 01:25–01:45 | Di Pasar Bunga, tekan **W** menuju zebra cross yang sedang digunakan. Lepas W saat feedback tampil. |
 | 01:45–02:15 | Tunjuk tindakan berikutnya, penjelasan, dan rujukan aturan pada kartu feedback. Hindari browser. |
 | 02:15–02:40 | Pilih **Lihat contoh [D]**. Tunjuk pengereman. **Tab** kembali ke feedback. |
