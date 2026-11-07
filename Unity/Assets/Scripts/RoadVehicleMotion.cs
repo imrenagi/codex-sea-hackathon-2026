@@ -28,7 +28,7 @@ namespace JalanKita
                 return Mathf.MoveTowards(speed, target, (speed < target ? 8.4f : 1.6f) * dt);
             }
             if (speed < 0) return Mathf.MoveTowards(speed, 0, 1.2f * dt);
-            float acceleration = mode == VehicleMode.Car ? 2.85f : 3.3f;
+            float acceleration = mode == VehicleMode.Car ? 3.3f : 3.8f;
             acceleration *= Mathf.Lerp(1, .58f, Mathf.Clamp01(speed / Mathf.Max(1, speedLimit)));
             float resistance = .55f + speed * speed * .004f;
             return Mathf.MoveTowards(speed, throttle ? speedLimit : 0,

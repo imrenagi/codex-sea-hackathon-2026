@@ -396,7 +396,7 @@ namespace JalanKita
             {
                 speed = reverse || speed < 0 ? RoadVehicleMotion.AdvanceSpeed(dt, Mode, throttle, brake, reverse, targetSpeed, speed)
                     : brake ? Mathf.MoveTowards(speed, 0, 10.5f * dt)
-                    : Mathf.MoveTowards(speed, throttle ? targetSpeed : 0, dt * (throttle ? (Mode == VehicleMode.Car ? 2.85f : 3.3f) : 1.7f));
+                    : Mathf.MoveTowards(speed, throttle ? targetSpeed : 0, dt * (throttle ? (Mode == VehicleMode.Car ? 3.3f : 3.8f) : 1.7f));
                 heading = steering.Step(Mode, speed, heading, steer, dt);
             }
             else motion.Step(dt, Mode, throttle, brake, steer, targetSpeed, ref speed, ref heading, reverse);

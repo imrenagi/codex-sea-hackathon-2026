@@ -108,7 +108,7 @@ namespace JalanKita
             trafficHeadingStart = Heading;
             var oldNose = Nose;
             Speed = reverse || Speed < 0 ? RoadVehicleMotion.AdvanceSpeed(dt, Mode, throttle, brake, reverse, 16.1f, Speed)
-                : Mathf.MoveTowards(Speed, brake ? 0 : throttle ? 16.1f : 0, dt * (brake ? 10.5f : throttle ? 2.85f : 1.7f));
+                : Mathf.MoveTowards(Speed, brake ? 0 : throttle ? 16.1f : 0, dt * (brake ? 10.5f : throttle ? 3.3f : 1.7f));
             Heading = steering.Step(Mode, Speed, Heading, steer, dt);
             Position += new Vector2(Mathf.Sin(Heading*Mathf.Deg2Rad), Mathf.Cos(Heading*Mathf.Deg2Rad)) * Speed * dt;
             if (RejectReverseOffRoad()) return;
