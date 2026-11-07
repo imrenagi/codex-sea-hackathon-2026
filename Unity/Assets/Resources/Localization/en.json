@@ -22,15 +22,15 @@
       "value": "Driving controls [F1]"
     },
     {
-      "key": "credits.completed",
+      "key": "tutorial.complete",
       "value": "Tutorial complete"
     },
     {
-      "key": "credits.explore",
+      "key": "navigation.explore_modes",
       "value": "Explore Other Modes"
     },
     {
-      "key": "credits.menu",
+      "key": "navigation.return_menu",
       "value": "Return to Menu"
     },
     {

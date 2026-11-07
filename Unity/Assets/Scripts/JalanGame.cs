@@ -690,7 +690,13 @@ namespace JalanKita
         void ShowPitchComplete()
         {
             if (demoFinishedAt < 0) demoFinishedAt = Time.realtimeSinceStartupAsDouble;
-            ShowCreditsPage(true);
+            SetPage(Page.Checkpoint);
+            var content = ScrollDialog();
+            AddLabel(content, GameText.Get("tutorial.complete"), "heading");
+            AddLabel(content, GameText.Get(demoTutorial.Scenario.CompletionSummaryKey), "copy");
+            var actions = Element(content, "row actions");
+            AddButton(actions, GameText.Get("navigation.explore_modes"), () => ShowPlayChooser(true), "primary");
+            AddButton(actions, GameText.Get("navigation.return_menu"), BackToMenu, "quiet");
         }
 
         void OnDestroy()

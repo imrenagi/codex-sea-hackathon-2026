@@ -37,7 +37,7 @@
 .mirrors { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
 .mirror { position: absolute; background-color: #15181d; border-width: 2px; border-color: #69665f; border-radius: 8px; overflow: hidden; }
 .mirror-left { left: 0; top: 43%; width: 150px; height: 94px; }
-.mirror-right { right: 170px; bottom: 12px; width: 150px; height: 94px; }
+.mirror-right { right: 0; top: 43%; width: 150px; height: 94px; }
 .mirror-centre { left: 50%; top: 0; width: 190px; height: 70px; translate: -50% 0; }
 .mirror-image { flex-grow: 1; scale: -1 1; }
 .mirror-caption { position: absolute; left: 0; right: 0; bottom: 0; background-color: rgba(16, 19, 24, 0.7); color: var(--rs-text); font-size: 10px; -unity-text-align: middle-center; padding: 2px; }
@@ -335,7 +335,7 @@
 .compact .objective-title { font-size: 21px; }
 .compact .objective-copy { font-size: 15px; }
 .compact .mirror-left { width: 138px; height: 86px; top: 44%; }
-.compact .mirror-right { width: 138px; height: 86px; right: 160px; bottom: 10px; }
+.compact .mirror-right { width: 138px; height: 86px; right: 0; top: 44%; }
 .compact .mirror-centre { width: 178px; height: 66px; }
 .compact .route-panel { width: 210px; padding: 8px 10px; }
 .compact .signal-panel { width: 210px; top: 160px; padding: 8px; }
@@ -547,8 +547,6 @@
 
 /* Credits use the existing warm dialog surface and a quiet team roster. */
 .dialog.credits-card { width: 580px; max-height: 94%; padding: 28px 32px; }
-.credits-complete { color: var(--rs-success); margin-bottom: 10px; }
-.credits-summary { margin-top: 12px; color: var(--rs-secondary); }
 .credits-team { margin-top: 24px; padding-top: 20px; border-top-width: 1px; border-color: var(--rs-line); }
 .credits-team-name { color: var(--rs-brass-hover); font-size: 30px; margin-top: 7px; margin-bottom: 16px; }
 .credits-person { color: var(--rs-text); font-size: 21px; white-space: normal; margin-bottom: 10px; }
