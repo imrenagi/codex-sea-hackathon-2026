@@ -7,6 +7,7 @@ namespace JalanKita
     {
         public static void Step(Journey run, float dt)
         {
+            if (run.Stage >= 5) { DriveBoulevard(run, dt); return; }
             float cruise = 9.2f;
             float targetX = LeftLane;
             float stopAt = float.PositiveInfinity;
@@ -50,6 +51,41 @@ namespace JalanKita
             float remaining = Mathf.Max(0, stopAt - 1.15f - run.Front);
             float desired = Mathf.Min(cruise, Mathf.Sqrt(2 * 5.1f * remaining));
             float steer = Mathf.Clamp((targetX - run.Position.x) * .48f, -1, 1);
+            run.Step(dt, run.Speed < desired - .14f, run.Speed > desired + .12f, steer);
+        }
+
+        static readonly Vector2[][] boulevardPaths = new Vector2[5][];
+
+        static void DriveBoulevard(Journey run, float dt)
+        {
+            int stage = run.Stage;
+            if (run.Finished) return;
+            var path = boulevardPaths[stage - 5] ??= Boulevard.Path(stage);
+            float cruise = stage <= 7 ? 5.5f : 8;
+            float remaining = float.PositiveInfinity;
+            int signal = stage == 6 ? -1 : stage == 7 ? 1 : stage == 5 || stage == 8 ? -1 : run.Position.y > 922 ? -1 : 0;
+            if (stage <= 7)
+            {
+                float nose = Boulevard.Local(stage, run.Nose).y;
+                float exit = Vector2.Dot(run.Position - Boulevard.Center(stage), Boulevard.Exit(stage));
+                if (nose < run.JunctionStopLine && (!run.MovementGreen || run.BoulevardPedestrian.HasValue))
+                    remaining = run.JunctionStopLine - 1.2f - nose;
+                if (exit > 22) signal = 0;
+            }
+            else if (stage == 8 && run.Nose.y < Boulevard.RailLine && run.RailWarning)
+                remaining = Boulevard.RailLine - 1.2f - run.Nose.y;
+            else if (stage == 9 && !run.AmbulancePassed)
+                remaining = 1038 - run.Nose.y;
+            if (run.Indicator != signal)
+            {
+                if (signal == 0) { if (run.Indicator != 0) run.ToggleIndicator(run.Indicator); }
+                else run.ToggleIndicator(signal);
+            }
+            float desired = Mathf.Min(cruise, Mathf.Sqrt(2 * 5.1f * Mathf.Max(0, remaining)));
+            var target = Boulevard.LookAhead(path, run.Position, 4);
+            var delta = target - run.Position;
+            float heading = Mathf.Atan2(delta.x, delta.y) * Mathf.Rad2Deg;
+            float steer = Mathf.Clamp(Mathf.DeltaAngle(run.Heading, heading) / 24, -1, 1);
             run.Step(dt, run.Speed < desired - .14f, run.Speed > desired + .12f, steer);
         }
 

@@ -26,6 +26,20 @@ namespace JalanKita.EditorTools
             EditorApplication.EnterPlaymode();
         }
 
+        [MenuItem("Jalan Kita/Verify Result Screens (Play mode)")]
+        public static void RunInOpenEditor()
+        {
+            var game = UnityEngine.Object.FindFirstObjectByType<JalanGame>();
+            if (!EditorApplication.isPlaying || !game) throw new InvalidOperationException("Enter Play mode first.");
+            game.enabled = false;
+            try
+            {
+                foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode))) Verify(game, mode);
+                Debug.Log("Result screens passed: both vehicles, all ten cards, pause/resume and checkpoint retry.");
+            }
+            finally { game.enabled = true; Call(game, "ShowMenu"); }
+        }
+
         static void AwaitGame()
         {
             if (!EditorApplication.isPlaying) return;
@@ -37,7 +51,7 @@ namespace JalanKita.EditorTools
             {
                 game.enabled = false;
                 foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode))) Verify(game, mode);
-                Debug.Log("Result flow checks passed: both vehicles, all five completion cards, frozen position and speed, continuous resume, final quiz, violation and checkpoint retry.");
+                Debug.Log("Result flow checks passed: both vehicles, all ten completion cards, frozen position and speed, continuous resume, final quiz, violation and checkpoint retry.");
                 EditorApplication.Exit(0);
             }
             catch (Exception error)

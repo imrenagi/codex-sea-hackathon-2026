@@ -14,8 +14,9 @@ namespace JalanKita.EditorTools
                 VerifyContinuousRoute(mode, 0);
                 VerifyContinuousRoute(mode, 1);
                 VerifyRetries(mode);
+                BoulevardChecks.Run(mode);
             }
-            Debug.Log("Jalan Kita checks passed for both vehicles, both traffic variants, all five checkpoints, and checkpoint retry/persistence.");
+            Debug.Log("Jalan Kita checks passed for both vehicles, both traffic variants, all ten checkpoints, and checkpoint retry/persistence.");
         }
 
         static void VerifyContinuousRoute(VehicleMode mode, int variant)
@@ -23,10 +24,11 @@ namespace JalanKita.EditorTools
             var save = new JourneySave();
             save.mistakes[(int)Rule.Pedestrian] = variant;
             save.mistakes[(int)Rule.Junction] = variant;
+            save.mistakes[(int)Rule.Railway] = variant;
             var drive = new Journey(mode, save, persistent: false);
             drive.DriverGear = drive.PassengerGear = drive.Headlight = true;
             Require(drive.Depart(), "Preflight");
-            for (int i = 0; i < 9000 && !drive.Finished; i++)
+            for (int i = 0; i < 30000 && !drive.Finished; i++)
             {
                 var previous = drive.Position;
                 int stage = drive.Stage;

@@ -5,7 +5,7 @@ using UjianSim.Game;
 
 namespace JalanKita
 {
-    public sealed class District
+    public sealed partial class District
     {
         static readonly int[] Side = { -1, 1 };
         static readonly float[] Junctions = { StopJunction, LightJunction, MainJunction };
@@ -36,6 +36,7 @@ namespace JalanKita
             BuildBuildings();
             BuildSigns();
             BuildStreetProps();
+            BuildBoulevard();
             StaticBatchingUtility.Combine(scenery);
 
             car = Model("Car_City", Vector3.zero, 0, actors);
@@ -60,6 +61,7 @@ namespace JalanKita
             camera = new GameObject("Kamera pengemudi").AddComponent<Camera>();
             camera.transform.SetParent(parent);
             camera.tag = "MainCamera";
+            camera.gameObject.AddComponent<AudioListener>();
             camera.clearFlags = CameraClearFlags.Skybox;
             camera.backgroundColor = new Color(.65f, .81f, .79f);
             camera.fieldOfView = 55;
@@ -84,7 +86,7 @@ namespace JalanKita
                 }
             }
 
-            for (int z = -25; z < 410; z += 4)
+            for (int z = -25; z < 390; z += 4)
             {
                 if (NearJunction(z, 5.3f) || Mathf.Abs(z - Zebra) < 3.5f) continue;
                 if (z >= OneWayStart && z <= Merge) Mark("Marka pindah lajur", 0, z, .14f, 1.95f);
@@ -92,7 +94,7 @@ namespace JalanKita
             }
             foreach (int side in Side)
             {
-                for (int z = -24; z < 408; z += 4)
+                for (int z = -24; z < 390; z += 4)
                 {
                     if (NearJunction(z, 6.1f)) continue;
                     bool opening = side == 1 ? z > SpurStart - 3 && z < SpurEnd + 3
@@ -128,10 +130,10 @@ namespace JalanKita
             for (float z = PhoneStart + 5; z < PhoneEnd - 1; z += 4)
                 Mark("Teluk berhenti", -7.1f, z, .12f, 4);
 
-            for (int i = 1; i < All.Length; i++)
+            for (int i = 1; i < 5; i++)
             {
                 float z = All[i].End;
-                string color = i == All.Length - 1 ? "e8b21a" : "2fae64";
+                string color = "2fae64";
                 for (int stripe = 0; stripe < 8; stripe++)
                     Mark("Garis checkpoint", -4.32f + stripe * .55f, z, .27f, .22f, color);
                 foreach (float x in new[] { -5.72f, 5.72f })
@@ -148,7 +150,7 @@ namespace JalanKita
             foreach (int side in Side)
             {
                 float rotation = side < 0 ? -90 : 90;
-                for (int z = -20; z < 408; z += 7)
+                for (int z = -20; z < 388; z += 7)
                 {
                     if (NearJunction(z, 10) || (side < 0 && z > 320 && z < 375)) continue;
                     float edge = side == 1 && z > SpurStart - 4 && z < SpurEnd + 5 ? 12 : 7.6f;
@@ -180,7 +182,7 @@ namespace JalanKita
             }
             for (int i = 0; i < 40; i++)
             {
-                float z = rng.Next(-24, 429);
+                float z = rng.Next(-24, 385);
                 float x = (i % 2 == 0 ? -1 : 1) * rng.Next(16, 41);
                 if (!NearJunction(z, 5)) Model("Tree_Shade_0", new Vector3(x, 0, z), i * 33);
             }
@@ -206,8 +208,9 @@ namespace JalanKita
 
         public void Snap() => snapCamera = true;
 
-        public void Present(Journey run, bool hood, float dt)
+        public void Present(Journey run, bool hood, float dt, bool driving = true)
         {
+            PresentBoulevard(run, driving);
             bool onMotorcycle = run.Mode == VehicleMode.Motorcycle;
             var player = onMotorcycle ? motorcycle : car;
             car.SetActive(!onMotorcycle && !hood);
@@ -346,7 +349,7 @@ namespace JalanKita
             foreach (int side in Side)
             {
                 Vector3? lastPole = null;
-                for (int z = -15; z < 407; z += 28)
+                for (int z = -15; z < 388; z += 28)
                 {
                     bool opening = side < 0 && z > PhoneStart && z < PhoneEnd
                         || side > 0 && z > SpurStart - 3 && z < SpurEnd + 3;

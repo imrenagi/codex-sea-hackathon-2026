@@ -28,7 +28,7 @@
 .objective-copy { margin-top: 5px; color: #e9e6df; white-space: normal; font-size: 16px; }
 .objective-detail { font-size: 13px; color: #a9c9ea; white-space: normal; margin-top: 5px; }
 .route-panel { min-width: 226px; margin-left: 10px; }
-.route-steps { margin: 10px 0 8px; }
+.route-steps { flex-wrap: wrap; max-width: 190px; margin: 10px 0 8px; }
 .step {
     width: 29px; height: 27px;
     -unity-text-align: middle-center;
@@ -72,7 +72,7 @@
     background-color: rgba(8, 10, 14, 0.3);
 }
 .dialog { width: 610px; max-width: 100%; padding: 25px 29px; }
-.landing-card { width: 540px; background-color: rgba(16, 19, 24, 0.86); padding: 29px; }
+.landing-card { width: 570px; background-color: rgba(16, 19, 24, 0.86); padding: 29px; }
 .rule-card { border-color: #e5484d; }
 .section { margin-top: 16px; }
 .note {
@@ -99,7 +99,7 @@
 .quiet { background-color: #2a2f37; }
 .tiny { min-height: 25px; padding: 4px 7px; font-size: 12px; margin: 3px 0 0; }
 .option { -unity-text-align: middle-left; margin: 7px 0 0; }
-.route-row { padding: 5px 0; }
+.route-row { padding: 2px 0; }
 .route-num { color: #2fae64; width: 29px; font-size: 13px; -unity-font-style: bold; }
 .route-text { font-size: 15px; color: #e9e6df; }
 .rule-source { font-size: 13px; margin-top: 11px; color: #c9c6be; white-space: normal; }

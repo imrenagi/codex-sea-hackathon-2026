@@ -123,7 +123,7 @@ namespace JalanKita
         void LateUpdate()
         {
             if (journey == null) return;
-            district.Present(journey, hood, Time.unscaledDeltaTime);
+            district.Present(journey, hood, Time.unscaledDeltaTime, page == Page.Drive);
             if (page == Page.Drive) RefreshHud();
         }
 
@@ -138,7 +138,7 @@ namespace JalanKita
             SetPage(Page.Menu);
             AddLabel(dialog, "SIMULASI KESELAMATAN JALAN  /  INDONESIA", "kicker");
             AddLabel(dialog, "Jalan Kita", "hero");
-            AddLabel(dialog, "Satu perjalanan melewati lima latihan berkendara di Kampung Kenanga.", "copy");
+            AddLabel(dialog, "Satu perjalanan: kampung, persimpangan besar, rel kereta, dan jalur ambulans.", "copy");
             var list = Element(dialog, "section");
             for (int i = 0; i < All.Length; i++)
             {
@@ -312,7 +312,10 @@ namespace JalanKita
             Rule.Pedestrian => "Pejalan kaki tidak memiliki pelindung seperti pengendara. Tunggu sampai jalur mereka aman.",
             Rule.Indicator or Rule.Gap or Rule.ReturnLeft => "Isyarat dan ruang yang cukup membantu pengendara lain memahami perpindahan lajurmu.",
             Rule.KeepLeft or Rule.NoEntry => "Mengikuti arah yang ditetapkan mengurangi risiko berhadapan dengan kendaraan dari arah berlawanan.",
-            Rule.Speed => "Kecepatan lebih rendah memberi waktu untuk bereaksi, terutama saat anak-anak berada di dekat jalan.",
+            Rule.Speed or Rule.BoulevardSpeed => "Kecepatan lebih rendah memberi waktu untuk bereaksi, terutama saat anak-anak berada di dekat jalan.",
+            Rule.Railway => "Kereta membutuhkan jarak sangat panjang untuk berhenti. Palang yang mulai naik belum berarti jalur sudah boleh dilalui.",
+            Rule.Emergency => "Memberi ruang membantu ambulans membawa pasien ke pertolongan lebih cepat tanpa memaksa manuver berbahaya.",
+            Rule.RightArrow or Rule.MovementLane or Rule.TurnSignal => "Lajur dan isyarat yang tepat memisahkan arus kendaraan. Hijau tetap mengharuskan pengemudi memperhatikan pejalan kaki.",
             Rule.Phone => "Perhatian yang teralihkan membuat bahaya di depan lebih mudah terlewat.",
             _ => "Jaga ruang di sekitar kendaraan agar ada waktu untuk mengerem dan menghindari bahaya."
         };
@@ -403,11 +406,16 @@ namespace JalanKita
                 "Kamu berhenti di rambu STOP, memberi jalan, dan mematuhi lampu lalu lintas.",
                 "Kamu memberi prioritas kepada pejalan kaki dan arus di jalan utama.",
                 "Kamu mengikuti arah jalan, memberi sein, dan berpindah lajur dengan aman.",
-                "Kamu menjaga kecepatan dan tetap fokus sampai akhir perjalanan."
+                "Kamu menjaga kecepatan dan tetap fokus melewati zona sekolah.",
+                "Kamu memilih lajur lurus, mematuhi lampu, dan menunggu pejalan kaki.",
+                "Kamu berbelok kiri dengan sein setelah lampu hijau dan zebra cross kosong.",
+                "Kamu berbelok kanan dari lajur yang tepat setelah panah kanan hijau.",
+                "Kamu menunggu kereta lewat dan palang terbuka penuh sebelum melintas.",
+                "Kamu memberi jalan kepada ambulans dengan aman tanpa melampaui batas kecepatan."
             };
             var body = ResultBody(sheet);
             AddLabel(body, recaps[completed], "sheet-lead");
-            AddLabel(body, "Checkpoint " + journey.Stage.ToString("00") + "/05 tersimpan. "
+            AddLabel(body, "Checkpoint " + journey.Stage.ToString("00") + "/" + All.Length.ToString("00") + " tersimpan. "
                 + (journey.Finished ? "Seluruh rute selesai." : "Lanjutkan di jalan yang sama."), "checkpoint-saved");
             var actions = Element(sheet, "sheet-actions");
             var next = AddButton(actions, journey.Finished ? "Kuis akhir" : "Lanjutkan perjalanan",
@@ -485,11 +493,27 @@ namespace JalanKita
                 target = journey.Front < SchoolLimit ? SchoolLimit : All[stage].End;
                 if (journey.Position.x < -4.25f && !journey.PhoneRinging)
                     prompt = "Kembali ke lajur kiri saat aman sebelum teluk berakhir.";
-                else if (journey.Front >= SchoolLimit) prompt = "Jaga kecepatan hingga garis finis.";
+                else if (journey.Front >= SchoolLimit) prompt = "Jaga kecepatan hingga checkpoint sekolah.";
                 signal = "BATAS 30 KM/J";
             }
+            if (stage >= 5)
+            {
+                string status;
+                if (stage <= 7)
+                {
+                    status = stage == 7 ? "PANAH KANAN " + (journey.ArrowPhase == 2 ? "HIJAU" : "MERAH")
+                        : journey.MainPhase == 2 ? "HIJAU" : journey.MainPhase == 1 ? "KUNING" : "MERAH";
+                    if (journey.BoulevardPedestrian.HasValue) status += " · TUNGGU PEJALAN KAKI";
+                    prompt += mode == VehicleMode.Car ? " Mobil berhenti sebelum kotak merah." : " Motor berhenti di garis depan kotak merah.";
+                }
+                else if (stage == 8) status = journey.RailWarning ? "BERHENTI · PERINGATAN KERETA" : "PALANG TERBUKA";
+                else status = journey.AmbulancePassed ? "AMBULANS SUDAH LEWAT"
+                    : journey.Ambulance.HasValue ? "SIRENE · AMBULANS " + Mathf.RoundToInt(Mathf.Abs(journey.AmbulanceGap)) + " M"
+                    : "ANGKOT BERHENTI DI LAJUR KIRI";
+                detail.text = status + " · BATAS 50 KM/J";
+            }
             instruction.text = prompt;
-            detail.text = (signal.Length == 0 ? "" : signal + "   /   ") + Mathf.Max(0, Mathf.RoundToInt(target - journey.Front)) + " M";
+            if (stage < 5) detail.text = (signal.Length == 0 ? "" : signal + "   /   ") + Mathf.Max(0, Mathf.RoundToInt(target - journey.Front)) + " M";
             routeCount.text = "CHECKPOINT  " + stage.ToString("00") + " / " + All.Length.ToString("00");
             for (int i = 0; i < routeSteps.Length; i++)
             {
@@ -497,7 +521,7 @@ namespace JalanKita
                 routeSteps[i].EnableInClassList("step-current", i == stage);
             }
             speed.text = Mathf.RoundToInt(journey.Kph).ToString();
-            speed.EnableInClassList("speed-alert", stage == 4 && journey.Front >= SchoolLimit && journey.Kph > 30.75f);
+            speed.EnableInClassList("speed-alert", stage == 4 && journey.Front >= SchoolLimit && journey.Kph > 30.75f || stage >= 5 && journey.Kph > 50.75f);
             bool blink = Time.unscaledTime % .7f < .42f;
             signalLeft.On = journey.Indicator == -1 && blink;
             signalRight.On = journey.Indicator == 1 && blink;
