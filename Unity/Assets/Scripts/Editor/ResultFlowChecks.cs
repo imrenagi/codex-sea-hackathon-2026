@@ -54,6 +54,8 @@ namespace JalanKita.EditorTools
                 VerifyArrowDirections();
                 IntegrationChecks.VerifyUI(game);
                 VerifyMirrorsAndLook(game);
+                SignalChecks.Verify(game);
+                VerifySignalTransitions(game);
                 VerifyDrivingKeyboard(game);
                 JakartaIntegrationChecks.VerifyUI(game);
                 Debug.Log("Result flow checks passed: both vehicles, all ten completion cards, mission selection, saved progress, arrow directions, continuous resume, final quiz and checkpoint retry.");
@@ -69,7 +71,7 @@ namespace JalanKita.EditorTools
         static void Verify(JalanGame game, VehicleMode mode)
         {
             Set(game, "practiceStart", -1);
-            var run = new Journey(mode, new JourneySave(), persistent: false);
+            var run = new Journey(mode, new JourneySave(), persistent: false, trafficSeed: 1);
             Set(game, "mode", mode);
             Set(game, "journey", run);
             run.DriverGear = run.PassengerGear = run.Headlight = true;
@@ -94,7 +96,7 @@ namespace JalanKita.EditorTools
                 Require(!run.Failure.HasValue, "Route remains driveable");
             }
 
-            run = new Journey(mode, new JourneySave { next = 1 }, persistent: false);
+            run = new Journey(mode, new JourneySave { next = 1 }, persistent: false, trafficSeed: 1);
             Set(game, "journey", run);
             for (int frame = 0; frame < 1000 && !run.Failure.HasValue; frame++)
                 run.Step(.02f, true, false, 0);
@@ -258,7 +260,7 @@ namespace JalanKita.EditorTools
             Require(root.Q<Button>("lookLeft")!=null && root.Q<Button>("lookRight")!=null,"Look buttons available");
             foreach(VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
             {
-                var run=new Journey(mode,new JourneySave { next=5 },persistent:false);
+                var run=new Journey(mode,new JourneySave { next=5 },persistent:false,trafficSeed:1);
                 district.Snap();
                 district.Present(run,false,1,true,-1);
                 Require(Camera.main.transform.forward.x < -.8f,"Z looks left without steering the vehicle");
@@ -272,6 +274,25 @@ namespace JalanKita.EditorTools
                 foreach(var mirror in district.Mirrors.Cameras) Require(!mirror.enabled,"Paused mirrors stop rendering");
             }
             Require(UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length==1,"Only the driving camera has an audio listener");
+        }
+
+        static void VerifySignalTransitions(JalanGame game)
+        {
+            var root = game.GetComponent<UIDocument>().rootVisualElement;
+            var district = (District)Field(game, "district");
+            var run = new Journey(VehicleMode.Car, new JourneySave { next = 1 }, persistent: false, trafficSeed: 1);
+            typeof(Journey).GetProperty("Position").SetValue(run, new Vector2(-2, 72));
+            Set(game, "journey", run);
+            Call(game, "SetPage", Enum.Parse(typeof(JalanGame).GetNestedType("Page", BindingFlags.NonPublic), "Drive"));
+            district.Present(run, false, .02f, true);
+            Call(game, "RefreshHud");
+            Require(!root.Q("signalPanel").ClassListContains("hidden"), "Training signal appears near intersection");
+            Call(game, "ShowMenu");
+            Require(root.Q("signalPanel").ClassListContains("hidden"), "Leaving training hides signal panel");
+            Call(game, "StartJaksa");
+            Call(game, "RefreshJaksaHud");
+            Require(root.Q("signalPanel").ClassListContains("hidden"), "Exploration does not show stale training signal");
+            Call(game, "ShowMenu");
         }
 
         static object Field(JalanGame game, string name) => typeof(JalanGame).GetField(name, Private).GetValue(game);

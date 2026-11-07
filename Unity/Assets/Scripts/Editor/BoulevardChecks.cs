@@ -5,7 +5,8 @@ namespace JalanKita.EditorTools
 {
     public static class BoulevardChecks
     {
-        static Journey Start(VehicleMode mode,int stage) => new(mode,new JourneySave { next=stage },persistent:false);
+        // Rule-specific probes need a fixed traffic layout; the traffic suite sweeps other seeds.
+        static Journey Start(VehicleMode mode,int stage) => new(mode,new JourneySave { next=stage },persistent:false,trafficSeed:1);
         static void Require(bool valid,string reason) { if(!valid) throw new InvalidOperationException(reason); }
         public static void Run(VehicleMode mode)
         {
