@@ -166,6 +166,22 @@ namespace JalanKita
             button.RegisterCallback<PointerCaptureOutEvent>(_=>heldLook=0);
         }
 
+        void OpenMissionPicker()
+        {
+            if (page != Page.Drive || journey.Activity != null || pitchDemo || learner != null) return;
+            ShowProgress();
+            var fold = dialog.Query<VisualElement>(className: "fold").ToList().Find(f =>
+                f.Q<Label>(className: "fold-title")?.text == "Latihan dari checkpoint");
+            fold.AddToClassList("open");
+            string prefix = (journey.Stage + 1).ToString("00") + " · ";
+            fold.Query<Button>().ToList().Find(b => b.text.StartsWith(prefix))?.Focus();
+        }
+
+        void CloseMissionPicker()
+        {
+            if (page == Page.Progress) ReturnToJourney();
+        }
+
         void Update()
         {
             if ((page == Page.Menu || page == Page.PlayChooser) && Input.GetKeyDown(KeyCode.F2)) { StartPitchDemo(); return; }
@@ -223,6 +239,7 @@ namespace JalanKita
             }
             if (page == Page.Drive)
             {
+                if (Input.GetKeyDown(KeyCode.P) && journey.Activity == null && !pitchDemo) { OpenMissionPicker(); return; }
                 if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Escape)) { ShowProgress(); return; }
                 if (Input.GetKeyDown(KeyCode.R)) Retry();
                 if (Input.GetKeyDown(KeyCode.C)) { hood = !hood; district.Snap(); }
@@ -438,8 +455,22 @@ namespace JalanKita
             { horizontalScrollerVisibility = ScrollerVisibility.Hidden, verticalScrollerVisibility = ScrollerVisibility.Auto };
             content.AddToClassList("menu-scroll");
             content.contentViewport.style.overflow = Overflow.Hidden;
+            RevealFocusedChildren(content);
             dialog.Add(content);
             return content;
+        }
+
+        static void RevealFocusedChildren(ScrollView scroll)
+        {
+            scroll.RegisterCallback<FocusInEvent>(e =>
+            {
+                if (e.target is not VisualElement focused || !scroll.contentContainer.Contains(focused)) return;
+                scroll.schedule.Execute(() =>
+                {
+                    if (scroll.panel != null && scroll.focusController?.focusedElement == focused)
+                        scroll.ScrollTo(focused);
+                });
+            });
         }
 
         void StartJaksa()
@@ -1103,6 +1134,7 @@ namespace JalanKita
                 horizontalScrollerVisibility = ScrollerVisibility.Hidden
             };
             scroll.AddToClassList("dialog-scroll");
+            RevealFocusedChildren(scroll);
             dialog.Add(scroll);
             return scroll;
         }

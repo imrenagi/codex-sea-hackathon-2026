@@ -16,7 +16,7 @@ namespace JalanKita
             KeyCode.LeftArrow, KeyCode.RightArrow, KeyCode.Space, KeyCode.Q, KeyCode.E,
             KeyCode.C, KeyCode.L, KeyCode.R, KeyCode.H, KeyCode.F, KeyCode.G, KeyCode.Z,
             KeyCode.X, KeyCode.Return, KeyCode.KeypadEnter, KeyCode.F1, KeyCode.F2,
-            KeyCode.Tab, KeyCode.Escape
+            KeyCode.Tab, KeyCode.Escape, KeyCode.P
         };
 
         void EnterHumanDrive(Page drivingPage)
