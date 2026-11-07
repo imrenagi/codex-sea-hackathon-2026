@@ -38,7 +38,7 @@ Choose **Mobil** or **Motor**, then **Demo singkat · Hak utama**. This opens Pa
 
 The map preview is optional. Limit it to 15 seconds within the prototype section. Keep a recording of the rehearsed demo on the presenting laptop.
 
-Before presenting, use Unity **6000.3.27f1** on the other laptop. Check the demo in both vehicle modes at **1280 × 720**. Try violation, retry, **Lihat cara benar**, pause/resume, completion, replay, and return to the saved journey. Confirm that the earlier save is unchanged. Build and rehearse on that laptop. This change has not been built or tested locally.
+Before presenting, use Unity **6000.3.27f1** on the other laptop. Check the demo in both vehicle modes at **1280 × 720**. Try violation, retry, **Lihat cara benar**, pause/resume, completion, replay, and return to the saved journey. Confirm that the earlier save is unchanged. Build and rehearse on that laptop. See the verification section below for automated checks; rehearse on the presentation hardware as well.
 
 ## Controls
 
