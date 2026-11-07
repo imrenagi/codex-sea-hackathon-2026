@@ -101,10 +101,10 @@ namespace JalanKita
                         AddLabel(copy, lesson.Citation, "rule-source");
                     }
                 }
+                AddActionButton(actions, ActionKind.Back, GameText.Get("text.back"), back, "quiet");
                 var next = AddActionButton(actions, ActionKind.Next, GameText.Get("text.continue"),
                     () => ShowSelectionVehicle(item.Id, selections, returnToSelection), "primary selection-start");
                 next.name = "selectionContinue";
-                AddActionButton(actions, ActionKind.Back, GameText.Get("text.back"), back, "quiet");
             }
             foreach (var item in items)
             {
