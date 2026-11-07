@@ -240,7 +240,7 @@ namespace JalanKita
         public bool MainRoadEncounterStarted => priorityTime >= 0;
         public int LightPhase => lightTime < 0 || lightTime % 22 < 8 ? 0 : lightTime % 22 < 19 ? 2 : 1;
 
-        float stopTime, lightTime, zebraTime, priorityTime, laneTime, wrongWay, overSpeed;
+        float stopTime, lightTime, zebraTime, priorityTime, laneTime, wrongWay;
         float rightSignalAge, leftSignalAge, stoppedInRestriction, pickupTime, boardingTime;
         int lane;
         bool phoneResolved;
@@ -303,7 +303,7 @@ namespace JalanKita
                 Position = new Vector2(RouteStage.LeftLane, Save.checkpoint == 1 ? 313 : Mission.SchoolPhoneCheckpoint);
             if (!Finished && IsMarket && Save.checkpoint > 0)
                 Position = Save.checkpoint == 1 ? new Vector2(RouteStage.LeftLane, 246) : new Vector2(-5.8f, Mission.PickupPoint);
-            Speed = wrongWay = overSpeed = Throttle = 0;
+            Speed = wrongWay = Throttle = 0;
             Safety.Reset();
             motion.Reset();
             motionFrom = Position; motionHeading = Heading; reverseSweep = false;
@@ -540,18 +540,6 @@ namespace JalanKita
             || reverseSweep && TrafficFootprint.SweptOverlaps(motionFrom,motionHeading,Position,Heading,
                 TrafficFootprint.PlayerHalfWidth(Mode),TrafficFootprint.PlayerHalfLength(Mode),
                 position,yaw,choice.Vehicle.HalfWidth,choice.Vehicle.HalfLength);
-
-        bool TouchesPedestrian(Vector2 pedestrian)
-        {
-            if(PedestrianClearance.Touches(pedestrian,Position,Heading,Mode))return true;
-            if(!reverseSweep)return false;
-            float turn=Mathf.DeltaAngle(motionHeading,Heading);
-            int samples=Mathf.Max(1,Mathf.CeilToInt((Vector2.Distance(motionFrom,Position)+Mathf.Abs(turn)*Mathf.Deg2Rad*
-                new Vector2(TrafficFootprint.PlayerHalfWidth(Mode),TrafficFootprint.PlayerHalfLength(Mode)).magnitude)/.1f));
-            for(int i=0;i<=samples;i++)
-                if(PedestrianClearance.Touches(pedestrian,Vector2.Lerp(motionFrom,Position,(float)i/samples),motionHeading+turn*i/samples,Mode))return true;
-            return false;
-        }
 
         bool RejectReverseOffRoad()
         {

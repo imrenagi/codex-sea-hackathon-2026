@@ -7,7 +7,6 @@ namespace JalanKita
     public sealed partial class JalanGame
     {
         readonly HashSet<string> controlsSeen = new();
-        readonly HashSet<string> controlsPracticeStarted = new();
         readonly HashSet<string> exploreBraking = new(), exploreStopped = new();
         const string ControlsCompleteKey = "RoadSense.Onboarding.MovementBrake.v1";
         const string EntryTutorialCompleteKey = "RoadSense.Tutorial.pasar-bunga-right-of-way.Completed.v1";
@@ -113,16 +112,8 @@ namespace JalanKita
 
         void EnterHumanDrive(Page drivingPage)
         {
-            string context = (drivingPage == Page.Jaksa ? "explore:" : "training:") + mode;
             SetPage(drivingPage);
             inputReleaseRequired = true;
-        }
-
-        Journey NewControlsPractice()
-        {
-            var save = JsonUtility.FromJson<JourneySave>(JsonUtility.ToJson(controlsOriginal.Save));
-            return new Journey(mode, save, persistent: false, mission: controlsOriginal.Activity)
-            { LearningControls = true };
         }
 
         void CompleteControlsPractice(float previousSpeed)

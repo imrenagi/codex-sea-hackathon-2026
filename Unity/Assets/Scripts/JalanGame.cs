@@ -27,7 +27,7 @@ namespace JalanKita
         JourneySave stored;
         VehicleMode mode;
         Page page;
-        bool confirmNew, hood;
+        bool hood;
         float toastUntil;
         float heldLook;
         int quizIndex, quizScore;
@@ -478,7 +478,6 @@ namespace JalanKita
         void ShowPlayChooser(bool expandModes) => ShowJourneyChooser(false);
         void ShowPracticeChooser()
         {
-            confirmNew = false;
             ShowJourneyChooser(true);
         }
 
@@ -709,14 +708,12 @@ namespace JalanKita
         {
             bool choosing = page == Page.PlayChooser;
             mode = value;
-            confirmNew = false;
             if (choosing) ShowJourneyChooser(practiceChooser); else ShowMenu();
         }
 
         void StartNew()
         {
             practiceStart = -1;
-            confirmNew = false;
             journey = new Journey(mode, new JourneySave());
             StartQuiz(false);
         }
@@ -968,7 +965,6 @@ namespace JalanKita
 
         void BackToMenu()
         {
-            confirmNew = false;
             ShowMenu();
         }
 
