@@ -20,7 +20,31 @@ namespace JalanKita
             if (!asset) throw new InvalidOperationException("Data peta belum tersedia: " + id);
             var map = JsonUtility.FromJson<CityMapData>(asset.text);
             if (map?.buildings == null || map.roads == null) throw new InvalidOperationException("Data peta tidak valid: " + id);
+            if (string.IsNullOrWhiteSpace(map.attribution)) throw new InvalidOperationException("Sumber peta belum tersedia: " + id);
+            foreach (var building in map.buildings)
+            {
+                if (building == null || !Finite(building.height) || building.height <= 0)
+                    throw new InvalidOperationException("Tinggi bangunan tidak valid: " + id);
+                CheckPoints(building.points, 3, id + " / bangunan " + building.osmId);
+            }
+            foreach (var road in map.roads)
+            {
+                if (road == null) throw new InvalidOperationException("Jalan tidak valid: " + id);
+                CheckPoints(road.points, 2, id + " / jalan " + road.osmId);
+                if (float.TryParse(road.layer, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float layer) && (!Finite(layer) || Mathf.Abs(layer) > 1000))
+                    throw new InvalidOperationException("Elevasi jalan tidak valid: " + id + " / " + road.osmId);
+            }
             return map;
+        }
+        static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+        static void CheckPoints(CityPoint[] points, int minimum, string label)
+        {
+            if (points == null || points.Length < minimum)
+                throw new InvalidOperationException("Geometri peta tidak lengkap: " + label);
+            foreach (var point in points)
+                if (!Finite(point.x) || !Finite(point.z) || Mathf.Abs(point.x) > 1000000 || Mathf.Abs(point.z) > 1000000)
+                    throw new InvalidOperationException("Koordinat peta tidak valid: " + label);
         }
     }
     public static class CityMapGeometry
@@ -29,25 +53,41 @@ namespace JalanKita
         {
             var result = new List<int>();
             if (points == null || points.Length < 3) return result.ToArray();
+            foreach (var point in points)
+                if (float.IsNaN(point.x) || float.IsInfinity(point.x) || float.IsNaN(point.z) || float.IsInfinity(point.z))
+                    return Array.Empty<int>();
             int count = points.Length;
             if ((points[0].At(0)-points[count-1].At(0)).sqrMagnitude < .0001f) count--;
             var ring = new List<int>();
-            float area = 0;
-            for (int i=0;i<count;i++)
+            for (int i=0;i<count;i++) ring.Add(i);
+            bool changed;
+            do
             {
-                var a=points[i]; var b=points[(i+1)%count];
-                area += a.x*b.z-b.x*a.z; ring.Add(i);
+                changed = false;
+                for (int i=ring.Count-1;i>=0 && ring.Count>2;i--)
+                {
+                    int a=ring[(i+ring.Count-1)%ring.Count], b=ring[i], c=ring[(i+1)%ring.Count];
+                    if ((points[a].At(0)-points[b].At(0)).sqrMagnitude<.0001f || Math.Abs(Cross(points[a],points[b],points[c]))<.00001)
+                    { ring.RemoveAt(i); changed = true; }
+                }
             }
-            for (int i=ring.Count-1;i>=0 && ring.Count>2;i--)
-            {
-                int a=ring[(i+ring.Count-1)%ring.Count], b=ring[i], c=ring[(i+1)%ring.Count];
-                if ((points[a].At(0)-points[b].At(0)).sqrMagnitude<.0001f || Mathf.Abs(Cross(points[a],points[b],points[c]))<.00001f)
-                    ring.RemoveAt(i);
-            }
+            while (changed && ring.Count > 2);
             count=ring.Count;
+            if (count < 3) return Array.Empty<int>();
+            // A local origin preserves the winding of small footprints far from zero.
+            double area = 0;
+            for (int i=0;i<count;i++)
+                area += Cross(points[ring[0]], points[ring[i]], points[ring[(i+1)%count]]);
+            if (Math.Abs(area) < .00001) return Array.Empty<int>();
+            for (int i=0;i<count;i++)
+                for (int j=i+1;j<count;j++)
+                {
+                    if (j == i+1 || (i == 0 && j == count-1)) continue;
+                    if (Intersects(points[ring[i]], points[ring[(i+1)%count]], points[ring[j]], points[ring[(j+1)%count]]))
+                        return Array.Empty<int>();
+                }
             if (area < 0) ring.Reverse();
-            int guard=count*count;
-            while (ring.Count >= 3 && guard-- > 0)
+            while (ring.Count >= 3)
             {
                 bool clipped=false;
                 for (int i=0;i<ring.Count;i++)
@@ -69,6 +109,18 @@ namespace JalanKita
             // Malformed polygons render walls only, not a misleading partial roof.
             return result.Count == (count-2)*3 ? result.ToArray() : Array.Empty<int>();
         }
-        static float Cross(CityPoint a,CityPoint b,CityPoint c) => (b.x-a.x)*(c.z-a.z)-(b.z-a.z)*(c.x-a.x);
+        static double Cross(CityPoint a,CityPoint b,CityPoint c) =>
+            ((double)b.x-a.x)*((double)c.z-a.z)-((double)b.z-a.z)*((double)c.x-a.x);
+        static bool Intersects(CityPoint a, CityPoint b, CityPoint c, CityPoint d)
+        {
+            if (Math.Max(a.x,b.x) < Math.Min(c.x,d.x) || Math.Max(c.x,d.x) < Math.Min(a.x,b.x)
+                || Math.Max(a.z,b.z) < Math.Min(c.z,d.z) || Math.Max(c.z,d.z) < Math.Min(a.z,b.z)) return false;
+            double ac=Cross(a,b,c), ad=Cross(a,b,d), ca=Cross(c,d,a), cb=Cross(c,d,b);
+            bool Between(CityPoint p, CityPoint q, CityPoint r) => r.x >= Math.Min(p.x,q.x)
+                && r.x <= Math.Max(p.x,q.x) && r.z >= Math.Min(p.z,q.z) && r.z <= Math.Max(p.z,q.z);
+            if (Math.Abs(ac) < .00001 && Between(a,b,c) || Math.Abs(ad) < .00001 && Between(a,b,d)
+                || Math.Abs(ca) < .00001 && Between(c,d,a) || Math.Abs(cb) < .00001 && Between(c,d,b)) return true;
+            return (ac > 0) != (ad > 0) && (ca > 0) != (cb > 0);
+        }
     }
 }
