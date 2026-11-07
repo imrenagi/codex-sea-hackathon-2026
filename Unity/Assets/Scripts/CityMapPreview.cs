@@ -9,6 +9,7 @@ namespace JalanKita
     {
         readonly GameObject root;
         readonly Camera camera;
+        readonly Transform compass;
         readonly VisualElement controls;
         readonly List<Mesh> meshes = new();
         readonly List<Material> materials = new();
@@ -37,6 +38,9 @@ namespace JalanKita
             camera.transform.SetParent(root.transform,false); camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(.12f,.20f,.24f);
             camera.nearClipPlane = 1; camera.farClipPlane = 12000; camera.fieldOfView = 50;
+            compass = new GameObject("North marker").transform;
+            compass.SetParent(camera.transform, false);
+            BuildCompass();
             var sun = new GameObject("City sunlight").AddComponent<Light>();
             sun.transform.SetParent(root.transform,false); sun.type = LightType.Directional;
             sun.transform.rotation = Quaternion.Euler(48,-35,0); sun.intensity = 1.05f;
@@ -155,6 +159,21 @@ namespace JalanKita
                 if ((polygon[i]-polygon[(i+polygon.Count-1)%polygon.Count]).sqrMagnitude<.0001f) polygon.RemoveAt(i);
             return polygon.ToArray();
         }
+        void BuildCompass()
+        {
+            var plate = new Batch(this, "Compass plate", new Color(.12f, .20f, .24f), compass);
+            plate.Quad(new(-.23f, -.3f, 0), new(-.23f, .31f, 0), new(.23f, .31f, 0), new(.23f, -.3f, 0));
+            plate.Flush();
+            var arrow = new Batch(this, "North arrow", new Color(.91f, .39f, .29f), compass);
+            arrow.Quad(new(0, .25f, -.005f), new(-.15f, -.04f, -.005f),
+                new(0, .03f, -.005f), new(.15f, -.04f, -.005f));
+            arrow.Flush();
+            var letter = new Batch(this, "North label", new Color(.96f, .94f, .88f), compass);
+            letter.Quad(new(-.09f, -.24f, -.005f), new(-.09f, -.10f, -.005f), new(-.06f, -.10f, -.005f), new(-.06f, -.24f, -.005f));
+            letter.Quad(new(.06f, -.24f, -.005f), new(.06f, -.10f, -.005f), new(.09f, -.10f, -.005f), new(.09f, -.24f, -.005f));
+            letter.Quad(new(-.06f, -.10f, -.005f), new(-.06f, -.15f, -.005f), new(.06f, -.24f, -.005f), new(.06f, -.19f, -.005f));
+            letter.Flush();
+        }
         public void Step(float dt)
         {
             float x=(Input.GetKey(KeyCode.D)||Input.GetKey(KeyCode.RightArrow)?1:0)-(Input.GetKey(KeyCode.A)||Input.GetKey(KeyCode.LeftArrow)?1:0);
@@ -203,6 +222,8 @@ namespace JalanKita
             camera.farClipPlane = Mathf.Max(12000, distance * ViewOffset.magnitude + 3000);
             camera.transform.position = focus + ViewOffset * distance;
             camera.transform.LookAt(focus);
+            float halfViewHeight = 4 * Mathf.Tan(camera.fieldOfView * .5f * Mathf.Deg2Rad);
+            compass.localPosition = new Vector3(halfViewHeight * camera.aspect - .3f, halfViewHeight - .4f, 4);
         }
         public void Dispose()
         {
@@ -219,11 +240,13 @@ namespace JalanKita
             readonly CityMapPreview owner;
             readonly string name;
             readonly Material material;
+            readonly Transform parent;
             readonly List<Vector3> vertices=new();
             readonly List<int> indices=new();
-            public Batch(CityMapPreview owner,string name,Color color)
+            public Batch(CityMapPreview owner,string name,Color color,Transform parent = null)
             {
                 this.owner=owner; this.name=name;
+                this.parent = parent ? parent : owner.root.transform;
                 material=new Material(Shader.Find("Universal Render Pipeline/Lit")); material.color=color;
                 material.SetFloat("_Cull",0); material.SetFloat("_Smoothness",.15f); owner.materials.Add(material);
             }
@@ -247,7 +270,7 @@ namespace JalanKita
                 var mesh=new Mesh { name=name };
                 owner.meshes.Add(mesh);
                 mesh.SetVertices(vertices); mesh.SetTriangles(indices,0); mesh.RecalculateNormals(); mesh.RecalculateBounds();
-                var go=new GameObject(name); go.transform.SetParent(owner.root.transform,false);
+                var go=new GameObject(name); go.transform.SetParent(parent,false);
                 go.AddComponent<MeshFilter>().sharedMesh=mesh;
                 var renderer=go.AddComponent<MeshRenderer>(); renderer.sharedMaterial=material; renderer.shadowCastingMode=ShadowCastingMode.Off;
                 vertices.Clear(); indices.Clear();
