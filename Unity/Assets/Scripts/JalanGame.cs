@@ -324,7 +324,8 @@ namespace JalanKita
         void UpdateSound(float dt)
         {
             bool driving = page == Page.Drive && !inputReleaseRequired && !journey.Failure.HasValue;
-            var frame = new SoundFrame { SirenDist = float.PositiveInfinity, BellDist = float.PositiveInfinity };
+            var frame = new SoundFrame { SirenDist = float.PositiveInfinity, BellDist = float.PositiveInfinity,
+                DecorativeAmbienceSuppressed = ControlsOnboardingActive };
             if (driving)
             {
                 frame.Speed = journey.Speed;
