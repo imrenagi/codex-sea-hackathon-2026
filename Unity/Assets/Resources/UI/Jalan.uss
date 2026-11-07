@@ -814,3 +814,16 @@
 .screen .volume-control .unity-base-slider__dragger-border {
     border-radius: 12px;
 }
+
+/* Action glyph padding must never collapse showroom labels into single letters. */
+.screen .vehicle-showroom > .actions {
+    align-self: stretch; width: 100%; flex-wrap: wrap; align-items: stretch;
+}
+.screen .vehicle-showroom > .actions > .button {
+    flex-basis: 180px; flex-grow: 1; flex-shrink: 0; min-width: 160px;
+    min-height: 44px; height: auto; white-space: normal;
+    margin: 4px; -unity-text-align: middle-center;
+}
+.screen .vehicle-showroom > .actions > .label {
+    width: 100%; white-space: normal; flex-shrink: 0;
+}
