@@ -31,11 +31,15 @@
 .route-steps { flex-wrap: wrap; max-width: 190px; margin: 10px 0 8px; }
 .step {
     width: 29px; height: 27px;
+    padding: 0; margin: 0 6px 4px 0;
+    border-width: 1px; border-color: #555a62;
     -unity-text-align: middle-center;
-    border-radius: 5px; margin-right: 6px;
+    border-radius: 5px;
     background-color: #2a2f37; color: #c9c6be;
     -unity-font-style: bold; font-size: 13px;
 }
+.step:hover, .step:focus { border-color: #ffffff; }
+.step:active { background-color: #555a62; }
 .step-current { background-color: #f3f1ec; color: #15181d; }
 .step-done { background-color: #2fae64; color: #ffffff; }
 .bottom-row { align-items: flex-end; }

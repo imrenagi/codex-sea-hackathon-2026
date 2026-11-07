@@ -115,8 +115,8 @@ namespace JalanKita
                 string[] arrows = { "LaneArrow_Left","LaneArrow_Straight","LaneArrow_Right" };
                 for (int lane = 0; lane < 3; lane++)
                 {
-                    Model(arrows[lane],World(W(-9+lane*3.6f,-39))+Vector3.up*.025f,heading+180);
-                    Model("RoadSymbol_Motorcycle",World(W(-9+lane*3.6f,-22))+Vector3.up*.03f,heading+180);
+                    Model(arrows[lane],World(W(-9+lane*3.6f,-39))+Vector3.up*.025f,heading);
+                    Model("RoadSymbol_Motorcycle",World(W(-9+lane*3.6f,-22))+Vector3.up*.03f,heading);
                 }
                 // Reuse the original lens materials and protected-right arrow model.
                 SignalModel(stage, arm, "TrafficLight", "M_Light_", W(-11.8f,-18), heading);

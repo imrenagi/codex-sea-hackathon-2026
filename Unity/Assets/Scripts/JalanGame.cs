@@ -23,11 +23,12 @@ namespace JalanKita
         bool confirmNew, hood;
         float toastUntil;
         int quizIndex, quizScore;
+        int practiceStart = -1;
         VisualElement root, hud, dialog, overlay, phone;
         Label location, title, instruction, detail, speed, routeCount, toast;
         HudIcon signalLeft, signalRight, headlight;
         Button progress;
-        readonly Label[] routeSteps = new Label[All.Length];
+        readonly Button[] routeSteps = new Button[All.Length];
 
         void Start()
         {
@@ -57,7 +58,18 @@ namespace JalanKita
             routeCount = root.Q<Label>("routeCount");
             toast = root.Q<Label>("toast");
             for (int i = 0; i < routeSteps.Length; i++)
-                routeSteps[i] = AddLabel(root.Q("steps"), (i+1).ToString("00"), "step");
+            {
+                int mission = i;
+                var button = new Button(() => JumpToMission(mission))
+                {
+                    name = "mission" + (i+1).ToString("00"),
+                    text = (i+1).ToString("00"),
+                    tooltip = "Latihan misi " + (i+1) + " · " + All[i].Title
+                };
+                button.AddToClassList("step");
+                root.Q("steps").Add(button);
+                routeSteps[i] = button;
+            }
 
             progress = root.Q<Button>("progress");
             progress.clicked += () => { if (learner != null) EndDemonstration(); else ShowProgress(); };
@@ -161,6 +173,9 @@ namespace JalanKita
 
         void ShowMenu()
         {
+            practiceStart = -1;
+            learner = null;
+            progress.text = "Kemajuan  [Tab]";
             stored = JourneySave.Load(mode);
             journey = new Journey(mode, new JourneySave());
             hood = false;
@@ -209,6 +224,7 @@ namespace JalanKita
 
         void StartNew()
         {
+            practiceStart = -1;
             confirmNew = false;
             journey = new Journey(mode, new JourneySave());
             StartQuiz(false);
@@ -216,6 +232,7 @@ namespace JalanKita
 
         void Resume()
         {
+            practiceStart = -1;
             journey = new Journey(mode, stored);
             district.Snap();
             if (journey.Finished)
@@ -229,6 +246,21 @@ namespace JalanKita
                 else ShowPreflight();
             }
             else SetPage(Page.Drive);
+        }
+
+        void JumpToMission(int stage)
+        {
+            if (stage < 0 || stage >= All.Length) return;
+            root.focusController?.focusedElement?.Blur();
+            learner = null;
+            practiceStart = stage;
+            journey = new Journey(mode, new JourneySave { next = stage }, persistent: false);
+            progress.text = "Kemajuan  [Tab]";
+            district.Snap();
+            toast.text = "LATIHAN MISI " + (stage+1).ToString("00") + " · PROGRES PERJALANAN TETAP TERSIMPAN";
+            toastUntil = Time.unscaledTime + 5;
+            if (stage == 0) ShowPreflight();
+            else { SetPage(Page.Drive); RefreshHud(); }
         }
 
         void ShowPreflight()
@@ -403,7 +435,8 @@ namespace JalanKita
             SetPage(Page.Progress);
             AddLabel(dialog, journey.Finished ? "PERJALANAN SELESAI" : "JURNAL PERJALANAN", "kicker");
             AddLabel(dialog, journey.Finished ? "Tiba dengan selamat" : "Kemajuan latihan", "heading");
-            AddLabel(dialog, journey.Stage + " dari " + All.Length + " checkpoint tersimpan  ·  "
+            AddLabel(dialog, (practiceStart >= 0 ? "Latihan dari misi " + (practiceStart+1) + " · Progres perjalanan tetap tersimpan  ·  "
+                : journey.Stage + " dari " + All.Length + " checkpoint tersimpan  ·  ")
                 + (mode == VehicleMode.Car ? "Mobil" : "Motor"), "copy");
             if (journey.Save.before >= 0)
                 AddLabel(dialog, "Kuis awal  " + journey.Save.before + "/3"
@@ -461,21 +494,23 @@ namespace JalanKita
             };
             var body = ResultBody(sheet);
             AddLabel(body, recaps[completed], "sheet-lead");
-            AddLabel(body, "Checkpoint " + journey.Stage.ToString("00") + "/" + All.Length.ToString("00") + " tersimpan. "
+            AddLabel(body, practiceStart >= 0 ? "Latihan selesai. Progres perjalanan tetap tersimpan."
+                : "Checkpoint " + journey.Stage.ToString("00") + "/" + All.Length.ToString("00") + " tersimpan. "
                 + (journey.Finished ? "Seluruh rute selesai." : "Lanjutkan di jalan yang sama."), "checkpoint-saved");
             var actions = Element(sheet, "sheet-actions");
-            var next = AddButton(actions, journey.Finished ? "Kuis akhir" : "Lanjutkan perjalanan",
+            var next = AddButton(actions, journey.Finished ? practiceStart >= 0 ? "Hasil latihan" : "Kuis akhir" : "Lanjutkan perjalanan",
                 ContinueCheckpoint, "big primary");
             if (!journey.Finished) AddButton(actions, "Ulang dari checkpoint", Retry, "big quiet");
             AddButton(actions, "Menu", BackToMenu, "big quiet");
-            AddLabel(sheet, journey.Finished ? "Enter: kuis akhir · Esc: menu"
+            AddLabel(sheet, journey.Finished ? practiceStart >= 0 ? "Enter: hasil latihan · Esc: menu" : "Enter: kuis akhir · Esc: menu"
                 : "Enter: lanjutkan · R: ulang dari checkpoint · Esc: menu", "result-keys");
             next.schedule.Execute(next.Focus).StartingIn(550);
         }
 
         void ContinueCheckpoint()
         {
-            if (journey.Finished) StartQuiz(true);
+            if (journey.Finished && practiceStart >= 0) ShowProgress();
+            else if (journey.Finished) StartQuiz(true);
             else SetPage(Page.Drive);
         }
 
@@ -560,10 +595,11 @@ namespace JalanKita
             }
             instruction.text = prompt;
             if (stage < 5) detail.text = (signal.Length == 0 ? "" : signal + "   /   ") + Mathf.Max(0, Mathf.RoundToInt(target - journey.Front)) + " M";
-            routeCount.text = "CHECKPOINT  " + stage.ToString("00") + " / " + All.Length.ToString("00");
+            routeCount.text = practiceStart >= 0 ? "LATIHAN MISI  " + (stage+1).ToString("00") + " / " + All.Length.ToString("00")
+                : "CHECKPOINT  " + stage.ToString("00") + " / " + All.Length.ToString("00");
             for (int i = 0; i < routeSteps.Length; i++)
             {
-                routeSteps[i].EnableInClassList("step-done", i < stage);
+                routeSteps[i].EnableInClassList("step-done", i < stage && (practiceStart < 0 || i >= practiceStart));
                 routeSteps[i].EnableInClassList("step-current", i == stage);
             }
             speed.text = Mathf.RoundToInt(journey.Kph).ToString();
@@ -692,7 +728,7 @@ namespace JalanKita
             }
             if (after) journey.Save.after = quizScore;
             else journey.Save.before = quizScore;
-            journey.Save.Store(mode);
+            if (practiceStart < 0) journey.Save.Store(mode);
             if (after) ShowProgress();
             else ShowPreflight();
         }

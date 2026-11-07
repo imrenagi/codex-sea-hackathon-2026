@@ -324,7 +324,7 @@ namespace JalanKita
             Box(name, new Vector3(x, .012f, z), new Vector3(w, .019f, l), color);
 
         void Arrow(float x, float z, int direction) =>
-            Model("LaneArrow_Straight", new Vector3(x, .025f, z), direction > 0 ? 180 : 0);
+            Model("LaneArrow_Straight", new Vector3(x, .025f, z), direction > 0 ? 0 : 180);
 
         void SurfaceBox(string name, Vector3 pos, Vector3 size, string surface)
         {
