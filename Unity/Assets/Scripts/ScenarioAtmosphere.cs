@@ -32,7 +32,7 @@ namespace JalanKita
             // Village neighbours and a real destination for the short departure journey.
             Platform(village.transform, new Vector3(-7.6f, .065f, 51), new Vector3(4.6f, .13f, 15));
             Stall(village.transform, new Vector3(-8.8f, .13f, 52), "e2ad54", false);
-            Label(village.transform, "WARUNG BU SARI", new Vector3(-7.98f, 1.95f, 52), .055f);
+            Label(village.transform, GameText.Get("text.bu_sari_s_shop"), new Vector3(-7.98f, 1.95f, 52), .055f);
             Add(village, "Penjual warung", -9.5f, 52, -9.5f, 52, "e1b05d", 1, 90, true);
             Add(village, "Pembeli warung", -6.6f, 51.4f, -6.6f, 51.4f, "3c728b", 1, -90, true);
             Add(village, "Tetangga menyapa", -5.8f, 6, -5.8f, 6, "a35662", 1, 90, true);
@@ -61,8 +61,8 @@ namespace JalanKita
             Platform(market.transform, new Vector3(-9.4f, .065f, 264), new Vector3(3.7f, .13f, 29));
             Stall(market.transform, new Vector3(-10.15f, .13f, 255), "ab594a", true);
             Stall(market.transform, new Vector3(-10.15f, .13f, 273), "477f71", true);
-            Label(market.transform, "BUAH SEGAR", new Vector3(-9.32f, 1.95f, 255), .06f);
-            Label(market.transform, "SAYUR HARI INI", new Vector3(-9.32f, 1.95f, 273), .053f);
+            Label(market.transform, GameText.Get("text.fresh_fruit"), new Vector3(-9.32f, 1.95f, 255), .06f);
+            Label(market.transform, GameText.Get("text.fresh_vegetables"), new Vector3(-9.32f, 1.95f, 273), .053f);
             Box(market.transform, "Dinding kios pasar", new Vector3(-12.05f, 1.6f, 264), new Vector3(.25f, 3.2f, 29), "d8c194");
             for (int bay = 0; bay < 6; bay++)
             {
@@ -174,7 +174,7 @@ namespace JalanKita
             }
             Box(parent, "Pintu gerbang sekolah", new Vector3(-8.92f, 1.25f, 321), new Vector3(.18f, 2.5f, 2.35f), "315d63");
             Box(parent, "Nama sekolah", new Vector3(-8.8f, 3.16f, 318), new Vector3(.14f, .65f, 7), "477b80");
-            Label(parent, "SD KENANGA", new Vector3(-8.7f, 3.16f, 318), .09f);
+            Label(parent, GameText.Get("text.kenanga_primary_school"), new Vector3(-8.7f, 3.16f, 318), .09f);
             Box(parent, "Tiang bendera", new Vector3(-7.8f, 2.3f, 307.6f), new Vector3(.07f, 4.4f, .07f), "c5c7bd");
             Box(parent, "Bendera merah", new Vector3(-7.8f, 4.08f, 308.15f), new Vector3(.035f, .35f, 1.1f), "b6443b");
             Box(parent, "Bendera putih", new Vector3(-7.8f, 3.73f, 308.15f), new Vector3(.035f, .35f, 1.1f), "f4eee1");
@@ -254,8 +254,13 @@ namespace JalanKita
         readonly Joint thighL, thighR, shinL, shinR, armL, armR, foreL, foreR;
         readonly Quaternion torsoRest;
         readonly Vector3 torsoUp;
+        static readonly Dictionary<string, Material> clothingPalette = new();
         readonly Dictionary<string, Material> colors;
+        readonly HashSet<Material> ownedColors;
+        readonly Renderer[] renderers;
         readonly float size;
+        readonly string everydayShirt, everydayPants;
+        bool? schoolAppearance;
 
         struct Joint
         {
@@ -278,10 +283,14 @@ namespace JalanKita
             Root = new GameObject(name);
             Root.transform.SetParent(parent, false);
             body = Models.Spawn("Person", Root.transform, out colors).transform;
+            renderers = body.GetComponentsInChildren<Renderer>(true);
+            ownedColors = new HashSet<Material>(colors.Values);
             size = scale;
+            everydayShirt = shirt;
+            everydayPants = variation % 2 == 0 ? "444c52" : "625c53";
             body.localScale = Vector3.one * scale;
             Tint("M_Shirt", shirt);
-            Tint("M_Pants", pupil ? "8e3536" : variation % 2 == 0 ? "3d464f" : "625a50");
+            Tint("M_Pants", pupil ? "855254" : everydayPants);
             Tint("M_Skin", new[] { "b98361", "956242", "bf8e6a", "a46e4d" }[variation % 4]);
             torso = Models.Find(body, "Torso");
             foreach (var side in new[] { "L", "R" })
@@ -311,14 +320,16 @@ namespace JalanKita
 
         public void SchoolAppearance(bool school)
         {
-            body.localScale = Vector3.one * (school ? .83f : size);
-            Tint("M_Shirt", school ? "f2eee4" : "c9ad71");
-            Tint("M_Pants", school ? "8e3536" : "3d464f");
+            if (schoolAppearance == school) return;
+            schoolAppearance = school;
+            body.localScale = Vector3.one * (school ? size * .83f : size);
+            Tint("M_Shirt", school ? "e5dfd3" : everydayShirt);
+            Tint("M_Pants", school ? "855254" : everydayPants);
         }
 
-        public void Draw(Vector3 position, float yaw, float time, float walking, bool gesture)
+        public void Draw(Vector3 position, float yaw, float time, float walking, bool gesture, float? gaitTime = null)
         {
-            float gait = time * 6.1f, swing = Mathf.Sin(gait), stride = Mathf.Clamp01(walking);
+            float gait = (gaitTime ?? time) * 6.1f, swing = Mathf.Sin(gait), stride = Mathf.Clamp01(walking);
             thighL.Set(-25 * swing * stride); thighR.Set(25 * swing * stride);
             shinL.Set((5 + 37 * Mathf.Max(0, Mathf.Cos(gait + .3f))) * stride);
             shinR.Set((5 + 37 * Mathf.Max(0, -Mathf.Cos(gait + .3f))) * stride);
@@ -327,15 +338,44 @@ namespace JalanKita
             foreL.Set(-12 - 12 * stride);
             foreR.Set(gesture ? -55 - 12 * Mathf.Sin(time * 2.1f) : -12 - 12 * stride);
             if (torso) torso.localRotation = Quaternion.AngleAxis(stride > .1f ? swing * 3 : Mathf.Sin(time * .8f) * 7, torsoUp) * torsoRest;
-            float bob = (Mathf.Cos(gait * 2) + 1) * .014f * stride;
+            float bob = (Mathf.Cos(gait * 2) + 1) * .011f * size * stride;
             Root.transform.SetPositionAndRotation(position + Vector3.up * bob, Quaternion.Euler(0, yaw, 0));
         }
 
         void Tint(string key, string color)
         {
-            if (!colors.TryGetValue(key, out var material)) return;
-            ColorUtility.TryParseHtmlString("#" + color, out var tint);
-            material.SetColor("_BaseColor", tint);
+            if (!colors.TryGetValue(key, out var previous)) return;
+            string paletteKey = key + "/" + color;
+            if (!clothingPalette.TryGetValue(paletteKey, out var material) || !material)
+            {
+                ColorUtility.TryParseHtmlString("#" + color, out var tint);
+                bool fabric = key == "M_Shirt" || key == "M_Pants";
+                if (fabric)
+                    tint = Color.Lerp(tint, new Color(tint.grayscale, tint.grayscale, tint.grayscale), .18f);
+                // Existing URP lighting supplies soft volume and shadows. Matte shared
+                // surfaces avoid plastic glare without adding a rendering pass or light.
+                material = MaterialLibrary.Create("Pedestrian " + paletteKey, tint, 0, fabric ? .12f : .28f);
+                material.enableInstancing = true;
+                if (fabric)
+                {
+                    material.SetFloat("_SpecularHighlights", 0);
+                    material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+                    material.SetFloat("_EnvironmentReflections", 0);
+                    material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+                }
+                clothingPalette[paletteKey] = material;
+            }
+            if (previous == material) return;
+            foreach (var renderer in renderers)
+            {
+                var surfaces = renderer.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < surfaces.Length; i++)
+                    if (surfaces[i] == previous) { surfaces[i] = material; changed = true; }
+                if (changed) renderer.sharedMaterials = surfaces;
+            }
+            colors[key] = material;
+            if (ownedColors.Remove(previous)) Models.Kill(previous);
         }
     }
 }

@@ -52,15 +52,15 @@ namespace JalanKita.EditorTools
                     string fullKey=JourneySave.Key(mode), fullSave=PlayerPrefs.GetString(fullKey);
                     string[] missions=Mission.Scenarios.Select(m=>PlayerPrefs.GetString(JourneySave.Key(mode,m))).ToArray();
                     Call(game,"ShowCatalogue",MissionKind.Scenario);
-                    var card=root.Query<VisualElement>(className:"mission-card").ToList().Single(c=>c.Query<Label>().ToList().Any(l=>l.text=="Melintasi Bundaran HI"));
-                    Submit(Button(card,"Pilih")); Require(Field(game,"page").ToString()=="Brief","Catalogue opens existing briefing");
-                    Submit(Button(root,"Mulai")); Require(Field(game,"page").ToString()=="Jaksa"&&(bool)Field(game,"hiActive"),"Brief starts HI mission");
+                    var card=root.Query<VisualElement>(className:"mission-card").ToList().Single(c=>c.Query<Label>().ToList().Any(l=>l.text==GameText.Get("hi.title")));
+                    Submit(Button(card,GameText.Get("text.select_2a7802"))); Require(Field(game,"page").ToString()=="Brief","Catalogue opens existing briefing");
+                    Submit(Button(root,GameText.Get("text.start"))); Require(Field(game,"page").ToString()=="Jaksa"&&(bool)Field(game,"hiActive"),"Brief starts HI mission");
                     var drive=(LandmarkDrive)Field(game,"hi"); var objective=(HiRoundaboutObjective)Field(game,"hiObjective");
                     Require(UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Count(a=>a.isActiveAndEnabled)==1,"One active listener in HI");
                     Set(game,"inputReleaseRequired",false);
                     Call(game,"ShowJaksaPause"); var position=drive.Position; float time=drive.Elapsed;
                     Call(game,"FixedUpdate"); Require(drive.Position==position&&drive.Elapsed==time,"Pause freezes pose/time");
-                    Submit(Button(root,"Lanjutkan")); Set(game,"inputReleaseRequired",false);
+                    Submit(Button(root,GameText.Get("text.continue"))); Set(game,"inputReleaseRequired",false);
                     drive.TrafficEnabled=false;
                     for(int i=0;i<60;i++) Call(game,"StepHi",.02f,false,false,0f,true);
                     Require(drive.Speed<-.1f,"S dispatcher supports signed reverse");
@@ -75,11 +75,11 @@ namespace JalanKita.EditorTools
                         Call(game,"StepHi",.02f,true,false,steer,false);
                     }
                     Require(objective.Complete,"Actual controller reaches result "+mode+" pose="+drive.Position+" stage="+objective.Stage+" reason="+objective.FailureReason);
-                    Require(Field(game,"page").ToString()=="JaksaPause"&&root.Query<Label>().ToList().Any(l=>l.text=="MISI SELESAI"),"Completion result shown");
+                    Require(Field(game,"page").ToString()=="JaksaPause"&&root.Query<Label>().ToList().Any(l=>l.text==GameText.Get("hi.completed")),"Completion result shown");
                     Require(PlayerPrefs.GetString(fullKey)==fullSave,"Main progress unchanged");
                     for(int i=0;i<missions.Length;i++) Require(PlayerPrefs.GetString(JourneySave.Key(mode,Mission.Scenarios[i]))==missions[i],"Other scenario progress unchanged");
-                    Submit(Button(root,"Ulangi misi")); Require(objective.Stage==HiRoundaboutObjective.Phase.Approach&&drive.Speed==0,"Result retry works");
-                    Call(game,"ShowJaksaPause"); Submit(Button(root,"Pilih misi"));
+                    Submit(Button(root,GameText.Get("hi.retry"))); Require(objective.Stage==HiRoundaboutObjective.Phase.Approach&&drive.Speed==0,"Result retry works");
+                    Call(game,"ShowJaksaPause"); Submit(Button(root,GameText.Get("hi.choose")));
                     Require(!(bool)Field(game,"hiActive")&&Field(game,"page").ToString()=="Catalogue","Result returns to catalogue");
                     Require(UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Count(a=>a.isActiveAndEnabled)==1,"One active listener after leaving HI");
                     Debug.Log("HI_FLOW_MODE_PASS "+mode);

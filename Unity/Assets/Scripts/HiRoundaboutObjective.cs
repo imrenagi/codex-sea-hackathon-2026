@@ -23,21 +23,21 @@ namespace JalanKita
         public string FailureReason { get; private set; }
         public string Title => Stage switch
         {
-            Phase.Approach => "Dekati Bundaran HI",
-            Phase.Yield => "Beri jalan sebelum masuk",
-            Phase.Circulate => "Ikuti bundaran menuju Thamrin",
-            Phase.Exit => "Keluar menuju Thamrin",
-            Phase.Complete => "Perjalanan HI selesai",
-            _ => "Coba lagi dari pendekatan"
+            Phase.Approach => GameText.Get("hi.approach"),
+            Phase.Yield => GameText.Get("hi.yield"),
+            Phase.Circulate => GameText.Get("hi.circulate"),
+            Phase.Exit => GameText.Get("hi.exit"),
+            Phase.Complete => GameText.Get("hi.done"),
+            _ => GameText.Get("hi.failed")
         };
         public string Instruction => Failed ? FailureReason : Stage switch
         {
-            Phase.Approach => "Ikuti lajur kiri dari Sudirman. Kurangi kecepatan menjelang bundaran.",
-            Phase.Yield => Conflict ? "Ada arus di bundaran. Tunggu sebelum masuk; lihat kanan dengan X."
-                : "Celah terbuka. Periksa kanan lalu masuk mengikuti arah bundaran.",
-            Phase.Circulate => "Ikuti arus searah jarum jam. Bersiap keluar ke Thamrin; gunakan sein kiri.",
-            Phase.Exit => "Lanjutkan di lajur keluar Thamrin hingga tujuan tercapai.",
-            _ => "Pendekatan, masuk bundaran, dan keluar menuju Thamrin selesai."
+            Phase.Approach => GameText.Get("hi.approach_instruction"),
+            Phase.Yield => Conflict ? GameText.Get("hi.wait_instruction")
+                : GameText.Get("hi.gap_instruction"),
+            Phase.Circulate => GameText.Get("hi.circulate_instruction"),
+            Phase.Exit => GameText.Get("hi.exit_instruction"),
+            _ => GameText.Get("hi.complete_instruction")
         };
 
         public HiRoundaboutObjective(LandmarkDrive drive)
@@ -94,7 +94,7 @@ namespace JalanKita
                 if (Crossed(entry, entryGate, network.Branches[0].Width, true))
                 {
                     if (Conflict || previousConflict)
-                        Fail("Masuk terlalu dekat dengan arus bundaran. Tunggu celah aman, lalu coba lagi.");
+                        Fail(GameText.Get("hi.unsafe_entry"));
                     else
                     {
                         Stage = Phase.Circulate;
@@ -111,7 +111,7 @@ namespace JalanKita
                 if (Crossed(exit, 22, network.Branches[1].Width, false))
                 {
                     if (ringTravel < requiredRingTravel)
-                        Fail("Ikuti bundaran searah jarum jam sebelum keluar menuju Thamrin.");
+                        Fail(GameText.Get("hi.wrong_order"));
                     else Stage = Phase.Exit;
                 }
             }

@@ -83,7 +83,7 @@ namespace JalanKita.EditorTools
                 float speed = run.Speed;
                 Call(game, "AnnounceCheckpoint");
                 Require(Page(game) == "Checkpoint", "Completion page");
-                Require(root.Q<Label>(className: "stamp")?.text == "MISI SELESAI!", "Success banner");
+                Require(root.Q<Label>(className: "stamp")?.text == GameText.Get("text.mission_complete_405e76"), "Success banner");
                 Call(game, "FixedUpdate");
                 Require(run.Position == position && run.Speed == speed, "Pause preserves driving state");
                 Call(game, "ContinueCheckpoint");
@@ -102,7 +102,7 @@ namespace JalanKita.EditorTools
                 run.Step(.02f, true, false, 0);
             Require(run.Failure == Rule.Stop, "STOP violation");
             Call(game, "ShowLesson", Rule.Stop);
-            Require(root.Q<Label>(className: "stamp")?.text == "PELANGGARAN!", "Violation banner");
+            Require(root.Q<Label>(className: "stamp")?.text == GameText.Get("text.violation"), "Violation banner");
             Require(root.Query<VisualElement>(className: "fold").ToList().Count == 2, "Explanation and legal folds");
             Call(game, "Retry");
             AcknowledgeControls(game);
@@ -130,7 +130,7 @@ namespace JalanKita.EditorTools
                     AcknowledgeControls(game);
                     Call(game, "ShowProgress");
                     var fold = root.Query<VisualElement>(className: "fold").ToList().Find(f =>
-                        f.Q<Label>(className: "fold-title")?.text == "Latihan dari checkpoint");
+                        f.Q<Label>(className: "fold-title")?.text == GameText.Get("text.practice_from_a_checkpoint"));
                     Require(fold != null, "Pause contains checkpoint picker");
                     Submit(fold.Q<Button>(className: "fold-head"));
                     Require(fold.ClassListContains("open"), "Checkpoint picker opens from pause");
@@ -155,7 +155,7 @@ namespace JalanKita.EditorTools
                         Require(run.Stage == stage+1 && !run.Failure.HasValue, "Selected mission can complete");
                     }
                     Call(game, "AnnounceCheckpoint");
-                    Require(root.Q<Label>(className:"checkpoint-saved").text.Contains("Latihan"), "Practice never claims skipped missions saved");
+                    Require(root.Q<Label>(className:"checkpoint-saved").text == GameText.Get("text.practice_complete_your_journey_progress_stays_saved"), "Practice never claims skipped missions saved");
                     Call(game, "ContinueCheckpoint");
                     AcknowledgeControls(game);
                     Require(Page(game) == (run.Finished ? "Progress" : "Drive"), "Practice finishes without overwriting quiz");
@@ -306,7 +306,7 @@ namespace JalanKita.EditorTools
             }
             Call(game, "SetPage", Enum.Parse(pageType, "Drive"));
             Call(game, "ShowProgress");
-            var resume = root.Q("dialog").Query<Button>().ToList().Find(b => b.text == "Kembali berkendara");
+            var resume = root.Q("dialog").Query<Button>().ToList().Find(b => b.text == GameText.Get("text.resume_driving"));
             Require(resume != null, "Paused journey exposes resume button");
             resume.Focus();
             using (var move = NavigationMoveEvent.GetPooled(Vector2.up))
@@ -368,81 +368,112 @@ namespace JalanKita.EditorTools
 
         static void VerifyControls(JalanGame game)
         {
+            using var preferences = new IntegrationChecks.SavedPreferences();
             var root = game.GetComponent<UIDocument>().rootVisualElement;
             var pageType = typeof(JalanGame).GetNestedType("Page", BindingFlags.NonPublic);
-            var seen = (System.Collections.Generic.HashSet<string>)Field(game, "controlsSeen");
             Call(game, "ShowMenu");
             var home = root.Q("dialog").Query<Button>().ToList();
-            Require(home.Count == 3 && home[0].text == "Play" && home[1].text == "Options" && home[2].text == "Exit", "Native home has exactly Play / Options / Exit");
+            Require(home.Count == 3 && home[0].text == GameText.Get("home.play")
+                && home[1].text == GameText.Get("home.options") && home[2].text == GameText.Get("home.exit"),
+                "Native home has exactly Play / Options / Exit");
             Submit(home[1]);
             Require(Page(game) == "Options", "Options route");
-            var guide = root.Q("dialog").Query<Button>().ToList().Find(b => b.text.Contains("Kontrol berkendara"));
+            var guide = root.Q("dialog").Query<Button>().ToList().Find(b => b.text == GameText.Get("controls.open"));
+            Require(guide != null, "Options exposes manual controls");
             Submit(guide);
             Require(Page(game) == "Controls", "Options opens manual controls");
             Submit(root.Q<Button>(className: "tutorial-start"));
             Require(Page(game) == "Options", "Manual controls returns to Options");
-            using var preferences = new IntegrationChecks.SavedPreferences();
             const string onboardingKey = "RoadSense.Onboarding.MovementBrake.v1";
-            PlayerPrefs.DeleteKey(onboardingKey);
+            const string completedKey = "RoadSense.Tutorial.pasar-bunga-right-of-way.Completed.v1";
+            PlayerPrefs.DeleteKey(onboardingKey); PlayerPrefs.DeleteKey(completedKey);
+            Set(game, "demoFinishedAt", -1d); Set(game, "completedTutorialScenarioId", null);
             var saved = new JourneySave { next = 4, trafficSeed = 173, before = 2 };
             saved.Store(VehicleMode.Car);
             string saveKey = JourneySave.Key(VehicleMode.Car), original = PlayerPrefs.GetString(saveKey);
             Call(game, "ShowMenu");
-            Submit(root.Q("dialog").Query<Button>().ToList().Find(b => b.text == "Play"));
+            Submit(root.Q("dialog").Query<Button>().ToList().Find(b => b.text == GameText.Get("home.play")));
             Require(Page(game) == "Drive", "First real Play starts contextual driving tutorial");
             var run = (Journey)Field(game, "journey");
-            Require(run.Mode == VehicleMode.Car && run.LearningControls && (bool)Field(game,"inputReleaseRequired"), "Safe car tutorial owns input and scoring");
-            var position=run.Position; float elapsed=run.ElapsedTime;
-            Call(game,"FixedUpdate");
-            Require(run.Position==position && run.ElapsedTime==elapsed,"Held entry input cannot move tutorial");
-            Set(game,"inputReleaseRequired",false);
-            bool prompted=false;
-            for(int i=0;i<2000&&!prompted;i++)
+            var tutorial = (TutorialRunner)Field(game, "demoTutorial");
+            Require(run.Mode == VehicleMode.Car && run.LearningControls && (bool)Field(game, "inputReleaseRequired"),
+                "Safe car tutorial owns input and scoring");
+            var position = run.Position; float elapsed = run.ElapsedTime;
+            Call(game, "FixedUpdate");
+            Require(run.Position == position && run.ElapsedTime == elapsed, "Held entry input cannot move tutorial");
+            Set(game, "inputReleaseRequired", false);
+            int pedestrians = 0, cars = 0;
+            void ObserveActors()
             {
-                run.Step(.02f,true,false,0);
-                prompted=(bool)typeof(JalanGame).GetMethod("PauseForDemoCrossing",Private).Invoke(game,null);
+                for (int i = 0; i < Journey.CrossingPedestrianCount; i++)
+                    if (run.CrossingPedestrian(i).HasValue) pedestrians |= 1 << i;
+                for (int i = 0; i < Journey.MainRoadTrafficCount; i++)
+                    if (run.MainRoadTraffic(i).HasValue) cars |= 1 << i;
             }
-            Require(prompted && Page(game)=="TutorialBrake" && !run.Failure.HasValue,"Crossing triggers centered brake prompt without penalties");
-            position=run.Position; elapsed=run.ElapsedTime;
-            Call(game,"FixedUpdate");
-            Require(run.Position==position && run.ElapsedTime==elapsed,"Brake prompt pauses simulation");
-            Call(game,"ResumeDemoCrossing");
-            for(int i=0;i<2000 && !(bool)Field(game,"demoCrossingReady");i++)
+            foreach (string expected in new[] { "pedestrian-crossing", "main-road-junction" })
             {
-                Call(game,"FixedUpdate");
-                Require(run.Speed>=0 && !run.Failure.HasValue,"Guided brake never reverses or penalizes learner");
+                for (int i = 0; i < 2500 && !tutorial.IsActive && !run.Failure.HasValue; i++)
+                {
+                    run.Step(.02f, true, false, 0); ObserveActors();
+                    Call(game, "BeginDemoTutorialStep");
+                }
+                Require(tutorial.IsActive && tutorial.Active.Id == expected && Page(game) == "TutorialBrake"
+                    && !run.Failure.HasValue, "Ordered tutorial prompt: " + expected);
+                position = run.Position; elapsed = run.ElapsedTime;
+                Call(game, "FixedUpdate");
+                Require(run.Position == position && run.ElapsedTime == elapsed, "Prompt freezes simulation: " + expected);
+                Require(!tutorial.TryAction(run, true, true), "Held S cannot dismiss new prompt");
+                tutorial.TryAction(run, false, false);
+                Require(tutorial.TryAction(run, true, true), "Fresh S accepts guided brake");
+                Call(game, "EnterDemoTutorialWaiting");
+                Require(tutorial.TryContinue(run, true, true) == null, "W cannot bypass required wait");
+                for (int i = 0; i < 2500 && tutorial.Phase != TutorialPhase.Ready; i++)
+                {
+                    Call(game, "FixedUpdate"); ObserveActors();
+                    Require(run.Speed >= 0 && !run.Failure.HasValue, "Guided brake never reverses or penalizes learner");
+                }
+                Require(tutorial.Phase == TutorialPhase.Ready && run.Speed == 0
+                    && tutorial.Active.CompleteWhen(run), "Actual hazard clears before continuation: " + expected);
+                Require(tutorial.TryContinue(run, true, true) == null, "Held W cannot skip ready transition");
+                tutorial.TryContinue(run, false, false);
+                var completed = tutorial.TryContinue(run, true, true);
+                Require(completed != null && completed.Id == expected && !run.LearningControls,
+                    "Fresh W restores normal driving rules: " + expected);
             }
-            Require((bool)Field(game,"demoCrossingReady") && run.Speed==0,"Guided brake stops and waits for pedestrian");
-            Call(game,"ContinueDemoCrossing");
-            Require(!run.LearningControls,"Continue restores normal rules");
-            for(int i=0;i<10000 && run.Stage==2 && !run.Failure.HasValue;i++) DrivingCoach.Step(run,.02f);
-            Require(run.Stage==3 && !run.Failure.HasValue,"Guided demonstration completes its bounded route");
-            Call(game,"AnnounceCheckpoint");
-            var choose=root.Q("dialog").Query<Button>().ToList().Find(b=>b.text=="Pilih perjalanan");
-            Require(choose!=null,"Completion exposes normal journey chooser"); Submit(choose);
-            Require(Page(game)=="PlayChooser" && PlayerPrefs.GetInt(onboardingKey)==1,"Completion reaches chooser and persists onboarding");
-            Require(PlayerPrefs.GetString(saveKey)==original,"Tutorial completion preserves existing route save byte-for-byte");
-            Call(game,"ShowMenu"); Submit(root.Q("dialog").Query<Button>().ToList().Find(b=>b.text=="Play"));
-            Require(Page(game)=="PlayChooser","Returning Play reaches all saved journeys and modes");
-            foreach(VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
+            Require(tutorial.CompletedCount == 2 && pedestrians == 7 && cars == 7,
+                "Tutorial encounters all three pedestrians and all three main-road cars");
+            for (int i = 0; i < 10000 && run.Stage == 2 && !run.Failure.HasValue; i++) DrivingCoach.Step(run, .02f);
+            Require(run.Stage == 3 && !run.Failure.HasValue, "Guided tutorial completes its bounded route");
+            Call(game, "AnnounceCheckpoint");
+            var actions = root.Q("dialog").Query<Button>().ToList();
+            var choose = actions.Find(b => b.text == GameText.Get("navigation.explore_modes"));
+            Require(choose != null && actions.Exists(b => b.text == GameText.Get("demo.replay")),
+                "Completion exposes journey chooser and fresh replay");
+            Submit(choose);
+            Require(Page(game) == "PlayChooser" && PlayerPrefs.GetInt(completedKey) == 1
+                && PlayerPrefs.GetInt(onboardingKey) == 1, "Completed tutorial persists completion and reaches chooser");
+            Require(PlayerPrefs.GetString(saveKey) == original, "Tutorial preserves existing route save byte-for-byte");
+            Call(game, "ShowMenu");
+            Submit(root.Q("dialog").Query<Button>().ToList().Find(b => b.text == GameText.Get("home.play")));
+            Require(Page(game) == "PlayChooser", "Returning Play reaches saved journeys and modes");
+            foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
             {
-                Set(game,"mode",mode);
-                Set(game,"pitchDemo",false);
-                Set(game,"journey",new Journey(mode,new JourneySave{next=1},false,trafficSeed:173));
-                Call(game,"Retry");
-                Require(Page(game)=="Drive" && (bool)Field(game,"inputReleaseRequired"),"Retry keeps contextual controls with release latch");
-                Call(game,"ShowProgress");
-                Call(game,"ShowControls",Enum.Parse(pageType,"Progress"),Enum.Parse(pageType,"Drive"),false);
-                Submit(root.Q<Button>(className:"tutorial-start"));
-                Require(Page(game)=="Progress","Manual guide returns to pause");
-                Call(game,"StartJaksa");
-                Require(Page(game)=="Jaksa" && (bool)Field(game,"inputReleaseRequired"),"Exploration retains release latch");
-                Call(game,"ShowJaksaPause");
-                Call(game,"ShowControls",Enum.Parse(pageType,"JaksaPause"),Enum.Parse(pageType,"Jaksa"),false);
-                Submit(root.Q<Button>(className:"tutorial-start"));
-                Require(Page(game)=="JaksaPause","Exploration guide returns to pause");
+                Set(game, "mode", mode); Set(game, "pitchDemo", false); Set(game, "demoTutorial", null);
+                Set(game, "journey", new Journey(mode, new JourneySave { next = 1 }, false, trafficSeed: 173));
+                Call(game, "Retry");
+                Require(Page(game) == "Drive" && (bool)Field(game, "inputReleaseRequired"), "Retry retains release latch");
+                Call(game, "ShowProgress");
+                Call(game, "ShowControls", Enum.Parse(pageType, "Progress"), Enum.Parse(pageType, "Drive"), false);
+                Submit(root.Q<Button>(className: "tutorial-start"));
+                Require(Page(game) == "Progress", "Manual guide returns to pause");
+                Call(game, "StartJaksa");
+                Require(Page(game) == "Jaksa" && (bool)Field(game, "inputReleaseRequired"), "Exploration retains release latch");
+                Call(game, "ShowJaksaPause");
+                Call(game, "ShowControls", Enum.Parse(pageType, "JaksaPause"), Enum.Parse(pageType, "Jaksa"), false);
+                Submit(root.Q<Button>(className: "tutorial-start"));
+                Require(Page(game) == "JaksaPause", "Exploration guide returns to pause");
             }
-            Debug.Log("ROADSENSE_ONBOARDING_PASSED real Play, contextual brake/wait/continue, no tutorial reverse/penalties, returning chooser, immutable route saves, help/pause/input gates.");
+            Debug.Log("ROADSENSE_ONBOARDING_PASSED actual Play, ordered crossing/junction with three actors each, fresh-key brake/wait/continue, returning chooser, immutable saves, help/pause/input gates.");
         }
 
         internal static void AcknowledgeControls(JalanGame game)
@@ -470,7 +501,13 @@ namespace JalanKita.EditorTools
         static object Field(JalanGame game, string name) => typeof(JalanGame).GetField(name, Private).GetValue(game);
         static void Set(JalanGame game, string name, object value) => typeof(JalanGame).GetField(name, Private).SetValue(game, value);
         static string Page(JalanGame game) => Field(game, "page").ToString();
-        static void Call(JalanGame game, string name, params object[] args) => typeof(JalanGame).GetMethod(name, Private).Invoke(game, args);
+        static void Call(JalanGame game, string name, params object[] args)
+        {
+            var method = Array.Find(typeof(JalanGame).GetMethods(Private),
+                m => m.Name == name && m.GetParameters().Length == args.Length);
+            if (method == null) throw new MissingMethodException(typeof(JalanGame).FullName, name);
+            method.Invoke(game, args);
+        }
         static void Require(bool valid, string message)
         {
             if (!valid) throw new InvalidOperationException(message);

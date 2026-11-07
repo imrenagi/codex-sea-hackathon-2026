@@ -10,11 +10,13 @@ namespace JalanKita
         readonly HashSet<string> controlsPracticeStarted = new();
         readonly HashSet<string> exploreBraking = new(), exploreStopped = new();
         const string ControlsCompleteKey = "RoadSense.Onboarding.MovementBrake.v1";
+        const string EntryTutorialCompleteKey = "RoadSense.Tutorial.pasar-bunga-right-of-way.Completed.v1";
+        string completedTutorialScenarioId;
         bool entryTutorial;
         Journey controlsOriginal;
         string controlsPracticeContext;
         bool controlsMoved, controlsBraked;
-        public bool ControlsOnboardingActive => page == Page.TutorialBrake || (pitchDemo && !demoCrossingTaught) || page == Page.Controls || journey?.LearningControls == true
+        public bool ControlsOnboardingActive => page == Page.TutorialBrake || page == Page.Controls || journey?.LearningControls == true
             || (!hiActive && (page == Page.Jaksa || page == Page.JaksaPause) && !exploreStopped.Contains("explore:" + mode));
         readonly HashSet<string> cueActionsSeen = new();
         Page controlsOrigin, controlsDrivingPage;
@@ -28,12 +30,34 @@ namespace JalanKita
             KeyCode.Tab, KeyCode.Escape, KeyCode.P
         };
 
-        bool demoCrossingTaught, demoBrakeLatched, demoCrossingReady, demoActionReleased;
+        TutorialRunner demoTutorial;
 
         void PlayFromHome()
         {
-            if (PlayerPrefs.GetInt(ControlsCompleteKey, 0) > 0) ShowPlayChooser();
+            bool completed = PlayerPrefs.GetInt(EntryTutorialCompleteKey, 0) == 1;
+            // The old demo stored whole-scenario success only for the current session.
+            // Its finish timestamp survives the menu; the movement/braking flag does not
+            // establish that the crossing and junction were completed.
+            if (!completed && demoFinishedAt >= 0 &&
+                (string.IsNullOrEmpty(completedTutorialScenarioId) || completedTutorialScenarioId == DemoTutorialScenarios.PasarBunga.Id) &&
+                (demoTutorial == null || demoTutorial.Scenario.Id == DemoTutorialScenarios.PasarBunga.Id))
+            {
+                PlayerPrefs.SetInt(EntryTutorialCompleteKey, 1);
+                PlayerPrefs.Save();
+                completed = true;
+            }
+            if (completed) ShowPlayChooser(true);
             else StartEntryTutorial();
+        }
+
+        void RememberEntryTutorialCompletion()
+        {
+            if (learner != null || !PitchComplete) return;
+            completedTutorialScenarioId = demoTutorial.Scenario.Id;
+            if (completedTutorialScenarioId != DemoTutorialScenarios.PasarBunga.Id
+                || PlayerPrefs.GetInt(EntryTutorialCompleteKey, 0) == 1) return;
+            PlayerPrefs.SetInt(EntryTutorialCompleteKey, 1);
+            PlayerPrefs.Save();
         }
 
         void StartEntryTutorial()
@@ -44,36 +68,46 @@ namespace JalanKita
             entryTutorial = true;
         }
 
-        bool PauseForDemoCrossing()
+        bool BeginDemoTutorialStep()
         {
-            if (!pitchDemo || demoCrossingTaught || learner != null || journey.Stage != 2
-                || !journey.Pedestrian.HasValue || journey.Position.y < journey.CrossingZebra - 19) return false;
-            demoCrossingTaught = true;
-            demoActionReleased = false;
-            journey.LearningControls = true;
-            SetPage(Page.TutorialBrake);
-            AddLabel(dialog, "Ada orang menyeberang", "kicker");
-            AddLabel(dialog, "Tekan [S] untuk mengerem", "tutorial-instruction");
+            if (!pitchDemo || learner != null || demoTutorial == null || !demoTutorial.TryBegin(journey)) return false;
+            if (demoTutorial.Simulation == TutorialSimulation.FreezeWorld)
+            {
+                SetPage(Page.TutorialBrake);
+                AddLabel(dialog, GameText.Get(demoTutorial.Active.HeadingKey), "kicker");
+                AddLabel(dialog, GameText.Get(demoTutorial.Active.ActionInstructionKey), "tutorial-instruction");
+            }
             return true;
         }
 
-        void ResumeDemoCrossing()
+        void ResumeDemoTutorial()
         {
-            demoBrakeLatched = true;
-            demoCrossingReady = demoActionReleased = false;
-            inputReleaseRequired = false;
-            SetPage(Page.Drive);
-            toast.text = "Mengerem. Tunggu sampai orang selesai menyeberang.";
-            toastUntil = Time.unscaledTime + 6;
+            demoTutorial.AcceptAction(journey);
+            EnterDemoTutorialWaiting();
         }
 
-        void ContinueDemoCrossing()
+        void EnterDemoTutorialWaiting()
         {
-            if (!demoBrakeLatched || !demoCrossingReady) return;
-            demoBrakeLatched = demoCrossingReady = demoActionReleased = false;
-            journey.LearningControls = false;
-            toast.text = "Bagus! Lanjut berkendara. Aturan normal sekarang aktif.";
-            toastUntil = Time.unscaledTime + 5;
+            inputReleaseRequired = false;
+            SetPage(Page.Drive);
+        }
+
+        void ReadDemoTutorialInput()
+        {
+            if (!Application.isFocused || demoTutorial?.IsActive != true) return;
+            if (demoTutorial.Phase == TutorialPhase.AwaitAction)
+            {
+                var key = demoTutorial.Active.ActionKey;
+                if (demoTutorial.TryAction(journey, Input.GetKey(key), Input.GetKeyDown(key)))
+                    EnterDemoTutorialWaiting();
+            }
+            else
+            {
+                var completed = demoTutorial.TryContinue(journey, Input.GetKey(KeyCode.W), Input.GetKeyDown(KeyCode.W));
+                if (completed == null) return;
+                toast.text = GameText.Get(completed.SuccessMessageKey);
+                toastUntil = Time.unscaledTime + 5;
+            }
         }
 
         void EnterHumanDrive(Page drivingPage)
@@ -109,7 +143,7 @@ namespace JalanKita
             }
             district.Snap();
             inputReleaseRequired = true;
-            toast.text = "Latihan selesai. Kembali ke awal; aturan normal aktif.";
+            toast.text = GameText.Get("text.practice_complete_back_to_the_start_normal_rules_are");
             toastUntil = Time.unscaledTime + 6;
         }
 
@@ -121,7 +155,7 @@ namespace JalanKita
                 exploreBraking.Add(context);
             if (!exploreBraking.Contains(context) || jaksa.Speed > .28f) return;
             exploreStopped.Add(context);
-            toast.text = "Latihan selesai. Berkendara seperti biasa.";
+            toast.text = GameText.Get("text.practice_complete_drive_as_usual");
             toastUntil = Time.unscaledTime + 5;
         }
 
@@ -130,47 +164,47 @@ namespace JalanKita
             controlsOrigin = origin;
             controlsDrivingPage = drivingPage;
             SetPage(Page.Controls);
-            AddLabel(dialog, mode == VehicleMode.Car ? "Kontrol mobil" : "Kontrol motor", "heading");
-            AddLabel(dialog, learner != null ? "Contoh otomatis dijeda. Tutup panduan untuk melanjutkan contoh."
-                : "Permainan tetap dijeda selama panduan ini terbuka.", "copy controls-intro");
+            AddLabel(dialog, mode == VehicleMode.Car ? GameText.Get("controls.car.title") : GameText.Get("controls.motorcycle.title"), "heading");
+            AddLabel(dialog, learner != null ? GameText.Get("text.the_demonstration_is_paused_close_this_guide_to_continue")
+                : GameText.Get("text.the_game_stays_paused_while_this_guide_is_open"), "copy controls-intro");
             var body = new ScrollView(ScrollViewMode.Vertical)
             { horizontalScrollerVisibility = ScrollerVisibility.Hidden };
             body.AddToClassList("controls-body");
             dialog.Add(body);
             var groups = Element(body, "control-groups");
             var movement = Element(groups, "control-group");
-            AddLabel(movement, "Bergerak & berhenti", "subhead");
-            ControlKey(movement, "W / ↑", "Gas", "Tahan untuk menambah kecepatan.", DrivingGlyph.Kind.Throttle);
-            ControlKey(movement, "S / ↓", "Rem lalu mundur", "Saat berkendara normal, tahan setelah berhenti untuk mundur perlahan. Dalam tutorial, tombol ini hanya mengerem.");
-            ControlKey(movement, "SPASI", "Rem saja", "Memperlambat atau berhenti tanpa mengaktifkan mundur. W menghentikan gerak mundur sebelum maju.");
-            ControlKey(movement, "A / D", "Kemudi kiri / kanan", "Bisa juga memakai panah ← / →.", DrivingGlyph.Kind.Steering);
-            ControlKey(movement, "Z / X", "Lihat kiri / kanan", "Tahan untuk melihat. Lepas untuk kembali ke depan.");
+            AddLabel(movement, "Moving & stopping", "subhead");
+            ControlKey(movement, "W / ↑", "Throttle", "Hold to accelerate.", DrivingGlyph.Kind.Throttle);
+            ControlKey(movement, "S / ↓", "Brake then reverse", "During normal driving, hold after stopping to reverse slowly. Guided tutorial actions only brake.");
+            ControlKey(movement, "SPACE", "Brake only", "Slow or stop without reversing. W brakes reverse movement before driving forward.");
+            ControlKey(movement, "A / D", "Steer left / right", "You can also use the arrow keys.", DrivingGlyph.Kind.Steering);
+            ControlKey(movement, "Z / X", "Look left / right", "Hold to look. Release to face forward.");
             var decisions = Element(groups, "control-group");
-            AddLabel(decisions, "Isyarat & pandangan", "subhead");
-            ControlKey(decisions, "Q / E", "Sein kiri / kanan", "Tekan sekali. Tekan tombol yang sama untuk mematikan.");
-            ControlKey(decisions, "C", "Ganti kamera", "Beralih antara kamera mengikuti dan pandangan pengemudi.", DrivingGlyph.Kind.Camera);
+            AddLabel(decisions, GameText.Get("text.signals_views"), "subhead");
+            ControlKey(decisions, "Q / E", GameText.Get("text.left_right_indicator"), GameText.Get("text.press_once_press_the_same_key_again_to_turn"));
+            ControlKey(decisions, "C", GameText.Get("text.change_camera"), GameText.Get("text.switch_between_chase_camera_and_driver_view"), DrivingGlyph.Kind.Camera);
             if (mode == VehicleMode.Motorcycle)
-                ControlKey(decisions, "L", "Lampu utama motor", "Tekan untuk menyalakan atau mematikan.");
-            ControlKey(decisions, "ESC / TAB", "Jeda", "Buka kemajuan dan pilihan perjalanan.");
-            Fold(body, "Kontrol lainnya", extra =>
+                ControlKey(decisions, "L", GameText.Get("text.motorcycle_headlight"), GameText.Get("text.press_to_switch_on_or_off"));
+            ControlKey(decisions, "ESC / TAB", GameText.Get("text.pause"), GameText.Get("text.open_progress_and_journey_options"));
+            Fold(body, GameText.Get("text.more_controls"), extra =>
             {
-                ControlKey(extra, "R", hiActive ? "Ulangi misi HI" : drivingPage == Page.Jaksa ? "Ulangi ruas jalan" : "Ulangi dari checkpoint", "Mulai ulang bagian yang sedang dijalani.");
-                ControlKey(extra, "H", "Klakson", "Tahan untuk membunyikan.");
-                ControlKey(extra, "M", "Suara", "Tekan untuk mematikan atau mengaktifkan suara.");
+                ControlKey(extra, "R", hiActive ? "Restart HI mission" : drivingPage == Page.Jaksa ? GameText.Get("text.restart_road_section") : GameText.Get("text.retry_from_checkpoint"), GameText.Get("text.restart_your_current_section"));
+                ControlKey(extra, "H", GameText.Get("text.horn"), GameText.Get("text.hold_to_sound_the_horn"));
+                ControlKey(extra, "M", GameText.Get("text.sound"), GameText.Get("text.press_to_mute_or_unmute"));
                 if (drivingPage == Page.Drive)
-                    ControlKey(extra, "F / G", journey.IsMarket ? "Jemput / telepon" : "Telepon",
-                        journey.IsMarket ? "F untuk menjemput saat berhenti di teluk. G untuk menjawab panggilan."
-                        : "F mengabaikan panggilan. G menjawab; berhenti di tempat aman lebih dulu.");
-                AddLabel(extra, "Di layar pelanggaran: R mencoba lagi, D menampilkan contoh cara benar.", "control-note");
+                    ControlKey(extra, "F / G", journey.IsMarket ? GameText.Get("text.pickup_phone") : GameText.Get("text.phone"),
+                        journey.IsMarket ? GameText.Get("text.f_picks_up_a_passenger_while_stopped_in_the")
+                        : GameText.Get("text.f_ignores_a_call_g_answers_stop_somewhere_safe"));
+                AddLabel(extra, GameText.Get("text.on_the_violation_screen_r_retries_d_shows_a"), "control-note");
             });
             var footer = Element(dialog, "controls-footer");
-            string action = origin == Page.Progress || origin == Page.JaksaPause ? "Kembali ke jeda [Enter]"
-                : origin == Page.Options ? "Kembali ke Options [Enter]"
-                : origin == Page.PlayChooser ? "Kembali ke pilihan perjalanan [Enter]"
-                : origin == Page.Menu ? "Kembali ke menu [Enter]"
-                : learner != null ? "Lanjutkan contoh [Enter]" : "Kembali berkendara [Enter]";
+            string action = origin == Page.Progress || origin == Page.JaksaPause ? GameText.Get("text.back_to_pause_enter")
+                : origin == Page.Options ? GameText.Get("text.back_to_options_enter")
+                : origin == Page.PlayChooser ? GameText.Get("text.back_to_journey_selection_enter")
+                : origin == Page.Menu ? GameText.Get("text.back_to_menu_enter")
+                : learner != null ? GameText.Get("text.continue_demonstration_enter") : GameText.Get("text.resume_driving_enter");
             AddButton(footer, action, () => CloseControls(true), "primary tutorial-start");
-            AddLabel(footer, "F1 membuka panduan saat berkendara. Esc menutup panduan.", "control-note");
+            AddLabel(footer, GameText.Get("text.f1_opens_this_guide_while_driving_esc_closes_it"), "control-note");
         }
 
         static void ControlKey(VisualElement parent, string key, string title, string note, DrivingGlyph.Kind? glyph = null)
@@ -215,15 +249,17 @@ namespace JalanKita
             Show(cue, false);
             bool guidedDemo = page == Page.Drive && pitchDemo && journey.LearningControls && learner == null;
             hud.EnableInClassList("demo-guided", guidedDemo);
-            Show(root.Q("demoTutorialCue"), guidedDemo);
+            hud.EnableInClassList("demo-feedback", page == Page.Drive && pitchDemo
+                && !guidedDemo && Time.unscaledTime < toastUntil);
+            var tutorialCue = root.Q("demoTutorialCue");
+            bool initialCue = guidedDemo && !demoTutorial.IsActive && !inputReleaseRequired;
+            tutorialCue.EnableInClassList("tutorial-initial", initialCue);
+            Show(tutorialCue, guidedDemo && (!initialCue || !demoTutorial.InitialInstructionDismissed));
             if (guidedDemo)
             {
                 root.Q<Label>("demoTutorialInstruction").text = inputReleaseRequired
-                    ? "Lepaskan tombol untuk melanjutkan"
-                    : demoBrakeLatched
-                        ? demoCrossingReady ? "Tekan [W] untuk melanjutkan"
-                            : "Tunggu sampai pejalan kaki selesai menyeberang"
-                        : "Tekan [W] untuk mulai berkendara";
+                    ? GameText.Get("tutorial.action.release")
+                    : demoTutorial.IsActive ? demoTutorial.Instruction(journey) : GameText.Get(demoTutorial.Scenario.InitialInstructionKey);
                 return;
             }
             if ((page != Page.Drive && page != Page.Jaksa) || learner != null
@@ -231,7 +267,7 @@ namespace JalanKita
             if (!root.Q("hudHint").ClassListContains("hidden")) return;
             if (page == Page.Drive && journey.LearningControls)
             {
-                PresentCue(controlsMoved ? "S" : "W A S D", controlsMoved ? "Tekan S untuk rem" : "Coba gas dan kemudi. Tanpa penalti.");
+                PresentCue(controlsMoved ? "S" : "W A S D", controlsMoved ? GameText.Get("text.press_s_to_brake") : GameText.Get("text.try_accelerating_and_steering_no_penalties"));
                 return;
             }
             string context = (page == Page.Jaksa ? "explore:" : "training:") + mode;
@@ -239,11 +275,11 @@ namespace JalanKita
             if (!controlsSeen.Contains(context))
             {
                 if (drivingSpeed > .2f && Pressed(KeyCode.W, KeyCode.UpArrow)) controlsSeen.Add(context);
-                else { PresentCue("W A S D", "Coba gas dan kemudi."); return; }
+                else { PresentCue("W A S D", GameText.Get("text.try_accelerating_and_steering")); return; }
             }
             if (page == Page.Jaksa)
             {
-                if (!hiActive && !exploreStopped.Contains(context)) PresentCue("S", "Tekan S untuk rem");
+                if (!hiActive && !exploreStopped.Contains(context)) PresentCue("S", GameText.Get("text.press_s_to_brake"));
                 return;
             }
             if (journey.Finished || journey.Failure.HasValue) return;
@@ -264,7 +300,7 @@ namespace JalanKita
             if (brake != null && drivingSpeed > .28f)
             {
                 bool braking = Input.GetKey(KeyCode.Space) || Pressed(KeyCode.S, KeyCode.DownArrow);
-                Suggest("brake:" + brake, "SPASI / S", "Rem sebelum area berhenti.", braking);
+                Suggest("brake:" + brake, GameText.Get("text.space_s"), GameText.Get("text.brake_before_the_stopping_area"), braking);
                 return;
             }
             int direction = 0;
@@ -281,7 +317,7 @@ namespace JalanKita
                 direction = -1;
             if (direction != 0)
                 Suggest("indicator:" + direction, direction < 0 ? "Q" : "E",
-                    direction < 0 ? "Sein kiri sebelum bermanuver." : "Sein kanan sebelum bermanuver.", journey.Indicator == direction);
+                    direction < 0 ? GameText.Get("text.signal_left_before_maneuvering") : GameText.Get("text.signal_right_before_maneuvering"), journey.Indicator == direction);
 
             void Suggest(string action, string keys, string copy, bool performed)
             {
@@ -300,10 +336,10 @@ namespace JalanKita
 
         void AddControlsHelp(VisualElement parent)
         {
-            AddButton(parent, "Kontrol berkendara [F1]", () => ShowControls(page,
+            AddButton(parent, GameText.Get("controls.open"), () => ShowControls(page,
                 page == Page.Jaksa || page == Page.JaksaPause ? Page.Jaksa : Page.Drive, false), "quiet help-action");
             if (page == Page.Options)
-                AddButton(parent, "Ulangi tutorial demo", StartEntryTutorial, "quiet help-action");
+                AddButton(parent, GameText.Get("text.replay_demo_tutorial"), StartEntryTutorial, "quiet help-action");
         }
     }
 }

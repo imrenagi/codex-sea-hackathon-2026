@@ -19,68 +19,73 @@ namespace JalanKita
         public const string Signals = "https://peraturan.bpk.go.id/Details/103764/permenhub-no-49-tahun-2014";
         public const string Limits = "https://peraturan.bpk.go.id/Details/103508/permenhub-no-111-tahun-2015";
 
-        public readonly string Title, Explanation, Action, Citation, Url, Regulation;
+        public readonly string Url, Regulation;
+        readonly string titleKey, explanationKey, actionKey, citationKey;
+        public string Title => GameText.Get(titleKey);
+        public string Explanation => GameText.Get(explanationKey);
+        public string Action => GameText.Get(actionKey);
+        public string Citation => GameText.Get(citationKey);
         public Lesson(string title, string explanation, string action, string citation, string url = Law,
             string regulation = "UU 22/2009")
         {
-            Title = title; Explanation = explanation; Action = action; Citation = citation; Url = url;
+            titleKey = title; explanationKey = explanation; actionKey = action; citationKey = citation; Url = url;
             Regulation = regulation;
         }
 
         public static readonly Lesson[] All =
         {
-            new("Sabuk pengaman belum terpasang", "Pengemudi dan penumpang depan wajib memakai sabuk pengaman.",
-                "Pasang kedua sabuk sebelum menekan Mulai jalan.", "Pasal 106 ayat (6)"),
-            new("Helm SNI belum lengkap", "Pengendara dan penumpang motor wajib mengenakan helm SNI.",
-                "Pakai helm SNI untuk keduanya. Kaitkan talinya agar helm tetap di kepala.", "Pasal 106 ayat (8)"),
-            new("Lampu utama motor masih mati", "Sepeda motor juga wajib menyalakan lampu utama pada siang hari.",
-                "Nyalakan lampu utama sebelum berangkat dan biarkan tetap menyala.", "Pasal 107 ayat (2)"),
-            new("Melewati garis STOP", "Rambu STOP mengharuskan kendaraan berhenti penuh sebelum garis henti.",
-                "Lepas gas, tahan rem sampai 0 km/j, lalu periksa arus silang sebelum maju.", "Pasal 106 ayat (4) huruf a–b"),
-            new("Menerobos lampu merah", "Kendaraan harus mematuhi isyarat lampu lalu lintas.",
-                "Berhenti sebelum garis putih dan tunggu lampu hijau sebelum melanjutkan.", "Pasal 106 ayat (4) huruf c"),
-            new("Arus utama masih melintas", "Saat keluar dari jalan yang lebih kecil, beri hak utama pada lalu lintas di jalan utama.",
-                "Tahan rem sebelum persimpangan. Tunggu kendaraan melintas dan pastikan jalan lapang.", "Pasal 113 ayat (1) huruf b"),
-            new("Pejalan kaki masih menyeberang", "Pejalan kaki mendapat prioritas saat menyeberang di tempat penyeberangan.",
-                "Tunggu di belakang zebra cross sampai pejalan kaki melewati jalurmu dan tidak ada yang mendekat ke jalurmu.", "Pasal 106 ayat (2) dan Pasal 131 ayat (2)"),
-            new("Masuk lajur lawan arah", "Pengemudi menggunakan jalur jalan sebelah kiri.",
-                "Kembali ke sisi kiri garis tengah dan tetap di kiri pada jalan dua arah.", "Pasal 108 ayat (1)"),
-            new("Masuk dari arah yang dilarang", "Rambu dilarang masuk menutup akses dari arah ini.",
-                "Ikuti panah lurus di jalan satu arah dan hindari cabang dengan rambu merah.", "Pasal 106 ayat (4) huruf a"),
-            new("Pindah lajur tanpa sein", "Sebelum berpindah lajur, amati lalu lintas dan beri isyarat sesuai arah perpindahan.",
-                "Nyalakan E untuk sein kanan atau Q untuk sein kiri sebelum berpindah lajur atau bergerak ke samping.", "Pasal 112 ayat (2)"),
-            new("Celah pindah lajur terlalu sempit", "Periksa lalu lintas di depan dan belakang sebelum berpindah lajur.",
-                "Tunggu mobil di lajur tujuan menjauh. Jarak aman dalam simulasi mengikuti kecepatan kendaraan.", "Pasal 112 ayat (2)"),
-            new("Perpindahan lajur belum selesai", "Latihan ini meminta satu perpindahan aman ke kanan dan kembali ke kiri sebelum jalur menyempit.",
-                "Gunakan sein kanan di garis putus-putus, lalu sein kiri dan kembali sebelum marka berakhir.", "Latihan"),
-            new("Melebihi batas 30 km/j", "Batas kecepatan yang terpasang berlaku di ruas ini.",
-                "Kurangi kecepatan sebelum rambu 30. Lepas gas atau rem ringan agar tetap di bawah batas.", "Pasal 106 ayat (4) huruf g dan Pasal 115 huruf a"),
-            new("Menjawab telepon sambil berjalan", "Pengemudi wajib berkonsentrasi saat berkendara. Menggunakan telepon mengganggu konsentrasi.",
-                "Abaikan panggilan saat mengemudi. Berhenti di tempat aman sebelum menggunakan telepon.", "Pasal 106 ayat (1) dan Penjelasan"),
-            new("Keluar dari rute latihan", "Kendaraan keluar dari permukaan jalan yang disediakan untuk latihan.",
-                "Ikuti marka rute dan kendalikan kecepatan sebelum mengarahkan kendaraan.", "Latihan"),
-            new("Jarak dengan kendaraan habis", "Beri ruang agar kamu sempat mengerem jika lalu lintas di depan melambat.",
-                "Jaga jarak dan rem lebih awal saat mendekati kendaraan lain.", "Tips keselamatan"),
-            new("Berhenti di area larangan", "Rambu dilarang berhenti berlaku meskipun penumpang meminta dijemput di sana.",
-                "Lanjutkan ke teluk jemput di sebelah kiri setelah area larangan.", "Pasal 118 huruf a"),
-            new("Tempat jemput belum aman", "Dalam misi ini penumpang dijemput setelah kendaraan berhenti di teluk yang ditandai.",
-                "Beri sein kiri, masuk teluk, berhenti di dekat penumpang, lalu tekan Jemput [F].", "Latihan"),
-            new("Penumpang belum dijemput", "Tujuan perjalanan ini adalah menjemput penumpang lalu bergabung kembali dengan aman.",
-                "Berhenti di teluk jemput, tekan Jemput [F], kemudian beri sein kanan dan tunggu celah aman.", "Latihan"),
-            new("Berbelok tanpa lampu sein", "Sebelum berbelok, amati lalu lintas dan beri isyarat sesuai arah belokan.",
-                "Nyalakan Q sebelum belok kiri atau E sebelum belok kanan. Dahulukan pejalan kaki sampai jalur belokanmu aman.", "Pasal 112 ayat (1)"),
-            new("Lajur tidak sesuai arah", "Ikuti panah lajur dan jangan melintasi garis lajur utuh menjelang persimpangan.",
-                "Pilih lajur sebelum marka utuh: kiri untuk belok kiri, tengah untuk lurus, kanan untuk belok kanan.", "Pasal 106 ayat (4) huruf a–b"),
-            new("Panah kanan belum hijau", "Lampu hijau untuk lurus bukan izin untuk belok kanan pada persimpangan dengan isyarat terpisah.",
-                "Berhenti di lajur kanan. Tunggu panah kanan hijau dan pastikan jalur belokan aman dari pejalan kaki.", "Pasal 106 ayat (4) huruf c"),
-            new("Mobil memasuki ruang henti motor", "Mobil melewati garis henti belakang saat lampu merah dan masuk kotak merah khusus motor.",
-                "Mobil berhenti di garis sebelum kotak merah. Motor boleh maju ke garis depan, tetapi tetap menunggu isyarat yang berlaku.", "Pasal 106 ayat (4) huruf b–c"),
-            new("Menerobos perlintasan kereta", "Kendaraan wajib berhenti saat peringatan berbunyi atau palang mulai menutup, dan mendahulukan kereta api.",
-                "Berhenti sebelum garis henti. Tunggu kereta lewat, lampu peringatan padam, dan palang terbuka penuh.", "Pasal 114"),
-            new("Menghalangi ambulans", "Ambulans yang membawa orang sakit mendapat hak utama; dalam latihan ini ambulans memakai lampu dan sirene.",
-                "Amati posisi ambulans, nyalakan sein kiri, dan pindah ke lajur kiri saat aman. Jangan menghalangi atau mengejarnya.", "Pasal 134 huruf b dan Pasal 135 ayat (1)"),
-            new("Melebihi batas 50 km/j", "Batas 50 km/j berlaku di ruas jalan besar ini, termasuk saat ambulans mendekat.",
-                "Kurangi gas dan beri jalan dengan tenang. Jangan mempercepat kendaraan untuk mendahului ambulans.", "Pasal 106 ayat (4) huruf g dan Pasal 115 huruf a")
+            new("text.seat_belts_are_not_fastened", "text.the_driver_and_front_passenger_must_wear_seat_belts",
+                "text.fasten_both_seat_belts_before_selecting_start_driving", "Pasal 106 ayat (6)"),
+            new("text.sni_helmets_are_not_ready", "text.the_motorcycle_rider_and_passenger_must_wear_sni_approved",
+                "text.equip_both_people_with_sni_helmets_fasten_the_straps", "Pasal 106 ayat (8)"),
+            new("text.motorcycle_headlight_is_off", "text.motorcycles_must_use_their_headlights_during_the_day_too",
+                "text.turn_on_the_headlight_before_setting_off_and_keep", "Pasal 107 ayat (2)"),
+            new("text.crossed_the_stop_line", "text.a_stop_sign_requires_a_complete_stop_before_the",
+                "text.release_the_throttle_brake_to_0_km_h_then", "Pasal 106 ayat (4) huruf a–b"),
+            new("text.ran_a_red_light", "text.drivers_must_obey_traffic_signals",
+                "text.stop_before_the_white_line_and_wait_for_green", "Pasal 106 ayat (4) huruf c"),
+            new("text.main_road_traffic_is_still_passing", "text.when_leaving_a_smaller_road_yield_to_traffic_on",
+                "text.hold_the_brake_before_the_junction_wait_for_traffic", "Pasal 113 ayat (1) huruf b"),
+            new("text.pedestrians_are_still_crossing", "text.pedestrians_have_priority_at_a_crossing",
+                "text.wait_behind_the_crossing_until_pedestrians_have_cleared_your", "Pasal 106 ayat (2) dan Pasal 131 ayat (2)"),
+            new("text.entered_the_oncoming_lane", "text.drive_on_the_left_side_of_the_road",
+                "text.return_to_the_left_of_the_center_line_and", "Pasal 108 ayat (1)"),
+            new("text.entered_against_a_no_entry_sign", "text.the_no_entry_sign_prohibits_access_from_this_direction",
+                "text.follow_the_straight_arrows_on_the_one_way_road", "Pasal 106 ayat (4) huruf a"),
+            new("text.changed_lanes_without_indicating", "text.check_traffic_and_signal_in_the_intended_direction_before",
+                "text.press_e_for_the_right_indicator_or_q_for", "Pasal 112 ayat (2)"),
+            new("text.lane_change_gap_is_too_small", "text.check_traffic_ahead_and_behind_before_changing_lanes",
+                "text.wait_for_the_car_in_your_target_lane_to", "Pasal 112 ayat (2)"),
+            new("text.lane_change_exercise_is_incomplete", "text.this_exercise_requires_a_safe_move_right_and_a",
+                "text.signal_right_at_the_dashed_line_then_signal_left", "text.practice"),
+            new("text.exceeded_the_30_km_h_limit", "text.the_posted_speed_limit_applies_on_this_road",
+                "text.slow_down_before_the_30_sign_release_the_throttle", "Pasal 106 ayat (4) huruf g dan Pasal 115 huruf a"),
+            new("text.answered_the_phone_while_driving", "text.drivers_must_stay_focused_using_a_phone_takes_attention",
+                "text.ignore_calls_while_driving_stop_somewhere_safe_before_using", "Pasal 106 ayat (1) dan Penjelasan"),
+            new("text.left_the_practice_route", "text.your_vehicle_left_the_road_provided_for_this_exercise",
+                "text.follow_the_route_markings_and_control_your_speed_before", "text.practice"),
+            new("text.too_close_to_another_vehicle", "text.leave_enough_space_to_brake_if_traffic_ahead_slows",
+                "text.keep_your_distance_and_brake_early_when_approaching_other", "text.safety_advice_9131f9"),
+            new("text.stopped_in_a_no_stopping_zone", "text.a_no_stopping_sign_still_applies_when_a_passenger",
+                "text.continue_to_the_pickup_bay_on_the_left_beyond", "Pasal 118 huruf a"),
+            new("text.pickup_location_is_not_safe_yet", "text.in_this_mission_pick_up_the_passenger_after_stopping",
+                "text.signal_left_enter_the_bay_stop_beside_the_passenger", "text.practice"),
+            new("text.passenger_has_not_been_picked_up", "text.pick_up_the_passenger_then_merge_back_into_traffic",
+                "text.stop_in_the_pickup_bay_press_pick_up_f", "text.practice"),
+            new("text.turned_without_indicating", "text.check_traffic_and_signal_in_the_intended_direction_before_96621f",
+                "text.press_q_before_turning_left_or_e_before_turning", "Pasal 112 ayat (1)"),
+            new("text.wrong_lane_for_this_direction", "text.follow_lane_arrows_and_do_not_cross_solid_lane",
+                "text.choose_your_lane_before_the_solid_line_left_to", "Pasal 106 ayat (4) huruf a–b"),
+            new("text.right_turn_arrow_is_not_green", "text.a_green_light_for_straight_traffic_does_not_permit",
+                "text.stop_in_the_right_lane_wait_for_a_green", "Pasal 106 ayat (4) huruf c"),
+            new("text.car_entered_the_motorcycle_stop_box", "text.the_car_crossed_its_stop_line_on_red_and",
+                "text.cars_stop_before_the_red_box_motorcycles_may_use", "Pasal 106 ayat (4) huruf b–c"),
+            new("text.entered_a_closed_railway_crossing", "text.stop_when_the_warning_sounds_or_the_barriers_begin",
+                "text.stop_before_the_line_wait_for_the_train_to", "Pasal 114"),
+            new("text.blocked_an_ambulance", "text.an_ambulance_carrying_a_patient_has_priority_this_exercise",
+                "text.locate_the_ambulance_signal_left_and_move_into_the", "Pasal 134 huruf b dan Pasal 135 ayat (1)"),
+            new("text.exceeded_the_50_km_h_limit", "text.the_50_km_h_limit_applies_on_this_main",
+                "text.ease_off_the_throttle_and_give_way_calmly_do", "Pasal 106 ayat (4) huruf g dan Pasal 115 huruf a")
         };
 
         public bool HasSource => Citation.StartsWith("Pasal", StringComparison.Ordinal);
@@ -88,12 +93,15 @@ namespace JalanKita
 
     public sealed class RouteStage
     {
-        public readonly string Title, Location, Instruction;
+        readonly string titleKey, locationKey, instructionKey;
+        public string Title => GameText.Get(titleKey);
+        public string Location => GameText.Get(locationKey);
+        public string Instruction => GameText.Get(instructionKey);
         public readonly float End, Heading;
         public readonly Vector2 Checkpoint;
         RouteStage(string title, string location, string instruction, float end)
         {
-            Title = title; Location = location; Instruction = instruction; End = end;
+            titleKey = title; locationKey = location; instructionKey = instruction; End = end;
             Checkpoint = new Vector2(LeftLane, end);
         }
 
@@ -103,16 +111,16 @@ namespace JalanKita
 
         public static readonly RouteStage[] All =
         {
-            new("Sebelum berangkat", "GARASI KENANGA", "Periksa perlengkapan pengemudi dan penumpang.", -12),
-            new("Rambu & lampu", "JALAN KENANGA", "Berhenti penuh di garis STOP sebelum melanjutkan.", 108),
-            new("Hak utama", "PASAR BUNGA", "Dahulukan pejalan kaki di zebra cross.", 204),
-            new("Arah & lajur", "JALAN MAWAR", "Ikuti arah panah. Beri sein dan pindah ke lajur kanan saat aman.", 298),
-            new("Kecepatan & fokus", "ZONA SEKOLAH", "Kurangi kecepatan sebelum rambu 30 km/j.", 382),
-            new("Lurus di jalan besar", "JALAN THAMRIN", "Pilih lajur tengah sebelum marka utuh. Tunggu hijau dan pejalan kaki.", new Vector2(-5.4f, 550)),
-            new("Belok kiri & pejalan kaki", "THAMRIN – DIPONEGORO", "Pilih lajur paling kiri, nyalakan Q, lalu tunggu hijau dan jalur belokan aman dari pejalan kaki.", new Vector2(-70, 631), 270),
-            new("Belok kanan terlindung", "DIPONEGORO – AHMAD YANI", "Pilih lajur kanan sebelum marka utuh. Nyalakan E dan tunggu panah kanan hijau.", new Vector2(-181.8f, 720)),
-            new("Perlintasan kereta api", "PERLINTASAN AHMAD YANI", "Berhenti saat bel berbunyi. Tunggu kereta lewat dan palang terbuka penuh.", new Vector2(-185.4f, 850)),
-            new("Beri jalan ambulans", "JALAN RUMAH SAKIT", "Lewati angkot di lajur tengah. Saat sirene terdengar, beri jalan ke kiri dengan sein.", new Vector2(-189, 1040))
+            new("text.before_you_drive", "text.kenanga_garage", "text.check_the_driver_and_passenger_safety_equipment", -12),
+            new("text.signs_signals", "text.jalan_kenanga", "text.stop_completely_at_the_stop_line_before_continuing", 108),
+            new("text.right_of_way", "text.pasar_bunga", "text.give_pedestrians_priority_at_the_crossing", 204),
+            new("text.directions_lanes", "text.jalan_mawar", "text.follow_the_arrows_signal_and_move_into_the_right", 298),
+            new("text.speed_focus", "text.school_zone", "text.slow_down_before_the_30_km_h_sign", 382),
+            new("text.straight_through_the_main_road", "text.jalan_thamrin", "text.choose_the_middle_lane_before_the_solid_line_wait", new Vector2(-5.4f, 550)),
+            new("text.left_turn_pedestrians", "text.thamrin_diponegoro", "text.choose_the_leftmost_lane_press_q_then_wait_for", new Vector2(-70, 631), 270),
+            new("text.protected_right_turn", "text.diponegoro_ahmad_yani", "text.choose_the_right_lane_before_the_solid_line_press", new Vector2(-181.8f, 720)),
+            new("text.railway_crossing", "text.ahmad_yani_crossing", "text.stop_when_the_bell_sounds_wait_for_the_train", new Vector2(-185.4f, 850)),
+            new("text.yield_to_the_ambulance", "text.jalan_rumah_sakit", "text.pass_the_minibus_in_the_middle_lane_when_the", new Vector2(-189, 1040))
         };
 
         public const float LeftLane = -2.15f;
@@ -229,6 +237,7 @@ namespace JalanKita
         public bool ChangedRight { get; private set; }
         public bool ReturnedLeft { get; private set; }
         public bool CrossedZebra => Front > CrossingZebra + 2;
+        public bool MainRoadEncounterStarted => priorityTime >= 0;
         public int LightPhase => lightTime < 0 || lightTime % 22 < 8 ? 0 : lightTime % 22 < 19 ? 2 : 1;
 
         float stopTime, lightTime, zebraTime, priorityTime, laneTime, wrongWay, overSpeed;
@@ -302,6 +311,8 @@ namespace JalanKita
             boardingTime = ElapsedTime = 0;
             if (PassengerPickedUp) pickupTime = 0;
             CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = PickupTraffic = null;
+            ClearCrossingPedestrians();
+            ResetMainRoadTraffic();
         }
 
         public bool Depart()
@@ -486,8 +497,9 @@ namespace JalanKita
             }
 
             CheckEncounterContacts(oldPosition, oldHeading, oldActors);
-            if(Pedestrian.HasValue && TouchesPedestrian(Pedestrian.Value))
-                Fail(Rule.Pedestrian);
+            for (int i = 0; i < CrossingPedestrianCount; i++)
+                if (crossingPedestrians[i].HasValue && TouchesPedestrian(crossingPedestrians[i].Value))
+                    Fail(Rule.Pedestrian);
             if (!Failure.HasValue && z >= StageEnd) Advance();
         }
 
@@ -495,6 +507,19 @@ namespace JalanKita
 
         void CheckJunction(float oldFront, float center, bool signalled = false)
         {
+            if (Stage == 2 && center == RouteStage.MainJunction)
+            {
+                if (Front < center - 4.3f || Position.y > center + 5.5f) return;
+                for (int i = 0; i < MainRoadTrafficCount; i++)
+                {
+                    if (!mainRoadTraffic[i].HasValue) continue;
+                    var carPosition = mainRoadTraffic[i].Value;
+                    float carDistance = (Position.x - carPosition.x) * CrossDirection;
+                    if (Crosses(oldFront, center - 4.3f) && carDistance >= -4 && carDistance < 18) Fail(Rule.Junction);
+                    if (TrafficCollision(MainRoadTrafficChoice(i), carPosition, CrossDirection * 90)) Fail(Rule.Junction);
+                }
+                return;
+            }
             if (!CrossTraffic.HasValue || Front < center - 4.3f || Position.y > center + 5.5f) return;
             Vector2 traffic = CrossTraffic.Value;
             if (traffic.y != center) return;
@@ -580,10 +605,9 @@ namespace JalanKita
                 Tick(ref zebraTime, dt, z >= RouteStage.Zebra - 19);
                 Tick(ref priorityTime, dt, z >= RouteStage.YieldLine - 20);
                 PedestrianDirection = Save.mistakes[(int)Rule.Pedestrian] % 2 == 0 ? 1 : -1;
-                float walkX = -5.6f + Mathf.Max(0, zebraTime - .65f) * 1.83f;
-                Pedestrian = walkX < 5.6f ? new Vector2(walkX * PedestrianDirection, RouteStage.Zebra) : null;
+                UpdateCrossingPedestrians(RouteStage.Zebra, 2.45f);
                 CrossDirection = Save.mistakes[(int)Rule.Junction] % 2 == 0 ? -1 : 1;
-                CrossTraffic = CrossingCar(priorityTime, RouteStage.MainJunction, CrossDirection);
+                UpdateMainRoadTraffic(dt, playerFrom, playerHeadingFrom);
             }
             else if (Stage == 3)
             {
@@ -602,12 +626,11 @@ namespace JalanKita
             {
                 Tick(ref zebraTime, dt, z >= 307);
                 PedestrianDirection = Save.variant % 2 == 0 ? 1 : -1;
-                float walkX = -5.6f + Mathf.Max(0, zebraTime - .65f) * 1.5f;
-                Pedestrian = zebraTime >= 0 && walkX < 5.6f
-                    ? new Vector2(walkX * PedestrianDirection, CrossingZebra) : null;
+                UpdateCrossingPedestrians(CrossingZebra, 1.5f);
             }
-            else if (IsSchool) Pedestrian = null;
-            CrossTraffic = FollowEncounter(previousCross, CrossTraffic, Traffic.Cross, Vector2.right * CrossDirection, 6.2f, dt, playerFrom, playerHeadingFrom);
+            else if (IsSchool) ClearCrossingPedestrians();
+            if (Stage != 2)
+                CrossTraffic = FollowEncounter(previousCross, CrossTraffic, Traffic.Cross, Vector2.right * CrossDirection, 6.2f, dt, playerFrom, playerHeadingFrom);
             LaneTraffic = FollowEncounter(previousLane, LaneTraffic, Traffic.Lane, Vector2.up, 5.1f, dt, playerFrom, playerHeadingFrom);
             SpurTraffic = FollowEncounter(previousSpur, SpurTraffic, Traffic.Spur, Vector2.down, 5, dt, playerFrom, playerHeadingFrom);
             PickupTraffic = FollowEncounter(previousPickup, PickupTraffic, Traffic.Pickup, Vector2.up, Save.variant % 2 == 0 ? 5.1f : 4.6f, dt, playerFrom, playerHeadingFrom);
@@ -649,6 +672,8 @@ namespace JalanKita
             }
             Persist();
             CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = PickupTraffic = null;
+            ClearCrossingPedestrians();
+            ResetMainRoadTraffic();
         }
 
         void Checkpoint(int index)

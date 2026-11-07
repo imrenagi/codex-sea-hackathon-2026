@@ -1,0 +1,30 @@
+/* Selection-only art. Base text generator and typography remain owned by Jalan.uss. */
+.mission-card.selection-mission-card { flex-direction: row; align-items: center; padding: 12px; }
+.selection-preview { width: 176px; flex-shrink: 0; margin-right: 17px; overflow: hidden; border-radius: 4px; background-color: #192126; }
+.selection-preview-image { width: 100%; height: 99px; flex-shrink: 0; }
+.selection-preview-caption { color: #b5c1b8; font-size: 10px; letter-spacing: 1px; padding: 5px 8px; white-space: normal; }
+.selection-mission-body { flex-grow: 1; flex-shrink: 1; min-width: 0; }
+.selection-mission-body .mission-title { flex-shrink: 1; font-size: 20px; }
+.selection-mission-body .copy { font-size: 15px; }
+.selection-mission-body .objective-detail { font-size: 13px; }
+.selection-mission-body .button { min-height: 36px; margin-top: 8px; }
+.city-selection-list .unity-scroll-view__content-container { flex-direction: row; flex-wrap: wrap; }
+.city-selection-card { flex-basis: 45%; flex-grow: 1; flex-shrink: 0; min-width: 230px; margin: 0 9px 12px 0; padding: 0 0 12px; border-radius: 5px; overflow: hidden; align-items: stretch; -unity-text-align: middle-left; }
+.city-selection-card .selection-preview { width: 100%; margin-right: 0; border-radius: 0; }
+.city-selection-card .selection-preview-image { height: 151px; }
+.city-selection-title { margin: 11px 13px 0; font-size: 20px; }
+.city-selection-description { margin: 6px 13px 0; white-space: normal; font-size: 14px; color: #c6c2b8; min-height: 36px; }
+.city-selection-action { margin: 9px 13px 0; font-size: 12px; letter-spacing: 1px; color: #d5b679; }
+.compact .selection-preview { width: 136px; margin-right: 12px; }
+.compact .selection-preview-image { height: 77px; }
+.compact .city-selection-card .selection-preview { width: 100%; margin-right: 0; }
+.compact .city-selection-card .selection-preview-image { height: 120px; }
+
+/* The normal chooser exposes levels within its single outer scroll view. */
+.chooser-levels { flex-shrink: 0; }
+.chooser-levels > .selection-mission-card { flex-shrink: 0; margin-bottom: 12px; }
+.chooser-levels .selection-preview { width: 136px; margin-right: 12px; }
+.chooser-levels .selection-preview-image { height: 77px; }
+.chooser-levels .selection-preview-caption { display: none; }
+.chooser-levels .selection-mission-body .mission-title { font-size: 18px; }
+.chooser-levels .selection-mission-body .copy { font-size: 14px; }

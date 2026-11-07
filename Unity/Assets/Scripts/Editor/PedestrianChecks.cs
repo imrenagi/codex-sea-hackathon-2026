@@ -26,11 +26,20 @@ namespace JalanKita.EditorTools
                     var save = new JourneySave { next = 2 };
                     save.mistakes[(int)Rule.Pedestrian] = direction == 1 ? 0 : 1;
                     var run = new Journey(mode, save, persistent: false, trafficSeed: 1);
-                    float pedestrianX = clear ? (direction == 1 ? 2 : -5.5f) : -2.15f;
-                    float clock = .65f + (pedestrianX * direction + 5.6f) / 1.83f;
-                    Field(run, "zebraTime", clock - .02f);
                     Set(run, "Position", new Vector2(-2.15f, RouteStage.Zebra - 2 - (mode == VehicleMode.Car ? 1.95f : 1) - .02f));
                     Set(run, "Speed", 2f);
+                    // Find the intended clearance state from the real three-person
+                    // simulation rather than duplicating the former single-person pace.
+                    Set(run,"PedestrianDirection",direction);
+                    float clock = -1;
+                    for(float candidate=.3f;candidate<10;candidate+=.02f)
+                    {
+                        Field(run,"zebraTime",candidate);
+                        typeof(Journey).GetMethod("UpdateCrossingPedestrians",Private).Invoke(run,new object[]{RouteStage.Zebra,2.45f});
+                        if(run.Pedestrian.HasValue && run.PedestrianBlocksPath != clear){clock=candidate;break;}
+                    }
+                    Require(clock>=0,"Grouped crossing contains requested clearance state");
+                    Field(run,"zebraTime",clock-.02f);
                     run.Step(.02f, true, false, 0);
                     Require(run.Pedestrian.HasValue, "Clearance fixture still has a pedestrian on the road");
                     Require(clear ? !run.Failure.HasValue : run.Failure == Rule.Pedestrian, $"Small crossing {mode}/{direction}/clear={clear}: {run.Failure}");

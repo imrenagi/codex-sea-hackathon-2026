@@ -1,0 +1,169 @@
+{
+  "method": "Blender FBX/GLB round-trip; no Unity runtime or performance validation",
+  "exports": [
+    {
+      "file": "assets/vehicles/avanza_inspired/unity/Body.fbx",
+      "triangles": 22336,
+      "meshes": 11,
+      "bounds_m": {
+        "min": [
+          -1.0740000009536743,
+          -2.23449969291687,
+          -2.384185791015625e-07
+        ],
+        "max": [
+          1.0740000009536743,
+          2.258500099182129,
+          1.7750002145767212
+        ]
+      },
+      "required_nodes": "present",
+      "wheel_centres": "preserved",
+      "indicator_centres": {
+        "Indicator_Front_L": [
+          -0.918101,
+          1.464893,
+          1.121356
+        ],
+        "Indicator_Front_R": [
+          0.918101,
+          1.464893,
+          1.121356
+        ],
+        "Indicator_Rear_L": [
+          -0.675,
+          -2.188472,
+          1.036195
+        ],
+        "Indicator_Rear_R": [
+          0.675,
+          -2.188472,
+          1.036195
+        ]
+      }
+    },
+    {
+      "file": "assets/vehicles/avanza_inspired/unity/Body_LOD1.fbx",
+      "triangles": 9396,
+      "meshes": 11,
+      "bounds_m": {
+        "min": [
+          -1.074737548828125,
+          -2.23449969291687,
+          0.0022339816205203533
+        ],
+        "max": [
+          1.074737548828125,
+          2.258500099182129,
+          1.7750002145767212
+        ]
+      },
+      "required_nodes": "present",
+      "wheel_centres": "preserved",
+      "indicator_centres": {
+        "Indicator_Front_L": [
+          -0.99173,
+          1.003306,
+          1.218974
+        ],
+        "Indicator_Front_R": [
+          0.991692,
+          1.00333,
+          1.218954
+        ],
+        "Indicator_Rear_L": [
+          -0.675,
+          -2.188472,
+          1.036195
+        ],
+        "Indicator_Rear_R": [
+          0.675,
+          -2.188472,
+          1.036195
+        ]
+      }
+    },
+    {
+      "file": "assets/vehicles/avanza_inspired/avanza_inspired.glb",
+      "triangles": 22336,
+      "meshes": 11,
+      "bounds_m": {
+        "min": [
+          -1.0740000009536743,
+          -2.234499931335449,
+          0.0
+        ],
+        "max": [
+          1.0740000009536743,
+          2.258500099182129,
+          1.774999976158142
+        ]
+      },
+      "required_nodes": "present",
+      "wheel_centres": "preserved",
+      "indicator_centres": {
+        "Indicator_Front_L": [
+          -0.940673,
+          1.328781,
+          1.150112
+        ],
+        "Indicator_Front_R": [
+          0.940673,
+          1.328781,
+          1.150112
+        ],
+        "Indicator_Rear_L": [
+          -0.676235,
+          -2.188394,
+          1.036165
+        ],
+        "Indicator_Rear_R": [
+          0.676235,
+          -2.188394,
+          1.036165
+        ]
+      }
+    },
+    {
+      "file": "assets/vehicles/avanza_inspired/avanza_inspired_lod1.glb",
+      "triangles": 9396,
+      "meshes": 11,
+      "bounds_m": {
+        "min": [
+          -1.074737548828125,
+          -2.234499931335449,
+          0.002234220504760742
+        ],
+        "max": [
+          1.074737548828125,
+          2.258500099182129,
+          1.774999976158142
+        ]
+      },
+      "required_nodes": "present",
+      "wheel_centres": "preserved",
+      "indicator_centres": {
+        "Indicator_Front_L": [
+          -1.007154,
+          0.913101,
+          1.237995
+        ],
+        "Indicator_Front_R": [
+          1.007112,
+          0.913148,
+          1.237994
+        ],
+        "Indicator_Rear_L": [
+          -0.676235,
+          -2.188394,
+          1.036165
+        ],
+        "Indicator_Rear_R": [
+          0.676235,
+          -2.188394,
+          1.036165
+        ]
+      }
+    }
+  ]
+}

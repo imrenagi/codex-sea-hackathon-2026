@@ -115,7 +115,7 @@ namespace JalanKita
             if(floors<=4)
             {
                 mesh.Box(dark,new Vector3(face+side*.12f,3.45f,lot.center.y),new Vector3(.12f,.72f,5));
-                Text(new[]{"KOPI","TOKO HARIAN","LAUNDRY","WARUNG"}[random.Next(4)],new Vector3(face+side*.18f,3.45f,lot.center.y),n,.17f,Color.white);
+                Text(new[]{GameText.Get("text.coffee"),GameText.Get("text.general_store"),"LAUNDRY",GameText.Get("text.local_shop")}[random.Next(4)],new Vector3(face+side*.18f,3.45f,lot.center.y),n,.17f,Color.white);
             }
         }
 

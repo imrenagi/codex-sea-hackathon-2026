@@ -58,7 +58,7 @@ namespace JalanKita.EditorTools
                 objective.Reset();
                 for (float s = 16; s < path.Length - 2 && !objective.Failed; s += .5f)
                 { Pose(drive, path.At(s), path.Heading(s), 5); objective.Step(.1f); }
-                Require(objective.Failed && !objective.Complete && objective.FailureReason.Contains("arus bundaran"), "Actual circulating conflict blocks successful entry " + mode);
+                Require(objective.Failed && !objective.Complete && objective.FailureReason == GameText.Get("hi.unsafe_entry"), "Actual circulating conflict blocks successful entry " + mode);
 
                 drive.Reset(mode); drive.TrafficEnabled = false; objective.Reset();
                 Require(!objective.Failed && !objective.Complete && objective.Stage == HiRoundaboutObjective.Phase.Approach, "Retry clears failure and stage");

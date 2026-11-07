@@ -1,79 +1,138 @@
-# RoadSense: six-minute English speaker notes
+# RoadSense: slide cues and speaker notes
 
-Team: **We Will Handle**. Total allocation: **360 seconds**, including **90 seconds of live demonstration**. Start a visible six-minute timer. Each segment has a hard end time; any spare time is breathing and transition time inside that segment. These are rehearsal targets, not a claim that any speaking pace will land exactly on six minutes.
+Use `PITCH.md` as the spoken script. The slide cues below follow that text.
+The six-minute slot includes a 2:05 live demo and a 15-second buffer.
 
-| Slide | Segment | Start | End | Seconds |
-|---|---|---|---|---|
-| 1 | Introduction | 00:00 | 00:25 | 25 |
-| 2 | The learning gap | 00:25 | 01:05 | 40 |
-| 3 | The learning loop | 01:05 | 01:50 | 45 |
-| 4 | Live demonstration, including app transitions | 01:50 | 03:20 | 90 |
-| 5 | Indonesian context | 03:20 | 04:05 | 45 |
-| 6 | Current prototype | 04:05 | 04:50 | 45 |
-| 7 | Next validation | 04:50 | 05:35 | 45 |
-| 8 | Closing | 05:35 | 06:00 | 25 |
+| Slide | Screen | Pitch clock | Duration |
+|---|---|---|---|
+| 1 | We are frustrated. They have a license. But who gives way? | 0:00-0:35 | 0:35 |
+| 2 | Practice for real traffic | 0:35-1:25 | 0:50 |
+| 3 | National crash costs | 1:25-1:45 | 0:20 |
+| 4 | Illustrative 1% saving and RoadSense | 1:45-2:15 | 0:30 |
+| 5 | Live demo; switch to the app | 2:15-4:20 | 2:05 |
+| 6 | Built with Codex | 4:20-4:50 | 0:30 |
+| 7 | Proposed uses and pilot | 4:50-5:35 | 0:45 |
+| 8 | Closing | 5:35-5:45 | 0:10 |
+| Hold 8 | Buffer | 5:45-6:00 | 0:15 |
 
-## 1. Introduction — 00:00–00:25
+## Presenter cues
 
-“We are We Will Handle, and this is RoadSense: a playable space for practicing road decisions in an Indonesian setting. Our starting point is a familiar moment: someone steps onto a crossing. You know the rule, but you still need to notice them, brake, and choose when to move again.”
+- Slide 1: begin with the frustration in Jakarta. Do not add an introduction ahead of the script.
+- Slide 2: move here at the sentence about passing a driving test. The old zig-zag/figure-eight course changed in 2023; do not describe it as the current test.
+- Slide 3: pause after Rp450 trillion. Say that the estimate uses 2020 figures.
+- Slide 4: 1% means lower national economic losses, not measured savings caused by this app. Introduce RoadSense before switching to the demo.
+- Slide 5: use only the mission and emphasis points in the script below. Switch back by 4:20. The image is an earlier prototype crop, not the current tutorial or a record of a successful run.
+- Slide 6: explain Codex's contribution. Prepare the genuine task capture and matching artifact requested in PITCH.md for display alongside this slide. The four text columns summarize the work; they are not an activity log.
+- Slide 7: licensing prerequisites and Gojek/Grab training are proposed uses. The pilot asks whether learners repeat fewer mistakes and can apply a lesson elsewhere.
+- Slide 8: say the exact closing line, finish by 5:45, and hold the slide.
 
-The cover is labeled concept artwork. The actual prototype appears on slide 4 and in the live demonstration.
+## Demo rehearsal check
 
-## 2. The learning gap — 00:25–01:05
+The sequence in PITCH.md calls for a deliberate pedestrian violation and manual retry. Current `../DEMO_TUTORIAL_SCENARIO.md` describes a guided crossing/junction tutorial that pauses, brakes automatically, and disables penalties during guidance. Verify the prepared build and entry route before presenting. Do not promise a deliberate failure in a mode that prevents it. If only the guided tutorial is available, identify it as guided practice and show feedback/retry separately only if actually available. This deck update does not change the game or establish a completed rehearsal.
 
-“At a crossing, the question is not only whether you can remember a rule. It is whether you can recognize the situation and apply it while controlling a vehicle. The pedestrian may still be moving. You may be approaching too quickly. You need to decide whether to wait. RoadSense explores how we can give learners a place to rehearse that decision, see what happened, and try again before facing the same kind of moment on a real road.”
+## Slide sources
 
-Do not introduce accident statistics or claim that this prototype reduces crashes. This slide frames the learning problem rather than reporting research findings.
+- Slides 1, 2 and 8: existing AI-generated concept artwork; source prompts remain in `assets/PROVENANCE.json`. The visible artwork labels distinguish illustrations from gameplay.
+- Slide 2: Polri's 2023 test changes, linked in the preparation notes below.
+- Slides 3 and 4: Perpres 1/2022, annex page 1, linked in the preparation notes below. The estimate is Rp448-478 trillion on 2020 GDP; the deck rounds to about Rp450 trillion. The hypothetical 1% saving uses the same baseline.
+- Slide 5: `assets/gameplay-existing.png`, an earlier prototype capture cropped to its road/vehicle region. The proposed demo sequence comes from PITCH.md.
+- Slides 6 and 7: contribution and proposal wording from PITCH.md. No new test result, partnership, or learner outcome is asserted.
 
-## 3. The learning loop — 01:05–01:50
+## Full pitch and preparation notes
 
-“The experience begins with a road situation and a choice. When the player makes a mistake, feedback explains the action and shows the relevant rule citation. The player can then watch a driving example and retry. That connection matters: the next attempt comes with something specific to change. We have implemented this loop in the prototype. Today, we are demonstrating the interaction. We still need to evaluate how well it helps people learn and whether they can apply the lesson in a different situation.”
+The following text is copied from PITCH.md by build_deck.py so these notes match the current script.
 
-Point along the diagram once, then follow the return connection. Switch to the live application at **01:50**.
+# RoadSense — six-minute pitch and live demo
 
-## 4. Live demo — 01:50–03:20
+Read the pitch paragraphs aloud. The demo section contains actions and points to emphasize, not a script. Timing assumes about 135–140 spoken words per minute, with short pauses. Finish by 5:45, leaving 15 seconds spare. Do not read the preparation notes aloud.
 
-**Goal:** show the first crossing tutorial clearly, then show feedback and the example if time allows. All transitions are inside the 90-second slot. The application interface is currently Indonesian; narrate it in English. The PDF does not claim an implemented English interface.
+| Time      | Section                                     | Duration |
+| --------- | ------------------------------------------- | -------- |
+| 0:00–1:25 | Frustration and the testing gap             | 1:25     |
+| 1:25–2:15 | National cost and RoadSense                 | 0:50     |
+| 2:15–4:20 | Live demo: pedestrian and junction priority | 2:05     |
+| 4:20–4:50 | Built with Codex                            | 0:30     |
+| 4:50–5:45 | Proposed uses and closing                   | 0:55     |
+| 5:45–6:00 | Spare time                                  | 0:15     |
 
-| Pitch clock | Operator action and English narration |
-|---|---|
-| 01:50–02:05 | Switch to the prepared app and select Play. Play opens the car demo directly. “The demo begins in a separate session, so this practice does not replace saved journey progress.” Press W to approach the first crossing. |
-| 02:05–02:25 | At the crossing, the simulation pauses and asks for braking. Press S. “The prompt appears at the decision point. I brake, and the vehicle stays stopped while the pedestrian crosses.” Do not pretend that the crossing is clear before the pedestrian actually finishes. |
-| 02:25–02:40 | Wait for the pedestrian to clear. Release W if it is held, then press W again only when prompted. “Continuing requires a fresh input after the crossing is clear. Now normal driving rules resume.” |
-| 02:40–03:08 | If the next junction and feedback can be reached in time, demonstrate the feedback, its rule reference, and the existing driving example. “This feedback explains the mistake. The example shows the action to try next.” Use D on feedback for the example or activate its visible example control. R retries. Describe only what actually appears. |
-| 03:08–03:20 | Return to the PDF. “The same structure supports another attempt: act, understand, and retry.” If the latter interaction was not shown, say: “We have shown the crossing tutorial; feedback and the driving example are also available in the prototype.” Advance at **03:20** regardless of progress. |
+## 0:00–1:25 | The frustration
 
-Rehearse on the presenting hardware before the pitch. The 90-second slot is a presentation plan, not a recorded timing result. If input stalls, focus the app once. If the runtime cannot proceed, return to the PDF and state what was not demonstrated. Use a backup recording only if a real recording of the intended build exists, and identify it as a recording. Never imply a completed run or mistake count that the audience has not seen.
+We are frustrated with how people drive on our roads in Jakarta.
 
-## 5. Indonesian context — 03:20–04:05
+A rider cuts into your lane. A pedestrian tries to cross, but nobody stops. At a junction, everyone wants to go first. Sometimes they are blocking the intersection during the traffic jam.
 
-“We built the scenarios around everyday Indonesian journeys: shopping in a village, passing a school crossing, and picking up a market passenger. The vehicle choice also changes preparation. A car requires a seat belt. A motorcycle requires a helmet and headlight. These details give the practice a recognizable setting and a reason for the player to pay attention to their vehicle. The illustration represents that context; the live application is the playable prototype you just saw.”
+These riders may have a licence. But do they know when to give way?
 
-This slide uses labeled concept artwork. Do not describe the artwork as a screenshot or a promise of production graphics.
+Passing a driving test does not always mean someone is ready for real traffic. That is the gap we want to close.
 
-## 6. Current prototype — 04:05–04:50
+We want driving preparation to reflect real road situations. The motorcycle test checks skills like braking and turning. On the road, riders also need to notice people, know who goes first, and make safe decisions. We want them to practise those decisions before they drive in real traffic.
 
-“The current prototype includes five short skill tests, three everyday missions, and a ten-stage journey. The journey covers preparation, signs and signals, priority, lane changes, school-zone decisions, junctions, railway gates, and an ambulance encounter. Car and motorcycle progress remain separate. Short sessions let the player focus on a particular situation, while the longer journey connects those situations. These numbers describe implemented content. They are not user counts, completion results, or evidence of learning impact.”
+## 1:25–2:15 | The cost and the national opportunity
 
-Keep this focused on playable learning content. The optional map overviews are not driving simulations and are not part of this pitch.
+Indonesia's national road-safety plan estimates that road crashes cost about **450 trillion rupiah** in 2020. That is roughly three percent of GDP. The cost is huge. Families pay through hospital bills, lost income, and lost lives.
 
-## 7. Next validation — 04:50–05:35
+[Pause. Show: “≈ Rp450 trillion / year · 2020 economic baseline”.]
 
-“Our next question is whether practice changes the next decision. We have not measured that yet. We plan to observe first-time players, check whether they understand the cues and controls, then compare their decisions in a new scenario after using the feedback and retry loop. That will help us separate following a prompt from understanding a situation. We would use those observations to improve the interaction before making claims about learning outcomes.”
+[Show: “1% lower national crash losses ≈ Rp4.5 trillion / year”, with “Illustrative scenario · 2020 baseline” beneath it.]
 
-The diagram is a proposed evaluation sequence, not an experiment already completed. There are no invented outcome figures or partner commitments.
+If Indonesia reduced those crash costs by just one percent, that would mean about **4.5 trillion rupiah saved a year**. We have not proven that impact yet. It shows why better road training matters.
 
-## 8. Closing — 05:35–06:00
+So we built **RoadSense**: a driving game where people learn the rules by practising real road situations.
 
-“RoadSense gives a road decision room to be practiced, explained, and tried again. We have a playable prototype, familiar Indonesian scenarios, and a clear next step: testing what people understand and carry into the next attempt. We are We Will Handle. Thank you, and we invite you to try RoadSense.”
+## 2:15–4:20 | Live demo: learn to give way
 
-Finish at **06:00**. Keep questions outside the six-minute pitch.
+**Mission:** **Demo singkat · Hak utama — Pasar Bunga**, using **Motor**. This single mission covers a pedestrian crossing and giving way at a junction. Start with the game loaded; open the mission from the menu or press F2.
 
-## Content and image sources
+| Time      | What to show                                                                                   | What to emphasize                                                                                                                                         |
+| --------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2:15–2:30 | Approach the occupied crossing and deliberately fail to give way.                              | The game checks an actual driving decision: whether the rider lets someone cross safely.                                                                  |
+| 2:30–2:50 | Show the violation card, **YANG BENAR**, and the legal citation.                               | Immediate feedback: what went wrong, what to do instead, and the law behind it. Give the judges time to read.                                             |
+| 2:50–3:10 | Select **Lihat cara benar**. Show the coach stopping and waiting, then return to the feedback. | Learners can see the correct action in the same situation.                                                                                                |
+| 3:10–3:45 | Retry manually. Stop before the crossing, wait for a clear path, then continue.                | The learner must perform the correct action themselves.                                                                                                   |
+| 3:45–4:10 | At the junction, give way to traffic on the main road, then reach the green checkpoint.        | Who goes first depends on the situation. Show the second right-of-way decision without changing missions.                                                 |
+| 4:10–4:20 | Show the completion card and actual session result.                                            | The complete experience: make a mistake, understand it, watch, retry, and finish. The result is practice evidence, not proof of safer real-world driving. |
 
-- Product scope: `README.md`, “Experiences,” “Saved progress,” and “Controls,” inspected on 2026-11-07.
-- Current first-crossing flow: `docs/DEMO_TUTORIAL_SCENARIO.md`, inspected on 2026-11-07. This takes precedence over older demo entry instructions in other documents.
-- Earlier demo narrative: `docs/ROAD_SENSE_DEMO.md`; its outdated first-entry sequence was not reused.
-- Slide 4 image: existing `assets/gameplay-existing.png`, placed through a text-free crop of the road and vehicle. It is an earlier capture, not evidence of the latest tutorial UI.
-- Generated artwork: built-in image generation, three distinct assets. Full prompts and provenance are in `assets/PROVENANCE.json`. Artwork on slides 1, 2, 5, and 8 is visibly labeled. The cover background intentionally returns on the closing slide.
-- No external statistical, medical, legal-effectiveness, traction, or learning-impact claims are used.
+**Keep the demo focused:** one mission, one deliberate mistake, one explanation, one retry. Briefly explain each point while driving; let the game do most of the talking. Move to Codex at 4:20.
+
+## 4:20–4:50 | What we built with Codex
+
+[Show a genuine Codex task capture alongside its resulting implementation or verification artifact.]
+
+Codex helped us build the driving game, rule checks, explanations, and tests.
+
+We chose Deep Domain AI as our direction. We turn Indonesian traffic rules into situations people can practise. The game checks their actions and explains the result. It also labels what is law and what is safety advice.
+
+## 4:50–5:45 | Where this could go and closing
+
+We want to bring this online in two ways.
+
+First, as a required learning step before the driving test, if licensing authorities adopt it. Applicants would practise road situations and show they understand the rules.
+
+Second, as training for people joining Gojek or Grab as driver partners, and refresher lessons for existing drivers.
+
+We would start with a driving school or a group of drivers. Do they repeat fewer mistakes? Can they handle a new situation? Do they drive more safely afterward?
+
+Passing the game cannot guarantee safe driving. We need to test whether the lessons carry over to the road.
+
+**RoadSense. Learn to give way before someone else pays for your mistake.**
+
+[End by 5:45. Hold the final screen.]
+
+---
+
+## Preparation notes — do not read aloud
+
+### Numbers and sources
+
+- **Economic baseline:** The annex to [Perpres 1/2022, national road-safety plan](https://peraturan.bpk.go.id/Download/189970/Perpres%20Nomor%201%20Tahun%202022%20-%20Lampiran.pdf), first page, cites an ADB estimate of **2.9–3.1% of GDP**, equivalent to **Rp448–478 trillion using 2020 GDP of Rp15,434.2 trillion**. This confirms the estimate in [old-pitch.md](../old-pitch.md). “About Rp450 trillion” is a rounded figure near the lower end, not an updated 2026 estimate.
+- **Illustrative improvement:** Rp450 trillion × 0.01 = **Rp4.5 trillion**. This is a hypothetical reduction in total national economic losses, not a product forecast, government-budget saving, or claim that 1% fewer crashes necessarily means 1% lower costs. Real impact depends on adoption, sustained behaviour change, and the severity of crashes avoided.
+- **Testing context:** [Polri's explanation of the 2023 motorcycle-test changes](https://tribratanews.polri.go.id/blog/nasional-3/permudah-masyarakat-korlantas-polri-resmi-ubah-skema-ujian-praktik-pembuatan-sim-62007) describes braking, U-turn, S-course, and avoidance exercises. Some official service standards also describe on-road testing, for example this [2025 Satpas standard](https://reshulusungaiselatan.kalsel.polri.go.id/wp-content/uploads/STANDAR-PELAYANAN-SATPAS-2025-REVISI.pdf). The pitch therefore identifies a preparation gap without asserting that no real-road assessment exists or that test design is the proven main cause of crashes.
+- **Adoption:** Licensing prerequisites and Gojek/Grab onboarding are proposals, not current integrations, partnerships, or approved requirements. Before using it for eligibility decisions, validate the assessment, identity checks, accessibility, and legal content with the relevant partner. The current demo does not establish those capabilities.
+
+### Live delivery
+
+- If the presenting build still shows **Jalan Kita**, say once: “Jalan Kita is the name on this prototype build.” Present the project as **RoadSense**.
+- Rehearse the exact route and build. The demo has **2:05**, including commentary. These times are estimates, not a completed rehearsal. If the route needs more time, cut the paragraph about the old motorcycle test from the opening and begin the demo about 20 seconds earlier; keep the 4:20 exit.
+- The completion card counts the actual session's mistakes, including the deliberate violation. Do not call it a measured learning improvement.
+- If the demo stalls, switch to a clearly labelled recording and say: “I’ll show a recording of the same sequence.” If there is no recording, show the coach and explicitly call it a demonstration. Only say the route is completed when the completion screen appears.
+- Move to the Codex section by **4:20**. If running late, shorten the coach segment after its first clear stop and keep the feedback commentary brief. Start the proposed uses by **4:50** and the closing line by **5:40**.

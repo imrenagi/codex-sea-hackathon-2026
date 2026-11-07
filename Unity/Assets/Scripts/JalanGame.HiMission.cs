@@ -10,8 +10,8 @@ namespace JalanKita
         HiRoundaboutObjective hiObjective;
         bool hiActive, hiResultRecorded;
         HiMissionRecord hiRecord;
-        const string HiTitle = "Melintasi Bundaran HI";
-        const string HiFocus = "Masuk bundaran / Beri jalan / Keluar ke Thamrin";
+        static string HiTitle => GameText.Get("hi.title");
+        static string HiFocus => GameText.Get("hi.focus");
         [Serializable] sealed class HiMissionRecord { public int attempts, completions, failures; }
         string HiSaveKey => "RoadSense.Mission.HI.v1." + mode;
         bool HiEnded => hiObjective != null && (hiObjective.Complete || hiObjective.Failed);
@@ -30,31 +30,31 @@ namespace JalanKita
             var card = Element(list, "mission-card");
             var row = Element(card, "row split");
             AddLabel(row, HiTitle, "subhead mission-title");
-            AddLabel(row, "2–4 menit", "kicker duration");
+            AddLabel(row, GameText.Get("hi.duration"), "kicker duration");
             AddLabel(card, HiFocus, "copy");
-            AddLabel(card, saved.attempts == 0 ? "Belum dicoba" : "Percobaan " + saved.attempts + " / Selesai " + saved.completions + " kali", "objective-detail");
-            AddButton(card, "Pilih", ShowHiBrief, "primary");
+            AddLabel(card, saved.attempts == 0 ? GameText.Get("text.not_attempted") : GameText.Get("hi.saved_status", saved.attempts, saved.completions), "objective-detail");
+            AddButton(card, GameText.Get("text.select_2a7802"), ShowHiBrief, "primary");
         }
         void ShowHiBrief()
         {
             catalogueKind = MissionKind.Scenario;
             SetPage(Page.Brief);
-            AddLabel(dialog, "MISI SEHARI-HARI / 2–4 MENIT", "kicker");
+            AddLabel(dialog, GameText.Get("hi.kicker"), "kicker");
             AddLabel(dialog, HiTitle, "heading");
-            AddLabel(dialog, "Berangkat dari Sudirman, beri jalan kepada kendaraan di bundaran, lalu ikuti putaran dan keluar menuju Thamrin.", "copy");
+            AddLabel(dialog, GameText.Get("hi.brief"), "copy");
             var note = Element(dialog, "note");
-            AddLabel(note, "FOKUS LATIHAN", "kicker");
+            AddLabel(note, GameText.Get("text.practice_focus"), "kicker");
             AddLabel(note, HiFocus, "copy");
-            AddLabel(dialog, "Perlambat sebelum masuk. Tunggu celah aman, lalu ikuti arahan di layar. Hasil disimpan terpisah; ulangi dari awal bila belum berhasil.", "copy");
+            AddLabel(dialog, GameText.Get("hi.brief_detail"), "copy");
             var actions = Element(dialog, "row actions");
-            AddButton(actions, "Mulai", StartHiMission, "primary");
-            AddButton(actions, "Kembali", () => ShowCatalogue(MissionKind.Scenario), "quiet");
+            AddButton(actions, GameText.Get("text.start"), StartHiMission, "primary");
+            AddButton(actions, GameText.Get("text.back"), () => ShowCatalogue(MissionKind.Scenario), "quiet");
         }
         void StartHiMission()
         {
             CloseCityPreview();
             pitchDemo = false; learner = null; practiceStart = -1;
-            demoBrakeLatched = demoCrossingReady = demoActionReleased = false;
+            demoTutorial = null;
             trainingRoot.SetActive(false);
             if (jaksa != null) jaksa.Street.Root.SetActive(false);
             hi = new LandmarkDrive(transform, JakartaPlace.BundaranHI, forwardMissionTraffic: true);
@@ -63,7 +63,7 @@ namespace JalanKita
             hiObjective.Reset();
             hiActive = true; hiResultRecorded = false;
             hiRecord = ReadHiRecord(); hiRecord.attempts++; StoreHiRecord();
-            progress.tooltip = "Jeda / kemajuan [Tab]";
+            progress.tooltip = GameText.Get("text.progress_tab");
             root.Q<Label>(className: "controls").text = "";
             EnterHumanDrive(Page.Jaksa);
             Show(root.Q("steps"), false); Show(phone, false); Show(toast, false); Show(root.Q("pickup"), false);
@@ -83,7 +83,7 @@ namespace JalanKita
         }
         void RefreshHiHud()
         {
-            location.text = "BUNDARAN HI / JAKARTA PUSAT";
+            location.text = GameText.Get("hi.location");
             title.text = HiTitle;
             instruction.text = hiObjective.Instruction;
             detail.text = hiObjective.Title;
@@ -100,19 +100,19 @@ namespace JalanKita
         {
             SetPage(Page.JaksaPause);
             var content = ScrollDialog();
-            AddLabel(content, hiObjective.Complete ? "MISI SELESAI" : hiObjective.Failed ? "COBA LAGI" : "JEDA PERJALANAN", "kicker");
+            AddLabel(content, hiObjective.Complete ? GameText.Get("hi.completed") : hiObjective.Failed ? GameText.Get("hi.try_again") : GameText.Get("hi.paused"), "kicker");
             AddLabel(content, HiTitle, "heading");
-            AddLabel(content, hiObjective.Complete ? "Tujuan tercapai dengan selamat." : hiObjective.Failed ? hiObjective.FailureReason : hiObjective.Instruction, "copy");
-            AddLabel(content, "Percobaan: " + hiRecord.attempts + " / Selesai: " + hiRecord.completions + " / Percobaan belum berhasil: " + hiRecord.failures, "copy");
+            AddLabel(content, hiObjective.Complete ? GameText.Get("hi.success") : hiObjective.Failed ? hiObjective.FailureReason : hiObjective.Instruction, "copy");
+            AddLabel(content, GameText.Get("hi.result_counts", hiRecord.attempts, hiRecord.completions, hiRecord.failures), "copy");
             var note = Element(content, "note");
-            AddLabel(note, "FOKUS LATIHAN", "kicker"); AddLabel(note, HiFocus, "copy");
-            AddLabel(content, "Hasil tersimpan terpisah dari perjalanan utama. Percobaan yang ditinggalkan dimulai dari awal.", "objective-detail");
+            AddLabel(note, GameText.Get("text.practice_focus"), "kicker"); AddLabel(note, HiFocus, "copy");
+            AddLabel(content, GameText.Get("hi.save_note"), "objective-detail");
             AddControlsHelp(content);
             var actions = Element(content, "row actions");
-            if (!HiEnded) AddButton(actions, "Lanjutkan", () => EnterHumanDrive(Page.Jaksa), "primary");
-            AddButton(actions, "Ulangi misi", () => { ResetExplore(); EnterHumanDrive(Page.Jaksa); }, HiEnded ? "primary" : "quiet");
-            AddButton(actions, "Pilih misi", LeaveHiForCatalogue, "quiet");
-            AddButton(actions, "Menu utama", BackToMenu, "quiet");
+            if (!HiEnded) AddButton(actions, GameText.Get("text.continue"), () => EnterHumanDrive(Page.Jaksa), "primary");
+            AddButton(actions, GameText.Get("hi.retry"), () => { ResetExplore(); EnterHumanDrive(Page.Jaksa); }, HiEnded ? "primary" : "quiet");
+            AddButton(actions, GameText.Get("hi.choose"), LeaveHiForCatalogue, "quiet");
+            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
         }
         void LeaveHiForCatalogue()
         {

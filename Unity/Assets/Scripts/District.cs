@@ -10,16 +10,18 @@ namespace JalanKita
         static readonly int[] Side = { -1, 1 };
         static readonly float[] Junctions = { StopJunction, LightJunction, MainJunction };
         static readonly string[] Shops = { "Ruko_A", "Ruko_B", "Ruko_C", "Ruko_D" };
-        // Ujian SIM TownLayout.Buildings wall palette, unchanged.
-        static readonly string[] WallColors = { "efe2c2", "f3b27a", "ececec", "bfe0de", "f4c9bf",
-            "d9c8e6", "ffd98a", "c9d8b6", "f7efe1", "e8cfa8" };
+        // Weathered plaster, canvas and painted shopfronts keep safety colors distinct.
+        static readonly string[] WallColors = { "c9c7b8", "c8b7a1", "d6d3c8", "b5bcba", "c4afa0",
+            "b8b2b0", "cabc9e", "acb7ad", "d1c9b9", "b8ad98" };
+        static readonly string[] ShopColors = { "626e67", "786a5c", "53656b", "8a7662", "785b51", "687168" };
         readonly Dictionary<string, Material> palette = new();
         readonly Dictionary<string, Material> surfaces = new();
         readonly GameObject scenery;
         readonly Transform actors;
         readonly TrafficVehicleView crossCar, laneCar, spurCar, pickupCar;
+        readonly TrafficVehicleView[] mainRoadCars = new TrafficVehicleView[Journey.MainRoadTrafficCount];
         readonly PlayerVehicleView playerVehicle;
-        readonly StreetPerson pedestrian;
+        readonly StreetPerson[] pedestrians = new StreetPerson[Journey.CrossingPedestrianCount];
         readonly ScenarioAtmosphere atmosphere;
         readonly GameObject schoolScenery, marketScenery, marketCurb, finishMarker;
         readonly Renderer[] signal = new Renderer[3];
@@ -64,9 +66,14 @@ namespace JalanKita
 
             playerVehicle = new PlayerVehicleView(actors);
             crossCar = new TrafficVehicleView(actors, "Lalu lintas persimpangan");
+            for (int i = 0; i < mainRoadCars.Length; i++)
+                mainRoadCars[i] = new TrafficVehicleView(actors, "Main-road traffic " + (i + 1));
             laneCar = new TrafficVehicleView(actors, "Kendaraan di lajur kanan");
             spurCar = new TrafficVehicleView(actors, "Lalu lintas satu arah");
-            pedestrian = new StreetPerson(actors, "Pejalan kaki pada penyeberangan", "c9ad71", 1, false, 7);
+            string[] crossingShirts = { "b7bdad", "bd9c8e", "c8bda6" };
+            for (int i = 0; i < pedestrians.Length; i++)
+                pedestrians[i] = new StreetPerson(actors, "Crossing pedestrian " + (i + 1),
+                    crossingShirts[i], 1 - i * .035f, false, 7 + i);
             atmosphere = new ScenarioAtmosphere(actors);
             pickupCar = new TrafficVehicleView(actors, "Arus di belakang teluk jemput");
             headlamp = new GameObject("Lampu utama motor").AddComponent<Light>();
@@ -478,12 +485,28 @@ namespace JalanKita
                 !run.IsMarket || run.PassengerPickedUp && run.BoardingProgress >= 1, !hood, run.DriverGear, run.PassengerGear);
             headlamp.transform.SetPositionAndRotation(point + rotation * new Vector3(0, .87f, .85f), rotation);
             headlamp.enabled = false; // The selected scooter supplies its own correctly positioned lamps.
-            Pose(crossCar, run.Traffic.Cross, run.CrossTraffic, run.CrossDirection * 90, dt);
-            pedestrian.Root.SetActive(run.Pedestrian.HasValue);
-            if (run.Pedestrian.HasValue)
+            if (run.Stage == 2)
             {
-                pedestrian.SchoolAppearance(run.IsSchool);
-                pedestrian.Draw(World(run.Pedestrian.Value), run.PedestrianDirection * 90, run.ElapsedTime, 1, false);
+                crossCar.Hide();
+                for (int i = 0; i < mainRoadCars.Length; i++)
+                    Pose(mainRoadCars[i], run.MainRoadTrafficChoice(i), run.MainRoadTraffic(i), run.CrossDirection * 90, dt);
+            }
+            else
+            {
+                Pose(crossCar, run.Traffic.Cross, run.CrossTraffic, run.CrossDirection * 90, dt);
+                foreach (var car in mainRoadCars) car.Hide();
+            }
+            for (int i = 0; i < pedestrians.Length; i++)
+            {
+                var position = run.CrossingPedestrian(i);
+                pedestrians[i].Root.SetActive(position.HasValue);
+                if (!position.HasValue) continue;
+                pedestrians[i].SchoolAppearance(run.IsSchool);
+                // Lift the feet onto the pavement, including the waiting side.
+                float pavement = Mathf.Lerp(0, .125f, Mathf.InverseLerp(4.67f, 5.5f, Mathf.Abs(position.Value.x)));
+                pedestrians[i].Draw(World(position.Value) + Vector3.up * pavement,
+                    run.PedestrianDirection * 90, run.ElapsedTime + i * .57f,
+                    run.CrossingPedestrianWalking(i), false, run.CrossingPedestrianGaitTime(i));
             }
             Pose(laneCar, run.Traffic.Lane, run.LaneTraffic, 0, dt);
             Pose(spurCar, run.Traffic.Spur, run.SpurTraffic, 180, dt);
@@ -555,9 +578,9 @@ namespace JalanKita
                 if (mats.TryGetValue("M_WallPaint", out var wall))
                     wall.SetColor("_BaseColor", ColorOf(WallColors[random.Next(WallColors.Length)]));
                 if (mats.TryGetValue("M_Awning", out var awning))
-                    awning.SetColor("_BaseColor", Color.HSVToRGB((float)random.NextDouble(), .55f, .55f));
+                    awning.SetColor("_BaseColor", ColorOf(ShopColors[(int)(random.NextDouble() * ShopColors.Length)]));
                 if (mats.TryGetValue("M_ShopSign", out var board))
-                    board.SetColor("_BaseColor", Color.HSVToRGB((float)random.NextDouble(), .75f, .6f));
+                    board.SetColor("_BaseColor", ColorOf(ShopColors[(int)(random.NextDouble() * ShopColors.Length)]));
                 var sign = Models.Spawn("ShopSign_" + random.Next(10), model.transform);
                 sign.transform.localPosition = new Vector3(0, 4.35f, .1f);
                 sign.transform.localRotation = Quaternion.identity;

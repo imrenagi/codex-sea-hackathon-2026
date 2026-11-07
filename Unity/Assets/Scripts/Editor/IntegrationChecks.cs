@@ -14,7 +14,13 @@ namespace JalanKita.EditorTools
         static void Require(bool ok, string message) { if (!ok) throw new InvalidOperationException("INTEGRATION: " + message); }
         static object Field(JalanGame game, string name) => typeof(JalanGame).GetField(name, Private).GetValue(game);
         static void Set(JalanGame game, string name, object value) => typeof(JalanGame).GetField(name, Private).SetValue(game, value);
-        static void Call(JalanGame game, string name, params object[] args) => typeof(JalanGame).GetMethod(name, Private).Invoke(game, args);
+        static void Call(JalanGame game, string name, params object[] args)
+        {
+            var method = Array.Find(typeof(JalanGame).GetMethods(Private),
+                m => m.Name == name && m.GetParameters().Length == args.Length);
+            if (method == null) throw new MissingMethodException(typeof(JalanGame).FullName, name);
+            method.Invoke(game, args);
+        }
         static string Page(JalanGame game) => Field(game, "page").ToString();
 
         public sealed class SavedPreferences : IDisposable
@@ -23,6 +29,9 @@ namespace JalanKita.EditorTools
             const string OnboardingKey = "RoadSense.Onboarding.MovementBrake.v1";
             readonly bool onboardingExists = PlayerPrefs.HasKey(OnboardingKey);
             readonly int onboardingValue = PlayerPrefs.GetInt(OnboardingKey);
+            const string TutorialKey = "RoadSense.Tutorial.pasar-bunga-right-of-way.Completed.v1";
+            readonly bool tutorialExists = PlayerPrefs.HasKey(TutorialKey);
+            readonly int tutorialValue = PlayerPrefs.GetInt(TutorialKey);
             public SavedPreferences()
             {
                 foreach (VehicleMode mode in Enum.GetValues(typeof(VehicleMode)))
@@ -38,6 +47,7 @@ namespace JalanKita.EditorTools
             public void Dispose()
             {
                 if (onboardingExists) PlayerPrefs.SetInt(OnboardingKey, onboardingValue); else PlayerPrefs.DeleteKey(OnboardingKey);
+                if (tutorialExists) PlayerPrefs.SetInt(TutorialKey, tutorialValue); else PlayerPrefs.DeleteKey(TutorialKey);
                 foreach (var pair in values)
                     if (pair.Value == null) PlayerPrefs.DeleteKey(pair.Key); else PlayerPrefs.SetString(pair.Key, pair.Value);
                 PlayerPrefs.Save();
@@ -173,15 +183,29 @@ namespace JalanKita.EditorTools
                 Require(root.Query<Label>(className: "rule-source").ToList().Any(x => x.text.Contains("Pasal")), "Legal citation visible without opening fold");
                 Call(game, "StartDemonstration");
                 var demo = (Journey)Field(game, "journey");
-                for (int i = 0; i < 10000 && demo.Stage == 2 && !demo.Failure.HasValue; i++) DrivingCoach.Step(demo, .02f);
-                Require(demo.Stage == 3 && !demo.Failure.HasValue, "Pitch demonstration completes");
+                var example = (ViolationExampleSession)Field(game, "demonstration");
+                Require(example != null && ReferenceEquals(example.FailedJourney, run)
+                    && !ReferenceEquals(demo, run), "Violation example uses detached learner snapshot");
+                for (int i = 0; i < 10000 && !example.Finished; i++) example.Step(.02f);
+                Require(example.Finished && !demo.Failure.HasValue && demo.Front > demo.CrossingZebra + 4,
+                    "Pitch example completes its actual pedestrian maneuver");
                 Call(game, "EndDemonstration");
                 Require(ReferenceEquals(run, Field(game, "journey")) && run.MistakeCount == 1, "Demo restores actual learner mistake count");
                 Call(game, "Retry");
+                var failed = run;
+                run = (Journey)Field(game, "journey");
+                Require(!ReferenceEquals(run, failed) && run.Stage == 2 && run.MistakeCount == 0
+                    && (bool)Field(game, "inputReleaseRequired"), "Tutorial retry creates fresh guarded isolated session");
+                // The ordered prompts and fresh-key guards are exercised by VerifyControls.
+                run.LearningControls = false;
                 for (int i = 0; i < 10000 && run.Stage == 2 && !run.Failure.HasValue; i++) DrivingCoach.Step(run, .02f);
                 Require(run.Stage == 3 && !run.Failure.HasValue, "Pitch retry completes");
                 Call(game, "AnnounceCheckpoint");
-                Require(Page(game) == "Checkpoint" && root.Q<Label>(className: "stamp").text == "DEMO SELESAI!", "Pitch completion stays bounded");
+                Require(Page(game) == "Checkpoint" && root.Query<Label>(className: "heading").ToList()
+                    .Any(label => label.text == GameText.Get("tutorial.complete")), "Pitch completion stays bounded");
+                var completionActions = root.Q("dialog").Query<Button>().ToList();
+                Require(completionActions.Any(b => b.text == GameText.Get("navigation.explore_modes"))
+                    && completionActions.Any(b => b.text == GameText.Get("demo.replay")), "Completion preserves chooser and replay actions");
                 Call(game, "Retry");
                 Require(((Journey)Field(game, "journey")).Stage == 2 && ((Journey)Field(game, "journey")).MistakeCount == 0, "Pitch replay is a fresh isolated session");
                 Require(PlayerPrefs.GetString(key) == original && PlayerPrefs.GetString(missionKey) == missionValue, "Pitch failure/demo/retry/completion/replay preserve both save categories");

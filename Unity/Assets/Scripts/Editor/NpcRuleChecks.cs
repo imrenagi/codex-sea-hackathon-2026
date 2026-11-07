@@ -132,6 +132,25 @@ namespace JalanKita.EditorTools
                 Require(!TrafficFootprint.Sweeps(playerFrom,run.Position,0,0,.95f,1.95f,
                     before,next.Value,0,0,choice.Vehicle.HalfWidth,choice.Vehicle.HalfLength),"Encounter positive gap remains clear");
             }
+            for (int index=0; index<Journey.MainRoadTrafficCount; index++)
+            {
+                var run=new Journey(VehicleMode.Car,new JourneySave{next=2},false,trafficSeed:173);
+                typeof(Journey).GetProperty("CrossDirection").SetValue(run,1);
+                var playerFrom=new Vector2(-10,RouteStage.MainJunction);
+                float travel=(11.2f-index*.4f)*.04f;
+                typeof(Journey).GetProperty("Position").SetValue(run,playerFrom+Vector2.right*travel);
+                typeof(Journey).GetProperty("Heading").SetValue(run,90f);
+                var choice=run.MainRoadTrafficChoice(index);
+                var before=playerFrom+Vector2.right*(1.95f+choice.Vehicle.HalfLength+.15f);
+                var actors=(Vector2?[])typeof(Journey).GetField("mainRoadTraffic",Private).GetValue(run);
+                var finished=(bool[])typeof(Journey).GetField("mainRoadTrafficFinished",Private).GetValue(run);
+                for(int i=0;i<finished.Length;i++)finished[i]=i!=index;
+                actors[index]=before; Set(run,"priorityTime",10f);
+                typeof(Journey).GetMethod("UpdateMainRoadTraffic",Private).Invoke(run,
+                    new object[]{.04f,(Vector2?)playerFrom,(float?)90f});
+                Require(run.MainRoadTraffic(index).HasValue && Vector2.Distance(run.MainRoadTraffic(index).Value,before+Vector2.right*travel)<.001f,
+                    "Each finite crossing car receives the moving player's start pose: "+index);
+            }
             Debug.Log("NPC_RULE_CHECKS_PASSED stop lines, lights, pedestrian clearance, railway, following, ambulance yielding and swept collisions.");
         }
     }

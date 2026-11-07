@@ -137,8 +137,9 @@ namespace JalanKita
             run.Step(dt, run.Speed < desired - .14f, run.Speed > desired + .12f, steer);
         }
 
-        static bool TrafficComing(Journey run, float junction)
+        internal static bool TrafficComing(Journey run, float junction)
         {
+            if (run.Stage == 2 && junction == MainJunction) return run.MainRoadTrafficComing;
             if (!run.CrossTraffic.HasValue || run.CrossTraffic.Value.y != junction) return false;
             return (run.Position.x - run.CrossTraffic.Value.x) * run.CrossDirection > -4.3f;
         }

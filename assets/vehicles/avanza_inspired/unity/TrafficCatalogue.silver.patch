@@ -1,0 +1,11 @@
+--- a/Unity/Assets/Scripts/TrafficCatalogue.cs
++++ b/Unity/Assets/Scripts/TrafficCatalogue.cs
+@@ -29,7 +29,7 @@
+             new("retro_scooter",true,.245f,1.25f,.694f,1.828f,"67B7AA","B66C4A"),
+             new("maxi_scooter",true,.263f,1.35f,.72f,1.951f,"546679","D5DBD9"),
+             new("city_hatchback",false,.293f,2.405f,2.10f,3.957f,"E3B534","C74F39"),
+-            new("family_mpv",false,.32f,2.75f,2.15f,4.542f,"DCE1DD","254859"),
++            new("family_mpv",false,.32f,2.75f,2.15f,4.542f,"C5CACD","254859"),
+             new("utility_pickup",false,.288f,2.205f,2.095f,4.297f,"A3B1B4","42685A")
+         };
+         public static int Seed(string id,int variant,VehicleMode mode)
