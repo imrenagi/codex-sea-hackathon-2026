@@ -25,12 +25,14 @@ namespace JalanKita
         readonly DrivingCamera followCamera = new();
         public readonly DrivingMirrors Mirrors;
         readonly RoadVehicleMotion motion = new();
+        readonly System.Func<Vector2, RoadBoundary.Frame> roadFrame;
         bool snap = true;
         int trafficSeed = 731;
 
         public JaksaDrive(Transform parent)
         {
             Street = new JaksaStreet(parent);
+            roadFrame = RoadFrame;
             actors = new GameObject("Jaksa vehicles").transform;actors.SetParent(Street.Root.transform,false);
             player = new PlayerVehicleView(actors);
             Traffic = new TrafficSimulation(actors, Street);
@@ -60,7 +62,11 @@ namespace JalanKita
 
         public void Reset(VehicleMode mode)
         {
-            Mode=mode;Position=new Vector2(Street.RoadX(8)-.7f,8);Speed=Heading=0;
+            Mode=mode;
+            var frame=RoadFrame(new Vector2(0,8));
+            Heading=frame.Heading;
+            Position=RoadBoundary.Fit(roadFrame,mode,new Vector2(Street.RoadX(8)-1.48f/frame.Forward.y,8),Heading);
+            Speed=0;
             motion.Reset();
             Traffic.Reset(trafficSeed++);TrafficContact=false;
             Hood=false;CurbContact=false;Headlight=true;Indicator=0;snap=true;Street.Activate();Present(0);
@@ -68,6 +74,15 @@ namespace JalanKita
         public void ToggleCamera(){Hood=!Hood;snap=true;}
         public void ToggleIndicator(int direction) => Indicator = Indicator == direction ? 0 : direction;
         public void ToggleHeadlight() => Headlight = !Headlight;
+
+        RoadBoundary.Frame RoadFrame(Vector2 position)
+        {
+            float slope=Street.RoadX(position.y+.1f)-Street.RoadX(position.y-.1f);
+            var forward=new Vector2(slope,.2f).normalized;
+            // This scene's mesh is a horizontal X strip, not a normal-offset strip.
+            return new RoadBoundary.Frame(new Vector2(Street.RoadX(position.y),position.y),forward,
+                JaksaStreet.RoadHalfWidth*forward.y);
+        }
 
         public void Step(float dt,bool throttle,bool brake,float steer)
         {
@@ -79,18 +94,12 @@ namespace JalanKita
             float previousHeading=Heading;
             float speed=Speed,heading=Heading;
             motion.Step(dt,Mode,throttle&&!AtEnd,brake||AtEnd,steer,safeSpeed,ref speed,ref heading);
-            Speed=speed;Heading=heading;
-            Vector2 next=Position+new Vector2(Mathf.Sin(Heading*Mathf.Deg2Rad),Mathf.Cos(Heading*Mathf.Deg2Rad))*Speed*dt;
+            Vector2 next=RoadBoundary.Move(roadFrame,Mode,Position,dt,ref speed,ref heading,out bool curb);
+            Speed=speed;Heading=heading;CurbContact=curb;
             next.y=Mathf.Clamp(next.y,8,246);
-            float half=Mode==VehicleMode.Car?.95f:.45f;
-            // Account for the vehicle's rotated rectangular envelope at the raised curb.
-            float envelope=half*Mathf.Abs(Mathf.Cos(Heading*Mathf.Deg2Rad))+(Mode==VehicleMode.Car?2.05f:1.05f)*Mathf.Abs(Mathf.Sin(Heading*Mathf.Deg2Rad));
-            float x=Street.RoadX(next.y),limit=JaksaStreet.RoadHalfWidth-envelope-.12f;
-            CurbContact=next.x<x-limit||next.x>x+limit;
-            next.x=Mathf.Clamp(next.x,x-limit,x+limit);
-            if(Traffic.BlocksPlayer(Position,next,Heading,Mode,previousHeading))
+            next=RoadBoundary.Fit(roadFrame,Mode,next,Heading);
+            if(!RoadBoundary.Contains(roadFrame,Mode,next,Heading)||Traffic.BlocksPlayer(Position,next,Heading,Mode,previousHeading))
             {next=Position;Heading=previousHeading;Speed=0;TrafficContact=true;}
-            if(CurbContact)Speed=Mathf.MoveTowards(Speed,0,18*dt);
             if(next.y>=246)Speed=0;
             Position=next;
         }
