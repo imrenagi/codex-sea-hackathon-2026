@@ -7,6 +7,8 @@ namespace JalanKita
     {
         public static void Step(Journey run, float dt)
         {
+            if (run.Finished || run.Failure.HasValue) return;
+            if (run.IsMarket) { MarketStep(run, dt); return; }
             float cruise = 9.2f;
             float targetX = LeftLane;
             float stopAt = float.PositiveInfinity;
@@ -43,13 +45,46 @@ namespace JalanKita
                     break;
                 case 4:
                     cruise = 7.7f;
+                    if (run.IsSchool && run.Front < run.CrossingZebra - 2 && run.Pedestrian.HasValue)
+                        stopAt = run.CrossingZebra - 2;
                     if (run.PhoneRinging) run.ResolvePhone(false);
                     break;
             }
 
             float remaining = Mathf.Max(0, stopAt - 1.15f - run.Front);
             float desired = Mathf.Min(cruise, Mathf.Sqrt(2 * 5.1f * remaining));
-            float steer = Mathf.Clamp((targetX - run.Position.x) * .48f, -1, 1);
+            float steer = RoadVehicleMotion.TrackLane(run.Mode, run.Speed, run.Heading, run.Position.x, targetX);
+            run.Step(dt, run.Speed < desired - .14f, run.Speed > desired + .12f, steer);
+        }
+
+        static void MarketStep(Journey run, float dt)
+        {
+            float targetX = LeftLane;
+            float desired = 4.3f;
+            if (!run.PassengerPickedUp)
+            {
+                if (run.Position.y >= Mission.PickupStart + 1)
+                {
+                    targetX = -5.8f;
+                    if (run.Indicator != -1) run.ToggleIndicator(-1);
+                    float remaining = Mathf.Max(0, Mission.PickupPoint - 1.15f - run.Front);
+                    desired = Mathf.Min(desired, Mathf.Sqrt(2 * 4 * remaining));
+                }
+                if (run.CanPickup) run.Pickup();
+            }
+            if (run.PassengerPickedUp)
+            {
+                if (run.Indicator != 1) run.ToggleIndicator(1);
+                if (!run.PickupTraffic.HasValue || run.PickupTraffic.Value.y < run.Position.y + 12)
+                {
+                    targetX = -5.8f;
+                    desired = 0;
+                }
+                else targetX = LeftLane;
+                // Once back in traffic, keep going even after the approaching car leaves the scene.
+                if (run.Position.x >= -4.25f) { targetX = LeftLane; desired = 4.3f; }
+            }
+            float steer = RoadVehicleMotion.TrackLane(run.Mode, run.Speed, run.Heading, run.Position.x, targetX);
             run.Step(dt, run.Speed < desired - .14f, run.Speed > desired + .12f, steer);
         }
 

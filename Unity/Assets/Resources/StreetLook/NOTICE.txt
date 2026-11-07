@@ -1,0 +1,7 @@
+Original foliage generated on 7 November 2026 with the built-in image_gen tool for Jalan Kita.
+Reference direction: believable urban simulation scenery. No CARLA assets or code are included.
+
+Generation prompt:
+Use case: photorealistic-natural. Asset type: transparent alpha-cutout foliage texture for a real-time Unity 3D Indonesian urban driving game. Create one original square texture of a small dense tropical roadside tree branch cluster: thin branching brown twigs carrying about 35 naturally irregular oval green leaves with pointed tips, subtle veins, varied leaf angles, some overlap and ample transparent holes between leaves. A natural loose asymmetrical branching spray centered in the square, leaves occupy about 75% of canvas, entirely contained with transparent margins. Orthographic front view, neutral diffuse overcast lighting, base-color/albedo appearance without baked hard shadows or directional highlights. Muted medium olive and fresh green tones, realistic botanical leaf shapes, no polygonal/triangular stylization, no tree trunk, no scenery, no text, no logo. True transparent background, including gaps between leaves. This will be repeated on foliage cards, so balanced midtone greens, no black background, no white halo.
+
+Existing surface maps are reused from Resources/Jaksa and Resources/SopoDel; their authors and CC0 sources are recorded in those folders' NOTICE.txt files.

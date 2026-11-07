@@ -35,6 +35,12 @@
                     <ui:Button name="answerPhone" text="Jawab  [G]" class="button quiet" />
                 </ui:VisualElement>
             </ui:VisualElement>
+            <ui:VisualElement name="pickup" class="panel phone hidden">
+                <ui:Label text="JEMPUT DI PASAR" class="label kicker" />
+                <ui:Label text="Penumpang menunggu" class="label subhead" />
+                <ui:Label text="Berhenti di teluk kiri dekat penumpang sebelum menjemput." class="label copy" />
+                <ui:Button name="pickupPassenger" text="Jemput  [F]" class="button primary" />
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="overlay" class="scrim landing">
             <ui:VisualElement name="dialog" class="panel dialog landing-card" />

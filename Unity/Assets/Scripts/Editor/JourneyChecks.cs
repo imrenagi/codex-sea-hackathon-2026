@@ -104,11 +104,19 @@ namespace JalanKita.EditorTools
         {
             for (int i = 0; i < 700 && run.Position.y < RouteStage.PhoneStart + 4.2f; i++)
                 Cruise(run, 0);
-            for (int i = 0; i < 200 && run.Position.x > -5.3f; i++)
-                Cruise(run, -1);
+            // A real steering input changes heading. Countersteer to align in the bay
+            // before braking; releasing a key must not magically face the road again.
+            for (int i = 0; i < 500 && run.Position.y < RouteStage.PhoneEnd - 8 && !run.Failure.HasValue; i++)
+            {
+                float steer = RoadVehicleMotion.TrackLane(run.Mode, run.Speed, run.Heading, run.Position.x, -5.7f);
+                run.Step(.02f, run.Speed < 4.8f, run.Speed > 5, steer);
+            }
             for (int i = 0; i < 150 && run.Speed > 0; i++)
-                run.Step(.02f, false, true, 0);
-            Require(run.PhoneRinging && !run.Failure.HasValue, "Stopped in the bay with phone ringing");
+                run.Step(.02f, false, true, RoadVehicleMotion.TrackLane(run.Mode, run.Speed, run.Heading, run.Position.x, -5.7f));
+            Require(run.PhoneRinging && !run.Failure.HasValue && run.Speed == 0
+                && run.Position.x < -4.6f && run.Position.x > -6.8f
+                && run.Position.y >= RouteStage.PhoneStart + 4 && run.Position.y <= RouteStage.PhoneEnd,
+                $"Stopped in the bay with phone ringing: {run.Mode} at {run.Position}, speed {run.Speed}, {run.Failure}");
             run.ResolvePhone(true);
             Require(!run.PhoneRinging && !run.Failure.HasValue, "Answering while stopped in the bay should pass");
         }

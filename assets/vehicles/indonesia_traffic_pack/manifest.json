@@ -1,0 +1,485 @@
+{
+  "version": 1,
+  "purpose": "Original lightweight background traffic models for an Indonesian driving game",
+  "units": "meters",
+  "blender_forward": "+Y",
+  "blender_up": "+Z",
+  "glb_forward": "-Z",
+  "glb_up": "+Y",
+  "models": [
+    {
+      "lod0_triangles": 8138,
+      "lod1_triangles": 3482,
+      "export_meshes": 7,
+      "id": "sport_scooter",
+      "name": "Sport 160",
+      "kind": "scooter",
+      "colors": [
+        [
+          "cobalt",
+          "245DA5"
+        ],
+        [
+          "crimson",
+          "A92936"
+        ]
+      ],
+      "materials": 2,
+      "atlas_size": 128,
+      "bounds_m": {
+        "min": [
+          -0.36000001430511475,
+          -0.9662584662437439,
+          -0.0017999999690800905
+        ],
+        "max": [
+          0.36000001430511475,
+          0.8996237516403198,
+          1.2280000448226929
+        ]
+      },
+      "wheels": [
+        {
+          "node": "Wheel_Front",
+          "position": [
+            0,
+            0.6385,
+            0.258
+          ],
+          "radius": 0.258
+        },
+        {
+          "node": "Wheel_Rear",
+          "position": [
+            0,
+            -0.6385,
+            0.258
+          ],
+          "radius": 0.258
+        }
+      ],
+      "blender_forward": "+Y",
+      "glb_forward": "-Z",
+      "blend": "sport_scooter/sport_scooter.blend",
+      "fbx": "sport_scooter/sport_scooter.fbx",
+      "variants": [
+        {
+          "name": "cobalt",
+          "hex": "245DA5",
+          "glb": "sport_scooter/sport_scooter_cobalt.glb",
+          "lod1": "sport_scooter/sport_scooter_cobalt_lod1.glb"
+        },
+        {
+          "name": "crimson",
+          "hex": "A92936",
+          "glb": "sport_scooter/sport_scooter_crimson.glb",
+          "lod1": "sport_scooter/sport_scooter_crimson_lod1.glb"
+        }
+      ]
+    },
+    {
+      "lod0_triangles": 9610,
+      "lod1_triangles": 4118,
+      "export_meshes": 7,
+      "id": "retro_scooter",
+      "name": "Retro 110",
+      "kind": "scooter",
+      "colors": [
+        [
+          "mint",
+          "67B7AA"
+        ],
+        [
+          "terracotta",
+          "B66C4A"
+        ]
+      ],
+      "materials": 2,
+      "atlas_size": 128,
+      "bounds_m": {
+        "min": [
+          -0.34700000286102295,
+          -0.9527583718299866,
+          -0.0017999999690800905
+        ],
+        "max": [
+          0.34700000286102295,
+          0.8745380640029907,
+          1.2370001077651978
+        ]
+      },
+      "wheels": [
+        {
+          "node": "Wheel_Front",
+          "position": [
+            0,
+            0.625,
+            0.245
+          ],
+          "radius": 0.245
+        },
+        {
+          "node": "Wheel_Rear",
+          "position": [
+            0,
+            -0.625,
+            0.245
+          ],
+          "radius": 0.245
+        }
+      ],
+      "blender_forward": "+Y",
+      "glb_forward": "-Z",
+      "blend": "retro_scooter/retro_scooter.blend",
+      "fbx": "retro_scooter/retro_scooter.fbx",
+      "variants": [
+        {
+          "name": "mint",
+          "hex": "67B7AA",
+          "glb": "retro_scooter/retro_scooter_mint.glb",
+          "lod1": "retro_scooter/retro_scooter_mint_lod1.glb"
+        },
+        {
+          "name": "terracotta",
+          "hex": "B66C4A",
+          "glb": "retro_scooter/retro_scooter_terracotta.glb",
+          "lod1": "retro_scooter/retro_scooter_terracotta_lod1.glb"
+        }
+      ]
+    },
+    {
+      "lod0_triangles": 8872,
+      "lod1_triangles": 3797,
+      "export_meshes": 7,
+      "id": "maxi_scooter",
+      "name": "Touring 155",
+      "kind": "scooter",
+      "colors": [
+        [
+          "slate",
+          "546679"
+        ],
+        [
+          "pearl",
+          "D5DBD9"
+        ]
+      ],
+      "materials": 2,
+      "atlas_size": 128,
+      "bounds_m": {
+        "min": [
+          -0.36000001430511475,
+          -1.0096495151519775,
+          -0.0017999999690800905
+        ],
+        "max": [
+          0.36000001430511475,
+          0.9405797719955444,
+          1.2280000448226929
+        ]
+      },
+      "wheels": [
+        {
+          "node": "Wheel_Front",
+          "position": [
+            0,
+            0.675,
+            0.263
+          ],
+          "radius": 0.263
+        },
+        {
+          "node": "Wheel_Rear",
+          "position": [
+            0,
+            -0.675,
+            0.263
+          ],
+          "radius": 0.263
+        }
+      ],
+      "blender_forward": "+Y",
+      "glb_forward": "-Z",
+      "blend": "maxi_scooter/maxi_scooter.blend",
+      "fbx": "maxi_scooter/maxi_scooter.fbx",
+      "variants": [
+        {
+          "name": "slate",
+          "hex": "546679",
+          "glb": "maxi_scooter/maxi_scooter_slate.glb",
+          "lod1": "maxi_scooter/maxi_scooter_slate_lod1.glb"
+        },
+        {
+          "name": "pearl",
+          "hex": "D5DBD9",
+          "glb": "maxi_scooter/maxi_scooter_pearl.glb",
+          "lod1": "maxi_scooter/maxi_scooter_pearl_lod1.glb"
+        }
+      ]
+    },
+    {
+      "lod0_triangles": 9338,
+      "lod1_triangles": 4008,
+      "export_meshes": 8,
+      "id": "city_hatchback",
+      "name": "Kota Hatch",
+      "kind": "car",
+      "colors": [
+        [
+          "sunflower",
+          "E3B534"
+        ],
+        [
+          "coral",
+          "C74F39"
+        ]
+      ],
+      "materials": 2,
+      "atlas_size": 128,
+      "bounds_m": {
+        "min": [
+          -1.0499999523162842,
+          -1.9859999418258667,
+          0.0
+        ],
+        "max": [
+          1.0499999523162842,
+          1.9709999561309814,
+          1.4875000715255737
+        ]
+      },
+      "wheels": [
+        {
+          "node": "Wheel_FL",
+          "position": [
+            -0.7849999999999999,
+            1.2025,
+            0.293
+          ],
+          "radius": 0.293
+        },
+        {
+          "node": "Wheel_FR",
+          "position": [
+            0.7849999999999999,
+            1.2025,
+            0.293
+          ],
+          "radius": 0.293
+        },
+        {
+          "node": "Wheel_RL",
+          "position": [
+            -0.7849999999999999,
+            -1.2025,
+            0.293
+          ],
+          "radius": 0.293
+        },
+        {
+          "node": "Wheel_RR",
+          "position": [
+            0.7849999999999999,
+            -1.2025,
+            0.293
+          ],
+          "radius": 0.293
+        }
+      ],
+      "blender_forward": "+Y",
+      "glb_forward": "-Z",
+      "blend": "city_hatchback/city_hatchback.blend",
+      "fbx": "city_hatchback/city_hatchback.fbx",
+      "variants": [
+        {
+          "name": "sunflower",
+          "hex": "E3B534",
+          "glb": "city_hatchback/city_hatchback_sunflower.glb",
+          "lod1": "city_hatchback/city_hatchback_sunflower_lod1.glb"
+        },
+        {
+          "name": "coral",
+          "hex": "C74F39",
+          "glb": "city_hatchback/city_hatchback_coral.glb",
+          "lod1": "city_hatchback/city_hatchback_coral_lod1.glb"
+        }
+      ]
+    },
+    {
+      "lod0_triangles": 9417,
+      "lod1_triangles": 4042,
+      "export_meshes": 8,
+      "id": "family_mpv",
+      "name": "Keluarga MPV",
+      "kind": "car",
+      "colors": [
+        [
+          "pearl",
+          "DCE1DD"
+        ],
+        [
+          "deep_blue",
+          "254859"
+        ]
+      ],
+      "materials": 2,
+      "atlas_size": 128,
+      "bounds_m": {
+        "min": [
+          -1.0750000476837158,
+          -2.2785000801086426,
+          0.0
+        ],
+        "max": [
+          1.0750000476837158,
+          2.2634999752044678,
+          1.7024999856948853
+        ]
+      },
+      "wheels": [
+        {
+          "node": "Wheel_FL",
+          "position": [
+            -0.8099999999999999,
+            1.375,
+            0.32
+          ],
+          "radius": 0.32
+        },
+        {
+          "node": "Wheel_FR",
+          "position": [
+            0.8099999999999999,
+            1.375,
+            0.32
+          ],
+          "radius": 0.32
+        },
+        {
+          "node": "Wheel_RL",
+          "position": [
+            -0.8099999999999999,
+            -1.375,
+            0.32
+          ],
+          "radius": 0.32
+        },
+        {
+          "node": "Wheel_RR",
+          "position": [
+            0.8099999999999999,
+            -1.375,
+            0.32
+          ],
+          "radius": 0.32
+        }
+      ],
+      "blender_forward": "+Y",
+      "glb_forward": "-Z",
+      "blend": "family_mpv/family_mpv.blend",
+      "fbx": "family_mpv/family_mpv.fbx",
+      "variants": [
+        {
+          "name": "pearl",
+          "hex": "DCE1DD",
+          "glb": "family_mpv/family_mpv_pearl.glb",
+          "lod1": "family_mpv/family_mpv_pearl_lod1.glb"
+        },
+        {
+          "name": "deep_blue",
+          "hex": "254859",
+          "glb": "family_mpv/family_mpv_deep_blue.glb",
+          "lod1": "family_mpv/family_mpv_deep_blue_lod1.glb"
+        }
+      ]
+    },
+    {
+      "lod0_triangles": 10480,
+      "lod1_triangles": 4527,
+      "export_meshes": 8,
+      "id": "utility_pickup",
+      "name": "Niaga Pickup",
+      "kind": "car",
+      "colors": [
+        [
+          "silver",
+          "A3B1B4"
+        ],
+        [
+          "forest",
+          "42685A"
+        ]
+      ],
+      "materials": 2,
+      "atlas_size": 128,
+      "bounds_m": {
+        "min": [
+          -1.0475000143051147,
+          -2.1559998989105225,
+          0.0
+        ],
+        "max": [
+          1.0475000143051147,
+          2.1410000324249268,
+          1.8460708856582642
+        ]
+      },
+      "wheels": [
+        {
+          "node": "Wheel_FL",
+          "position": [
+            -0.7825,
+            1.1025,
+            0.288
+          ],
+          "radius": 0.288
+        },
+        {
+          "node": "Wheel_FR",
+          "position": [
+            0.7825,
+            1.1025,
+            0.288
+          ],
+          "radius": 0.288
+        },
+        {
+          "node": "Wheel_RL",
+          "position": [
+            -0.7825,
+            -1.1025,
+            0.288
+          ],
+          "radius": 0.288
+        },
+        {
+          "node": "Wheel_RR",
+          "position": [
+            0.7825,
+            -1.1025,
+            0.288
+          ],
+          "radius": 0.288
+        }
+      ],
+      "blender_forward": "+Y",
+      "glb_forward": "-Z",
+      "blend": "utility_pickup/utility_pickup.blend",
+      "fbx": "utility_pickup/utility_pickup.fbx",
+      "variants": [
+        {
+          "name": "silver",
+          "hex": "A3B1B4",
+          "glb": "utility_pickup/utility_pickup_silver.glb",
+          "lod1": "utility_pickup/utility_pickup_silver_lod1.glb"
+        },
+        {
+          "name": "forest",
+          "hex": "42685A",
+          "glb": "utility_pickup/utility_pickup_forest.glb",
+          "lod1": "utility_pickup/utility_pickup_forest_lod1.glb"
+        }
+      ]
+    }
+  ]
+}

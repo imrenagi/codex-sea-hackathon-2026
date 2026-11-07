@@ -8,7 +8,7 @@ namespace JalanKita
     public enum Rule
     {
         SeatBelt, Helmet, Headlight, Stop, Signal, Junction, Pedestrian, KeepLeft, NoEntry,
-        Indicator, Gap, ReturnLeft, Speed, Phone, OffRoad, Collision
+        Indicator, Gap, ReturnLeft, Speed, Phone, OffRoad, Collision, NoStopping, PickupPlace, PickupIncomplete
     }
 
     public sealed class Lesson
@@ -47,7 +47,7 @@ namespace JalanKita
             new("Masuk dari arah yang dilarang", "Rambu dilarang masuk menutup akses dari arah ini.",
                 "Ikuti panah lurus di jalan satu arah dan hindari cabang dengan rambu merah.", "Pasal 106 ayat (4) huruf a"),
             new("Pindah lajur tanpa sein", "Sebelum berpindah lajur, amati lalu lintas dan beri isyarat sesuai arah perpindahan.",
-                "Nyalakan E untuk sein kanan atau Q untuk sein kiri sebelum melintasi garis putus-putus.", "Pasal 112 ayat (2)"),
+                "Nyalakan E untuk sein kanan atau Q untuk sein kiri sebelum berpindah lajur atau bergerak ke samping.", "Pasal 112 ayat (2)"),
             new("Celah pindah lajur terlalu sempit", "Periksa lalu lintas di depan dan belakang sebelum berpindah lajur.",
                 "Tunggu mobil di lajur tujuan menjauh. Jarak aman dalam simulasi mengikuti kecepatan kendaraan.", "Pasal 112 ayat (2)"),
             new("Perpindahan lajur belum selesai", "Latihan ini meminta satu perpindahan aman ke kanan dan kembali ke kiri sebelum jalur menyempit.",
@@ -59,7 +59,13 @@ namespace JalanKita
             new("Keluar dari rute latihan", "Kendaraan keluar dari permukaan jalan yang disediakan untuk latihan.",
                 "Ikuti marka rute dan kendalikan kecepatan sebelum mengarahkan kendaraan.", "Latihan"),
             new("Jarak dengan kendaraan habis", "Beri ruang agar kamu sempat mengerem jika lalu lintas di depan melambat.",
-                "Jaga jarak dan rem lebih awal saat mendekati kendaraan lain.", "Tips keselamatan")
+                "Jaga jarak dan rem lebih awal saat mendekati kendaraan lain.", "Tips keselamatan"),
+            new("Berhenti di area larangan", "Rambu dilarang berhenti berlaku meskipun penumpang meminta dijemput di sana.",
+                "Lanjutkan ke teluk jemput di sebelah kiri setelah area larangan.", "Pasal 118 huruf a"),
+            new("Tempat jemput belum aman", "Dalam misi ini penumpang dijemput setelah kendaraan berhenti di teluk yang ditandai.",
+                "Beri sein kiri, masuk teluk, berhenti di dekat penumpang, lalu tekan Jemput [F].", "Latihan"),
+            new("Penumpang belum dijemput", "Tujuan perjalanan ini adalah menjemput penumpang lalu bergabung kembali dengan aman.",
+                "Berhenti di teluk jemput, tekan Jemput [F], kemudian beri sein kanan dan tunggu celah aman.", "Latihan")
         };
 
         public bool HasSource => Citation.StartsWith("Pasal", StringComparison.Ordinal);
@@ -98,23 +104,34 @@ namespace JalanKita
         public int before = -1;
         public int after = -1;
         public int[] mistakes = new int[Lesson.All.Length];
+        public int checkpoint, variant, attempts = 1, completions;
+        public int trafficSeed;
+        public int bestMistakes = -1;
+        public bool retryPending;
 
-        public static string Key(VehicleMode mode) => "JalanKita.Journey.v1." + mode;
+        public static string Key(VehicleMode mode, Mission mission = null) => mission == null
+            ? "JalanKita.Journey.v1." + mode : "JalanKita.Mission.v1." + mode + "." + mission.Id;
 
-        public static JourneySave Load(VehicleMode mode)
+        public static JourneySave Load(VehicleMode mode, Mission mission = null)
         {
-            var data = PlayerPrefs.GetString(Key(mode), "");
+            var data = PlayerPrefs.GetString(Key(mode, mission), "");
             if (string.IsNullOrEmpty(data)) return null;
             JourneySave save;
             try { save = JsonUtility.FromJson<JourneySave>(data); }
             catch (ArgumentException) { return null; }
-            return save != null && save.next >= 0 && save.next <= RouteStage.All.Length
-                && save.mistakes?.Length == Lesson.All.Length ? save : null;
+            if (save == null || save.next < (mission?.FirstStage ?? 0)
+                || save.next > (mission == null ? RouteStage.All.Length : mission.LastStage + 1)
+                || save.mistakes == null || save.mistakes.Length > Lesson.All.Length
+                || save.checkpoint < 0 || save.checkpoint > 2) return null;
+            // Append new rule counters without discarding existing journey progress.
+            if (save.mistakes.Length < Lesson.All.Length) Array.Resize(ref save.mistakes, Lesson.All.Length);
+            save.attempts = Mathf.Max(1, save.attempts);
+            return save;
         }
 
-        public void Store(VehicleMode mode)
+        public void Store(VehicleMode mode, Mission mission = null)
         {
-            PlayerPrefs.SetString(Key(mode), JsonUtility.ToJson(this));
+            PlayerPrefs.SetString(Key(mode, mission), JsonUtility.ToJson(this));
             PlayerPrefs.Save();
         }
     }
@@ -123,6 +140,7 @@ namespace JalanKita
     {
         public VehicleMode Mode { get; }
         public JourneySave Save { get; }
+        public Mission Activity { get; }
         public Vector2 Position { get; private set; }
         public float Heading { get; private set; }
         public float Speed { get; private set; }
@@ -131,7 +149,19 @@ namespace JalanKita
         public bool DriverGear, PassengerGear, Headlight;
         public bool PhoneRinging { get; private set; }
         public int Stage => Save.next;
-        public bool Finished => Stage == RouteStage.All.Length;
+        public bool Finished => Stage > (Activity?.LastStage ?? RouteStage.All.Length - 1);
+        public bool IsSchool => Activity?.IsSchool == true;
+        public bool IsMarket => Activity?.IsMarket == true;
+        public bool PassengerPickedUp { get; private set; }
+        public float ElapsedTime { get; private set; }
+        public float BoardingProgress => PassengerPickedUp ? Mathf.Clamp01(1 - boardingTime / 2.2f) : 0;
+        public bool IsBoarding => boardingTime > 0;
+        public bool CanPickup => IsMarket && !PassengerPickedUp && Speed < .28f
+            && Position.x < -5 && Position.y >= Mission.PickupPoint - 5 && Position.y <= Mission.PickupPoint + 4;
+        public int MistakeCount { get { int count = 0; foreach (int n in Save.mistakes) count += n; return count; } }
+        public float StageEnd => Stage == Activity?.LastStage ? Activity.Finish : RouteStage.All[Mathf.Min(Stage, RouteStage.All.Length - 1)].End;
+        public float CrossingZebra => IsSchool ? Mission.SchoolZebra : RouteStage.Zebra;
+        public Vector2? PickupTraffic { get; private set; }
         public float Kph => Speed * 3.6f;
         public float Front => Position.y + Mathf.Cos(Heading * Mathf.Deg2Rad) * (Mode == VehicleMode.Car ? 1.95f : 1f);
 
@@ -145,33 +175,71 @@ namespace JalanKita
         public bool FullStop { get; private set; }
         public bool ChangedRight { get; private set; }
         public bool ReturnedLeft { get; private set; }
-        public bool CrossedZebra => Front > RouteStage.Zebra + 2;
+        public bool CrossedZebra => Front > CrossingZebra + 2;
         public int LightPhase => lightTime < 0 || lightTime % 22 < 8 ? 0 : lightTime % 22 < 19 ? 2 : 1;
 
         float stopTime, lightTime, zebraTime, priorityTime, laneTime, wrongWay, overSpeed;
-        float rightSignalAge, leftSignalAge;
+        float rightSignalAge, leftSignalAge, stoppedInRestriction, pickupTime, boardingTime;
         int lane;
         bool phoneResolved;
         readonly bool persistent;
+        readonly RoadVehicleMotion motion = new();
+        readonly int trafficSeed;
+        public TrafficRoster Traffic { get; private set; }
 
-        public Journey(VehicleMode mode, JourneySave save, bool persistent = true)
+        public Journey(VehicleMode mode, JourneySave save, bool persistent = true, Mission mission = null, int? trafficSeed = null)
         {
-            Mode = mode; Save = save;
+            Mode = mode; Save = save; Activity = mission;
             this.persistent = persistent;
-            Retry();
+            // Cosmetic randomness is saved once: retry, reload and demonstration share a roster.
+            bool newTrafficSeed=!trafficSeed.HasValue&&save.trafficSeed==0;
+            if(newTrafficSeed)save.trafficSeed=UnityEngine.Random.Range(1,int.MaxValue);
+            this.trafficSeed = trafficSeed ?? save.trafficSeed;
+            if(newTrafficSeed)Persist();
+            if (Activity != null && Save.retryPending)
+            {
+                Save.attempts++;
+                Save.variant++;
+                Save.retryPending = false;
+                Persist();
+            }
+            ResetEncounter();
         }
 
         public void Retry()
         {
+            Save.retryPending = false;
+            if (Activity != null)
+            {
+                Save.attempts++;
+                Save.variant++;
+                Persist();
+            }
+            ResetEncounter();
+        }
+
+        void ResetEncounter()
+        {
+            Traffic = new TrafficRoster(unchecked(trafficSeed + Save.variant * 7919));
             Position = new Vector2(RouteStage.LeftLane, Stage == 0 ? RouteStage.All[0].End : RouteStage.All[Stage - 1].End);
+            if (!Finished && IsSchool && Save.checkpoint > 0)
+                Position = new Vector2(RouteStage.LeftLane, Save.checkpoint == 1 ? 313 : Mission.SchoolPhoneCheckpoint);
+            if (!Finished && IsMarket && Save.checkpoint > 0)
+                Position = Save.checkpoint == 1 ? new Vector2(RouteStage.LeftLane, 246) : new Vector2(-5.8f, Mission.PickupPoint);
             Heading = Speed = wrongWay = overSpeed = 0;
+            motion.Reset();
             Indicator = lane = 0;
             rightSignalAge = leftSignalAge = 0;
             Failure = null;
             DriverGear = PassengerGear = Headlight = Stage > 0;
             FullStop = ChangedRight = ReturnedLeft = phoneResolved = PhoneRinging = false;
             stopTime = lightTime = zebraTime = priorityTime = laneTime = -1;
-            CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = null;
+            stoppedInRestriction = 0;
+            pickupTime = -1;
+            PassengerPickedUp = IsMarket && Save.checkpoint >= 2;
+            boardingTime = ElapsedTime = 0;
+            if (PassengerPickedUp) pickupTime = 0;
+            CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = PickupTraffic = null;
         }
 
         public bool Depart()
@@ -197,6 +265,21 @@ namespace JalanKita
 
         public void ToggleHeadlight() => Headlight = !Headlight;
 
+        public void Pickup()
+        {
+            if (!IsMarket || Finished || Failure.HasValue || PassengerPickedUp) return;
+            if (Position.y >= Mission.NoStopStart && Position.y <= Mission.NoStopEnd) Fail(Rule.NoStopping);
+            else if (!CanPickup) Fail(Rule.PickupPlace);
+            else
+            {
+                PassengerPickedUp = true;
+                boardingTime = 2.2f;
+                Speed = 0;
+                pickupTime = 0;
+                Checkpoint(2);
+            }
+        }
+
         public void ResolvePhone(bool answer)
         {
             if (Stage != 4 || !PhoneRinging || Failure.HasValue) return;
@@ -215,14 +298,22 @@ namespace JalanKita
         public void Step(float dt, bool throttle, bool brake, float steer)
         {
             if (Stage == 0 || Finished || Failure.HasValue) return;
+            ElapsedTime += dt;
+            // Boarding is a simulation state: the vehicle stays stopped while the passenger approaches.
+            if (boardingTime > 0)
+            {
+                boardingTime = Mathf.Max(0, boardingTime - dt);
+                Speed = 0;
+                UpdateActors(dt);
+                return;
+            }
 
             float oldFront = Front;
+            float oldX = Position.x;
             float targetSpeed = Mode == VehicleMode.Car ? 16.1f : 16.7f;
-            float acceleration = Mode == VehicleMode.Car ? 2.85f : 3.3f;
-            Speed = brake ? Mathf.MoveTowards(Speed, 0, 10.5f * dt)
-                : Mathf.MoveTowards(Speed, throttle ? targetSpeed : 0, dt * (throttle ? acceleration : 1.7f));
-            float steerLimit = Speed > .15f ? Mathf.Lerp(37, 20, Speed / targetSpeed) : 0;
-            Heading = Mathf.MoveTowards(Heading, steer * steerLimit, (steer == 0 ? 110 : 84) * dt);
+            float speed = Speed, heading = Heading;
+            motion.Step(dt, Mode, throttle, brake, steer, targetSpeed, ref speed, ref heading);
+            Speed = speed; Heading = heading;
             Position += new Vector2(Mathf.Sin(Heading * Mathf.Deg2Rad), Mathf.Cos(Heading * Mathf.Deg2Rad)) * (Speed * dt);
             rightSignalAge = Indicator == 1 ? rightSignalAge + dt : 0;
             leftSignalAge = Indicator == -1 ? leftSignalAge + dt : 0;
@@ -234,6 +325,7 @@ namespace JalanKita
             bool spur = z >= RouteStage.SpurStart && z <= RouteStage.SpurEnd;
             if (spur && x > 5.25f) Fail(Rule.NoEntry);
             bool bay = z >= RouteStage.PhoneStart + 4 && z <= RouteStage.PhoneEnd;
+            bay |= IsMarket && z >= Mission.PickupStart && z <= Mission.PickupEnd;
             if (x < (bay ? -7.45f : -4.45f) || x > (spur ? 9.1f : 4.45f)) Fail(Rule.OffRoad);
             if (Mode == VehicleMode.Motorcycle && !Headlight && Kph >= 3) Fail(Rule.Headlight);
             if (!oneWay && x > .42f && Speed > 1)
@@ -272,12 +364,31 @@ namespace JalanKita
                     else if (ChangedRight) ReturnedLeft = true;
                     lane = currentLane;
                 }
-                if (LaneTraffic.HasValue && Mathf.Abs(LaneTraffic.Value.y - z) < (Mode == VehicleMode.Car ? 3.9f : 3f)
-                    && Mathf.Abs(LaneTraffic.Value.x - x) < (Mode == VehicleMode.Car ? 1.75f : 1.25f))
+                if (LaneTraffic.HasValue && TrafficCollision(Traffic.Lane, LaneTraffic.Value, 0))
                     Fail(Rule.Collision);
             }
-            if (Stage == 3 && z > RouteStage.Merge && (!ChangedRight || !ReturnedLeft || x >= 0))
+            if (Stage == 3 && !IsMarket && z > RouteStage.Merge && (!ChangedRight || !ReturnedLeft || x >= 0))
                 Fail(Rule.ReturnLeft);
+
+            if (IsMarket)
+            {
+                bool enteringBay = oldX >= -4.25f && x < -4.25f;
+                bool leavingBay = oldX < -4.25f && x >= -4.25f;
+                if (enteringBay && leftSignalAge < .28f || leavingBay && rightSignalAge < .28f) Fail(Rule.Indicator);
+                if (leavingBay && PickupTraffic.HasValue && Mathf.Abs(PickupTraffic.Value.y - z) < 11) Fail(Rule.Gap);
+                if (PickupTraffic.HasValue && TrafficCollision(Traffic.Pickup, PickupTraffic.Value, 0))
+                    // A rotated nose can leave the bay before its center crosses the boundary.
+                    // Preserve the unsafe-rejoin lesson when that nose meets passing traffic.
+                    Fail(PassengerPickedUp && x < -4.25f && Heading > 0 ? Rule.Gap : Rule.Collision);
+                if (z >= Mission.NoStopStart && z <= Mission.NoStopEnd && Speed < .28f)
+                {
+                    stoppedInRestriction += dt;
+                    if (stoppedInRestriction > 2) Fail(Rule.NoStopping);
+                }
+                else stoppedInRestriction = 0;
+                if (z >= 246) Checkpoint(1);
+                if (z > Mission.PickupEnd && !PassengerPickedUp) Fail(Rule.PickupIncomplete);
+            }
 
             if (Stage == 4)
             {
@@ -287,11 +398,17 @@ namespace JalanKita
                     if (overSpeed >= .6f) Fail(Rule.Speed);
                 }
                 else overSpeed = 0;
+                if (IsSchool)
+                {
+                    if (Crosses(oldFront, CrossingZebra - 2) && Pedestrian.HasValue) Fail(Rule.Pedestrian);
+                    if (z >= 313) Checkpoint(1);
+                    if (z >= Mission.SchoolPhoneCheckpoint) Checkpoint(2);
+                }
                 if (z >= RouteStage.PhoneStart && !phoneResolved) PhoneRinging = true;
                 if (z >= RouteStage.PhoneEnd && PhoneRinging) ResolvePhone(false);
             }
 
-            if (!Failure.HasValue && z >= RouteStage.All[Stage].End) Advance();
+            if (!Failure.HasValue && z >= StageEnd) Advance();
         }
 
         bool Crosses(float oldFront, float line) => oldFront < line && Front >= line;
@@ -303,9 +420,13 @@ namespace JalanKita
             if (traffic.y != center) return;
             float distance = (Position.x - traffic.x) * CrossDirection;
             if (!signalled && Crosses(oldFront, center - 4.3f) && distance >= -4 && distance < 18) Fail(Rule.Junction);
-            if (Mathf.Abs(traffic.x - Position.x) < 2.65f && Mathf.Abs(center - Position.y) < 2.75f)
+            if (TrafficCollision(Traffic.Cross, traffic, CrossDirection * 90))
                 Fail(signalled ? Rule.Collision : Rule.Junction);
         }
+
+        public bool TrafficCollision(TrafficChoice choice, Vector2 position, float yaw) =>
+            TrafficFootprint.Overlaps(Position, Heading, TrafficFootprint.PlayerHalfWidth(Mode), TrafficFootprint.PlayerHalfLength(Mode),
+                position, yaw, choice.Vehicle.HalfWidth, choice.Vehicle.HalfLength);
 
         void UpdateActors(float dt)
         {
@@ -314,7 +435,7 @@ namespace JalanKita
             {
                 Tick(ref stopTime, dt, z >= RouteStage.StopLine - 22);
                 Tick(ref lightTime, dt, z >= RouteStage.LightLine - 22);
-                CrossDirection = Save.mistakes[(int)Rule.Junction] % 2 == 0 ? 1 : -1;
+                CrossDirection = (Activity == null ? Save.mistakes[(int)Rule.Junction] : Save.variant) % 2 == 0 ? 1 : -1;
                 CrossTraffic = CrossingCar(stopTime, RouteStage.StopJunction, CrossDirection);
                 if (!CrossTraffic.HasValue && lightTime >= 0 && LightPhase == 0)
                 {
@@ -339,7 +460,22 @@ namespace JalanKita
                 float actorZ = RouteStage.OneWayStart + 3 + Mathf.Max(0, laneTime) * 5.1f;
                 LaneTraffic = actorZ < RouteStage.Merge + 2 ? new Vector2(RouteStage.RightLane, actorZ) : null;
                 SpurTraffic = laneTime < 0 ? null : new Vector2(7.4f, RouteStage.SpurEnd - (laneTime * 5) % 26);
+                if (IsMarket && PassengerPickedUp)
+                {
+                    Tick(ref pickupTime, dt, true);
+                    float trafficZ = Mission.PickupPoint - 22 + pickupTime * (Save.variant % 2 == 0 ? 5.1f : 4.6f);
+                    PickupTraffic = trafficZ < RouteStage.Merge + 12 ? new Vector2(RouteStage.LeftLane, trafficZ) : null;
+                }
             }
+            else if (IsSchool && Save.checkpoint < 2)
+            {
+                Tick(ref zebraTime, dt, z >= 307);
+                PedestrianDirection = Save.variant % 2 == 0 ? 1 : -1;
+                float walkX = -5.6f + Mathf.Max(0, zebraTime - .65f) * 1.5f;
+                Pedestrian = zebraTime >= 0 && walkX < 5.6f
+                    ? new Vector2(walkX * PedestrianDirection, CrossingZebra) : null;
+            }
+            else if (IsSchool) Pedestrian = null;
         }
 
         static Vector2? CrossingCar(float timer, float center, int direction)
@@ -358,16 +494,32 @@ namespace JalanKita
         {
             if (Failure.HasValue) return;
             Failure = rule;
+            Save.retryPending = true;
             Save.mistakes[(int)rule]++;
-            if (persistent) Save.Store(Mode);
+            Persist();
             Speed = 0;
         }
 
         void Advance()
         {
             Save.next++;
-            if (persistent) Save.Store(Mode);
-            CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = null;
+            Save.checkpoint = 0;
+            if (Activity != null && Finished)
+            {
+                Save.completions++;
+                Save.bestMistakes = Save.bestMistakes < 0 ? MistakeCount : Mathf.Min(Save.bestMistakes, MistakeCount);
+            }
+            Persist();
+            CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = PickupTraffic = null;
         }
+
+        void Checkpoint(int index)
+        {
+            if (Failure.HasValue || index <= Save.checkpoint) return;
+            Save.checkpoint = index;
+            Persist();
+        }
+
+        void Persist() { if (persistent) Save.Store(Mode, Activity); }
     }
 }

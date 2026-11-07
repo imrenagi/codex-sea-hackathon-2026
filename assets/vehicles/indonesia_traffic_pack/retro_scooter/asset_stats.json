@@ -1,0 +1,54 @@
+{
+  "lod0_triangles": 9610,
+  "lod1_triangles": 4118,
+  "export_meshes": 7,
+  "id": "retro_scooter",
+  "name": "Retro 110",
+  "kind": "scooter",
+  "colors": [
+    [
+      "mint",
+      "67B7AA"
+    ],
+    [
+      "terracotta",
+      "B66C4A"
+    ]
+  ],
+  "materials": 2,
+  "atlas_size": 128,
+  "bounds_m": {
+    "min": [
+      -0.34700000286102295,
+      -0.9527583718299866,
+      -0.0017999999690800905
+    ],
+    "max": [
+      0.34700000286102295,
+      0.8745380640029907,
+      1.2370001077651978
+    ]
+  },
+  "wheels": [
+    {
+      "node": "Wheel_Front",
+      "position": [
+        0,
+        0.625,
+        0.245
+      ],
+      "radius": 0.245
+    },
+    {
+      "node": "Wheel_Rear",
+      "position": [
+        0,
+        -0.625,
+        0.245
+      ],
+      "radius": 0.245
+    }
+  ],
+  "blender_forward": "+Y",
+  "glb_forward": "-Z"
+}
