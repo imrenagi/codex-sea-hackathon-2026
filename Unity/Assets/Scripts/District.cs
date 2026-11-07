@@ -161,8 +161,7 @@ namespace JalanKita
                         Model("StreetLamp", new Vector3(side * 5.1f, .12f, z + 2.4f), rotation);
                 }
             }
-            Model("Ruko_D", new Vector3(-10.2f, .04f, 341), -90);
-            Model("Ruko_D", new Vector3(-10.2f, .04f, 353), -90);
+            BuildSchoolFrontage();
             Model("RoadText_ZonaSekolah", new Vector3(LeftLane, .03f, SchoolLimit + 4));
             Model("RoadText_Stop", new Vector3(LeftLane, .03f, StopLine - 5));
             Model("Warung", new Vector3(9, .12f, 151), 90);
@@ -186,6 +185,47 @@ namespace JalanKita
                 float x = (i % 2 == 0 ? -1 : 1) * rng.Next(16, 41);
                 if (!NearJunction(z, 5)) Model("Tree_Shade_0", new Vector3(x, 0, z), i * 33);
             }
+        }
+
+        void BuildSchoolFrontage()
+        {
+            var batches = new Dictionary<string, MeshBuilder>();
+            void Detail(string color, Vector3 center, Vector3 size)
+            {
+                if (!batches.TryGetValue(color, out var mesh))
+                    batches.Add(color, mesh = new MeshBuilder());
+                mesh.Box(center - size * .5f, center + size * .5f);
+            }
+
+            SurfaceBox("Halaman sekolah", new Vector3(-14.7f, .005f, 347), new Vector3(12, .1f, 24), "Paving");
+            Detail("efe2c2", new Vector3(-17.5f, 2.45f, 347), new Vector3(7, 4.7f, 20));
+            Detail("a6533a", new Vector3(-17.5f, 4.9f, 347), new Vector3(7.8f, .35f, 20.8f));
+            Detail("bb6849", new Vector3(-17.5f, .4f, 347), new Vector3(7.1f, .65f, 20.1f));
+            for (int classroom = 0; classroom < 6; classroom++)
+            {
+                float z = 339 + classroom * 3.2f;
+                if (Mathf.Abs(z - 347) < 2) continue;
+                Detail("f7efe1", new Vector3(-13.96f, 2.4f, z), new Vector3(.12f, 1.7f, 2.1f));
+                Detail("35636e", new Vector3(-13.88f, 2.4f, z), new Vector3(.05f, 1.45f, 1.85f));
+                Detail("f7efe1", new Vector3(-13.84f, 2.4f, z), new Vector3(.04f, 1.5f, .08f));
+            }
+            Detail("6e503c", new Vector3(-13.93f, 1.5f, 347), new Vector3(.15f, 2.8f, 1.6f));
+            Detail("a6533a", new Vector3(-12.5f, 3.4f, 347), new Vector3(3.2f, .2f, 3.4f));
+            foreach (float z in new[] { 345.5f, 348.5f })
+                Detail("efe2c2", new Vector3(-11.1f, 1.7f, z), new Vector3(.15f, 3.3f, .15f));
+
+            foreach (float z in new[] { 343f, 351f })
+                Detail("efe2c2", new Vector3(-8.6f, 1.65f, z), new Vector3(.65f, 3.3f, .65f));
+            Detail("efe2c2", new Vector3(-8.6f, 3.1f, 347), new Vector3(.65f, .45f, 8.6f));
+            Detail("a6533a", new Vector3(-8.6f, 3.45f, 347), new Vector3(1.1f, .2f, 9.3f));
+            Detail("bb6849", new Vector3(-8.6f, .45f, 338.5f), new Vector3(.35f, .8f, 8.4f));
+            Detail("bb6849", new Vector3(-8.6f, .45f, 354.5f), new Vector3(.35f, .8f, 6.4f));
+
+            Detail("8f8a85", new Vector3(-11, 2.65f, 339), new Vector3(.06f, 5.3f, .06f));
+            Detail("c63b32", new Vector3(-11, 4.65f, 339.9f), new Vector3(.035f, .5f, 1.8f));
+            Detail("f7efe1", new Vector3(-11, 4.15f, 339.9f), new Vector3(.035f, .5f, 1.8f));
+            foreach (var batch in batches)
+                batch.Value.Build("Sekolah · " + batch.Key, scenery.transform, Material(batch.Key));
         }
 
         void BuildSigns()
