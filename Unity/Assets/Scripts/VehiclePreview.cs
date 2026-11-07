@@ -52,6 +52,9 @@ namespace JalanKita
         public void Present(VehicleMode mode, float dt)
         {
             if (!Visible) return;
+            // Only an actual model change resumes rotation after manual interaction.
+            // Reopening the chooser or clicking the same model preserves the stopped angle.
+            if (framed != VehicleCatalogue.Selected(mode)) AutoRotate = true;
             if (AutoRotate) Angle = Mathf.Repeat(Angle + Mathf.Clamp(dt, 0, .1f) * 18, 360);
             vehicle.Present(mode, origin, Angle, 0, 0, false, 0, false, true);
             if (framed != Definition)

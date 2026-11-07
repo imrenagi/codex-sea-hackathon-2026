@@ -467,7 +467,7 @@ namespace JalanKita
                 Box("Penanda tujuan", new Vector3(x, 1.1f, 0), new Vector3(.3f, 2.2f, .3f), "fac86a", finishMarker.transform);
         }
 
-        public void Present(Journey run, bool hood, float dt, bool driving = true, float lookInput = 0)
+        public void Present(Journey run, bool hood, float dt, bool driving = true, float lookInput = 0, bool homePanorama = false)
         {
             bool useRouteLook = run.UsesRouteSteering;
             if (useRouteLook != routeLook)
@@ -520,7 +520,13 @@ namespace JalanKita
             for (int i = 0; i < signal.Length; i++)
                 foreach(var mat in signal[i].sharedMaterials) IntersectionSignals.Light(mat,i,i==run.LightPhase);
 
-            followCamera.Present(camera, point, run.Heading, run.Speed, onMotorcycle, hood, dt, snapCamera, driving ? lookInput : 0);
+            if (homePanorama) PresentHomePanorama(dt);
+            else
+            {
+                // Restore the driving view immediately when leaving the home panorama.
+                if (homePanoramaActive) { homePanoramaActive = false; snapCamera = true; }
+                followCamera.Present(camera, point, run.Heading, run.Speed, onMotorcycle, hood, dt, snapCamera, driving ? lookInput : 0);
+            }
             Mirrors.Present(run, driving, snapCamera);
             Signals.Present(run, driving);
             snapCamera = false;

@@ -16,8 +16,11 @@ namespace JalanKita
             AddLabel(team, "Rizky Eko Putra", "credits-person");
             AddLabel(team, "Imre Nagi", "credits-person");
 
+            var tools = Element(content, "credits-team");
+            AddLabel(tools, GameText.Get("credits.codex"), "subhead");
+            AddLabel(tools, GameText.Get("credits.hackathon"), "copy");
+
             var actions = Element(content, "credits-actions");
-            AddButton(actions, GameText.Get("navigation.explore_modes"), () => ShowPlayChooser(true), "primary credits-explore");
             AddButton(actions, GameText.Get("navigation.return_menu"), ShowMenu, "quiet");
         }
     }

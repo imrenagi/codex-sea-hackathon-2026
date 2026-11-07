@@ -52,6 +52,7 @@ namespace JalanKita
             {
                 float yaw=RoadFrame(new Vector2(0,z)).Heading;
                 RoadSpeedSign.Create(Street.Root.transform,new Vector3(Street.RoadX(z)-4.15f,.12f,z),yaw,30);
+                RoadSpeedSign.Mark(Street.Root.transform,new Vector3(Street.RoadX(z+4)-1.5f,.08f,z+4),yaw,30);
                 if(!Street.Data.oneway)RoadSpeedSign.Create(Street.Root.transform,new Vector3(Street.RoadX(z)+4.15f,.12f,z+12),yaw+180,30);
             }
             Camera = new GameObject("Jaksa camera").AddComponent<Camera>();
@@ -122,6 +123,7 @@ namespace JalanKita
             }
             next=RoadBoundary.Fit(roadFrame,Mode,next,Heading);
             bool contained=RoadBoundary.Contains(roadFrame,Mode,next,Heading);
+            if(!contained){next=Position;Heading=previousHeading;Speed=0;}
             bool vehicleContact=Traffic.BlocksPlayer(Position,next,Heading,Mode,previousHeading);
             if(!contained || vehicleContact)
             {
@@ -137,6 +139,7 @@ namespace JalanKita
                 ReverseRequested=reverse,PostedLimitKph=PostedLimitKph,VehicleContact=vehicleContact,PedestrianContact=personContact});
             if(personContact){next=Position;Heading=previousHeading;Speed=0;}
             Position=next;
+            if(Safety.Failure.HasValue)Speed=0;
         }
 
         public void Present(float dt, bool driving = true, float lookInput = 0)

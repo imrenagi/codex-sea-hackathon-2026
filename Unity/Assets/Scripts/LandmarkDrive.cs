@@ -19,6 +19,7 @@ namespace JalanKita
         public readonly DriveSafetyState Safety = new();
         public float PostedLimitKph => 40;
         readonly DrivePedestrian[] pedestrians;
+        public System.Collections.Generic.IReadOnlyList<DrivePedestrian> PedestrianSnapshots => pedestrians;
         public bool Headlight {get;private set;}=true;
         public int Indicator {get;private set;}
         public int CameraMode {get;private set;}
@@ -60,6 +61,7 @@ namespace JalanKita
             {
                 float s=branch.Incoming?20:40;var p=branch.Route.At(s,-branch.Width*.5f-1.1f);
                 RoadSpeedSign.Create(Environment.Root.transform,new Vector3(p.x,.12f,p.y),branch.Route.Heading(s),40);
+                var paint=branch.Route.At(s+5,-branch.Width*.25f);RoadSpeedSign.Mark(Environment.Root.transform,new Vector3(paint.x,.08f,paint.y),branch.Route.Heading(s+5),40);
             }
             Reset(VehicleMode.Car);
         }
@@ -112,6 +114,7 @@ namespace JalanKita
             PedestrianPaths.FillHiRing(Environment.Route,pedestrians,previousTime,Elapsed);
             var previousPosition=Position;float previousHeading=Heading;
             if(TrafficEnabled){StepTraffic(dt);AccessTraffic.Step(dt,Position,Heading,Mode,Traffic);}
+            else AccessTraffic.StepPedestrians(dt);
             float target=RoadVehicleMotion.FreeSpeed(Mode);
             float travelHeading=Heading+(Speed<0||reverse&&Speed<=0?180:0);
             var forward=new Vector2(Mathf.Sin(travelHeading*Mathf.Deg2Rad),Mathf.Cos(travelHeading*Mathf.Deg2Rad));var right=new Vector2(forward.y,-forward.x);
@@ -132,6 +135,9 @@ namespace JalanKita
             Speed=nextSpeed;CurbContact=curb||endpoint;
             bool outside=Vector2.Distance(Position,next)>Mathf.Abs(nextSpeed)*dt+.5f
                 ||!RoadBoundary.Contains(roadFrame,Mode,next,nextHeading)||!OnFiniteRoad(next,nextHeading);
+            // Rejected road proposals are never presented or driven. Test people and
+            // direction against the accepted road pose, retaining real actor sweeps.
+            if(outside){next=Position;nextHeading=Heading;Speed=0;}
             bool actorBlocked=TrafficEnabled&&(TrafficBlocks(next,nextHeading)||AccessTraffic.BlocksPath(Position,next,Heading,nextHeading,TrafficFootprint.PlayerHalfWidth(Mode),TrafficFootprint.PlayerHalfLength(Mode)));
             bool personContact=DriveSafetyState.PedestrianContact(Position,next,Heading,nextHeading,Mode,pedestrians)
                 ||DriveSafetyState.PedestrianContact(Position,next,Heading,nextHeading,Mode,AccessTraffic.Pedestrians);
@@ -140,6 +146,7 @@ namespace JalanKita
                 DirectionKnown=true,ReverseRequested=reverse,PostedLimitKph=PostedLimitKph,VehicleContact=actorBlocked,PedestrianContact=personContact});
             if(outside||actorBlocked||personContact){Speed=0;CurbContact|=outside;TrafficContact|=actorBlocked;}
             else{Distance+=Vector2.Distance(Position,next);Position=next;Heading=nextHeading;}
+            if(Safety.Failure.HasValue)Speed=0;
         }
         void StepTraffic(float dt)
         {

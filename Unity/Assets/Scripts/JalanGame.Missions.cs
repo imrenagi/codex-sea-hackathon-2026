@@ -11,23 +11,51 @@ namespace JalanKita
         {
             catalogueKind = kind;
             SetPage(Page.Catalogue);
-            AddLabel(dialog, GameText.Get("missions.choose_activity", mode == VehicleMode.Car ? GameText.Get("text.car") : GameText.Get("text.motorcycle")), "kicker");
-            AddLabel(dialog, kind == MissionKind.Scenario ? GameText.Get("text.everyday_missions") : GameText.Get("level.choose.title"), "heading");
-            AddLabel(dialog, kind == MissionKind.Scenario
-                ? GameText.Get("text.one_goal_several_decisions_retry_difficult_sections_and_try")
-                : GameText.Get("text.choose_a_skill_to_test_results_and_attempts_are"), "copy");
-            var list = new ScrollView(ScrollViewMode.Vertical);
-            list.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
-            list.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
-            list.contentViewport.style.overflow = Overflow.Hidden;
-            list.AddToClassList("mission-list");
-            RevealFocusedChildren(list);
-            dialog.Add(list);
-            AddActivityChoices(list.contentContainer, kind);
-            var actions = Element(dialog, "row actions catalogue-footer");
-            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet");
-            AddButton(actions, kind == MissionKind.Scenario ? GameText.Get("text.view_skill_tests") : GameText.Get("text.view_everyday_missions"),
-                () => ShowCatalogue(kind == MissionKind.Scenario ? MissionKind.SkillTest : MissionKind.Scenario), "quiet");
+            AddLabel(dialog, GameText.Get(kind == MissionKind.Scenario ? "text.everyday_missions" : "level.choose.title"), "heading");
+            BuildSelectionBrowser(MissionSelections(kind), ShowPlayChooser);
+        }
+
+        // The primary chooser follows the real saved journey, not the separate skill-test catalogue.
+        // All launches use non-persistent checkpoint practice; saved journey and test scores stay intact.
+        void AddJourneyLevelChoices(VisualElement parent)
+        {
+            var tutorial = Element(parent, "mission-card selection-mission-card");
+            AddTutorialThumbnail(tutorial);
+            var tutorialBody = Element(tutorial, "selection-mission-body");
+            AddLabel(tutorialBody, GameText.Get("level.tutorial.title"), "subhead mission-title");
+            AddLabel(tutorialBody, GameText.Get("level.tutorial.description"), "copy");
+            AddLabel(tutorialBody, GameText.Get("level.tutorial.detail"), "objective-detail");
+
+            string[] thumbnails = { "preparation", "signals", "priority", "lanes", "focus",
+                "straight", "left_turn", "right_turn", "railway", "ambulance" };
+            string[] fallback = { "preparation", "signals", "priority", "lanes", "focus",
+                "lanes", "priority", "signals", "signals", "priority" };
+            for (int i = 0; i < RouteStage.All.Length; i++)
+            {
+                int checkpoint = i;
+                var stage = RouteStage.All[i];
+                string asset = "route_" + thumbnails[i];
+                if (!Resources.Load<Texture2D>("UI/Thumbnails/" + asset))
+                    asset = "mission_" + fallback[i];
+                var card = Element(parent, "mission-card selection-mission-card");
+                AddPlayableThumbnail(card, asset, GameText.Get("level.checkpoint.start"),
+                    () => JumpToMission(checkpoint));
+                var body = Element(card, "selection-mission-body");
+                AddLabel(body, GameText.Get("level.checkpoint.title", i + 1, stage.Title), "subhead mission-title");
+                AddLabel(body, stage.Location, "kicker");
+                AddLabel(body, stage.Instruction, "copy");
+                AddLabel(body, GameText.Get("level.checkpoint.detail"), "objective-detail");
+            }
+        }
+
+        void AddChooserModeCard(VisualElement parent, string asset, string titleText, string description,
+            string actionText, System.Action action)
+        {
+            var card = Element(parent, "mission-card selection-mission-card");
+            AddPlayableThumbnail(card, asset, actionText, action);
+            var body = Element(card, "selection-mission-body");
+            AddLabel(body, titleText, "subhead mission-title");
+            AddLabel(body, description, "copy");
         }
 
         void AddActivityChoices(VisualElement parent, MissionKind kind)
@@ -35,18 +63,19 @@ namespace JalanKita
             if (kind == MissionKind.SkillTest)
             {
                 var tutorial = Element(parent, "mission-card selection-mission-card");
-                AddSelectionThumbnail(tutorial, "mission_tutorial", GameText.Get("missions.thumbnail_caption"));
+                AddTutorialThumbnail(tutorial);
                 var body = Element(tutorial, "selection-mission-body");
                 AddLabel(body, GameText.Get("level.tutorial.title"), "subhead mission-title");
                 AddLabel(body, GameText.Get("level.tutorial.description"), "copy");
                 AddLabel(body, GameText.Get("level.tutorial.detail"), "objective-detail");
-                AddButton(body, GameText.Get("level.tutorial.start"), StartPitchDemo, "primary");
             }
             foreach (var activity in kind == MissionKind.Scenario ? Mission.Scenarios : Mission.Tests)
             {
                 var saved = JourneySave.Load(mode, activity);
                 var card = Element(parent, "mission-card selection-mission-card");
-                AddSelectionThumbnail(card, "mission_" + activity.Id, GameText.Get("missions.thumbnail_caption"));
+                string actionText = saved != null && saved.next <= activity.LastStage
+                    ? GameText.Get("text.continue") : GameText.Get("text.select_2a7802");
+                AddPlayableThumbnail(card, "mission_" + activity.Id, actionText, () => ShowMissionBrief(activity));
                 var body = Element(card, "selection-mission-body");
                 var row = Element(body, "row split");
                 AddLabel(row, activity.Title, "subhead mission-title");
@@ -56,7 +85,6 @@ namespace JalanKita
                     : saved.next <= activity.LastStage ? GameText.Get("missions.in_progress", saved.attempts)
                     : GameText.Get("missions.completed", saved.completions, saved.bestMistakes);
                 AddLabel(body, status, "objective-detail");
-                AddButton(body, saved != null && saved.next <= activity.LastStage ? GameText.Get("text.continue") : GameText.Get("text.select_2a7802"), () => ShowMissionBrief(activity), "primary");
             }
             if (kind == MissionKind.Scenario) AddHiMissionCard(parent);
         }
@@ -111,9 +139,11 @@ namespace JalanKita
         {
             SetPage(Page.Progress);
             var activity = journey.Activity;
+            if(journey.Finished) PracticeScore.RecordMission(mode,activity,journey.Save);
             bool scenario = activity.Kind == MissionKind.Scenario;
             AddLabel(dialog, journey.Finished ? scenario ? GameText.Get("text.mission_complete") : GameText.Get("text.test_complete") : GameText.Get("text.progress_saved"), "kicker");
             AddLabel(dialog, activity.Title, "heading");
+            if(journey.Finished) AddScoreSummary(dialog,journey.Save.mistakes,PracticeScore.Load(mode,"mission-"+activity.Id).bestStars);
             AddLabel(dialog, journey.Finished ? scenario ? GameText.Get("text.destination_reached_safely") : GameText.Get("text.latest_attempt_passed")
                 : GameText.Get("text.continue_or_choose_another_activity"), "copy");
             AddLabel(dialog, GameText.Get("missions.attempts", journey.Save.attempts, journey.MistakeCount), "copy");

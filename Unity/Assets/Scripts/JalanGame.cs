@@ -283,7 +283,7 @@ namespace JalanKita
             }
             else if (page == Page.Checkpoint)
             {
-                if (Input.GetKeyDown(KeyCode.R) && (PitchComplete || !journey.Finished)) Retry();
+                if (Input.GetKeyDown(KeyCode.R) && (PitchComplete || !journey.Finished || practiceStart >= 0)) Retry();
                 else if (Input.GetKeyDown(KeyCode.Escape)) BackToMenu();
             }
             else if (page == Page.Progress && pitchDemo && Input.GetKeyDown(KeyCode.R)) RestartDemoTutorial();
@@ -361,7 +361,7 @@ namespace JalanKita
                 if (page == Page.Jaksa) RefreshJaksaHud();
                 return;
             }
-            district.Present(journey, hood, presentationDt, page == Page.Drive && !inputReleaseRequired, look);
+            district.Present(journey, hood, presentationDt, page == Page.Drive && !inputReleaseRequired, look, page == Page.Menu);
             if (page == Page.Drive) RefreshHud();
         }
 
@@ -440,56 +440,45 @@ namespace JalanKita
         {
             PrepareMenuScene();
             SetPage(Page.Menu);
-            AddLabel(dialog, GameText.Get("brand.name"), "hero home-wordmark");
+            var wordmark = Resources.Load<Texture2D>("UI/Brand/RoadSenseWordmark");
+            if (wordmark != null)
+            {
+                var logo = new Image { image = wordmark, scaleMode = ScaleMode.ScaleToFit,
+                    tooltip = GameText.Get("brand.name"), pickingMode = PickingMode.Ignore };
+                logo.AddToClassList("home-logo");
+                dialog.Add(logo);
+            }
+            else
+                AddLabel(dialog, GameText.Get("brand.name"), "hero home-wordmark");
             AddLabel(dialog, GameText.Get("home.subtitle"), "home-tagline");
             var actions = Element(dialog, "home-actions");
             AddButton(actions, GameText.Get("home.play"), PlayFromHome, "primary home-action");
+            AddButton(actions, GameText.Get("home.practice"), ShowPracticeChooser, "quiet home-action");
             AddButton(actions, GameText.Get("home.options"), ShowOptions, "quiet home-action");
+            AddButton(actions, GameText.Get("credits.title"), ShowCreditsPage, "quiet home-action");
             if (Application.platform != RuntimePlatform.WebGLPlayer)
                 AddButton(actions, GameText.Get("home.exit"), Application.Quit, "quiet home-action");
         }
 
-        void ShowPlayChooser() => ShowPlayChooser(false);
-
-        void ShowPlayChooser(bool expandModes)
+        bool practiceChooser;
+        void ShowPlayChooser() => ShowJourneyChooser(false);
+        void ShowPlayChooser(bool expandModes) => ShowJourneyChooser(false);
+        void ShowPracticeChooser()
         {
+            confirmNew = false;
+            ShowJourneyChooser(true);
+        }
+
+        void ShowJourneyChooser(bool practice)
+        {
+            practiceChooser = practice;
             PrepareMenuScene();
             SetPage(Page.PlayChooser);
-            var content = MenuBody();
-            AddLabel(content, GameText.Get("text.choose_your_journey"), "heading");
-            var modes = Element(content, "row chooser-vehicles");
+            AddLabel(dialog, GameText.Get(practice ? "home.practice" : "text.choose_your_journey"), "heading");
+            var modes = Element(dialog, "row chooser-vehicles");
             AddChooserVehicle(modes, VehicleMode.Car, GameText.Get("text.car_a5cdf0"), DrivingGlyph.Kind.Steering);
             AddChooserVehicle(modes, VehicleMode.Motorcycle, GameText.Get("text.motorcycle_965701"), DrivingGlyph.Kind.Motorcycle);
-            AddLabel(content, GameText.Get("level.choose.title"), "subhead chooser-summary");
-            var levels = Element(content, "chooser-levels");
-            AddActivityChoices(levels, MissionKind.SkillTest);
-            Fold(content, GameText.Get("text.more_modes"), other =>
-            {
-                AddButton(other, GameText.Get("text.everyday_missions_3_journeys"), () => ShowCatalogue(MissionKind.Scenario), "quiet option");
-                AddLabel(other, GameText.Get("text.results_are_saved_for_each_test_and_mission"), "menu-note");
-                AddLabel(other, stored == null ? GameText.Get("text.explore_full_journey") : GameText.Get("text.explore_saved_journey"), "menu-section-title");
-                var explore = Element(other, "explore-actions");
-                {
-                    AddButton(explore, GameText.Get("text.sopo_del_free_drive"), StartJaksa, "option quiet");
-                    AddButton(explore, GameText.Get("text.map_previews_not_playable_yet"), ShowCityMaps, "option quiet");
-                    AddLabel(explore, GameText.Get("text.pan_and_zoom_around_6_jakarta_areas_choose_sopo"), "menu-note");
-                    if (stored == null)
-                        AddButton(explore, GameText.Get("text.full_journey_10_stages"), StartNew, "option quiet");
-                    else
-                    {
-                        string resume = stored.next == All.Length && stored.after >= 0 ? GameText.Get("text.view_journey_results")
-                            : stored.next > 0 ? GameText.Get("text.continue_journey") : GameText.Get("text.continue_preparation");
-                        AddButton(explore, resume, Resume, "option quiet");
-                        AddButton(explore, confirmNew ? GameText.Get("text.yes_restart_journey") : GameText.Get("text.restart_journey"), () =>
-                        {
-                            if (confirmNew) StartNew();
-                            else { confirmNew = true; ShowPlayChooser(); }
-                        }, "option quiet");
-                        if (confirmNew) AddLabel(explore, GameText.Get("text.this_replaces_the_journey_progress_for_this_vehicle"), "copy");
-                    }
-                }
-            }, confirmNew || expandModes);
-            AddButton(content, GameText.Get("text.main_menu_esc"), ShowMenu, "quiet exit-action");
+            BuildSelectionBrowser(practice ? PracticeSelections() : PlaySelections(), ShowMenu);
         }
 
         void AddChooserVehicle(VisualElement parent, VehicleMode choice, string title, DrivingGlyph.Kind glyph)
@@ -608,11 +597,8 @@ namespace JalanKita
         {
             CloseCityPreview();
             SetPage(Page.CityMaps);
-            AddLabel(dialog, GameText.Get("text.jakarta_openstreetmap"), "kicker");
             AddLabel(dialog, GameText.Get("text.choose_map"), "heading");
-            AddLabel(dialog, GameText.Get("text.3d_city_previews_about_1_7_1_5_km"), "copy");
-            AddCityMapChoices();
-            AddButton(dialog, GameText.Get("text.main_menu"), ShowMenu, "quiet");
+            BuildSelectionBrowser(CitySelections(), ShowPlayChooser);
         }
 
         void OpenCityMap(int index)
@@ -687,8 +673,10 @@ namespace JalanKita
             AddLabel(content, GameText.Get("tutorial.complete"), "heading");
             AddLabel(content, GameText.Get(demoTutorial.Scenario.CompletionSummaryKey), "copy");
             AddLabel(content, GameText.Get("demo.session_summary", DemoDuration(), journey.MistakeCount), "copy");
+            ShowTutorialScore(content);
             var actions = Element(content, "row actions");
-            AddButton(actions, GameText.Get("navigation.explore_modes"), () => ShowPlayChooser(true), "primary");
+            AddButton(actions, GameText.Get(practiceChooser ? "home.practice" : "navigation.explore_modes"),
+                () => { if (practiceChooser) ShowPracticeChooser(); else ShowPlayChooser(true); }, "primary");
             AddButton(actions, GameText.Get("demo.replay"), RestartDemoTutorial, "quiet");
             AddButton(actions, GameText.Get("navigation.return_menu"), BackToMenu, "quiet");
         }
@@ -701,7 +689,7 @@ namespace JalanKita
             bool choosing = page == Page.PlayChooser;
             mode = value;
             confirmNew = false;
-            if (choosing) ShowPlayChooser(); else ShowMenu();
+            if (choosing) ShowJourneyChooser(practiceChooser); else ShowMenu();
         }
 
         void StartNew()
@@ -740,6 +728,7 @@ namespace JalanKita
             learner = null;
             practiceStart = stage;
             journey = new Journey(mode, new JourneySave { next = stage }, persistent: false);
+            BeginPracticeScore();
             progress.tooltip = GameText.Get("text.progress_tab");
             district.Snap();
             toast.text = GameText.Get("mission.practice_started", stage + 1);
@@ -822,7 +811,9 @@ namespace JalanKita
                 AddButton(content, GameText.Get("text.open_official_source"), () => Application.OpenURL(Lesson.Signals), "quiet");
             });
             var actions = Element(sheet, "sheet-actions");
-            var retry = AddButton(actions, GameText.Get("example.retry"), Retry, "big primary");
+            AddLabel(body, GameText.Get(journey.Activity != null ? "rating.recovery_mission" : practiceStart >= 0 || pitchDemo ? "rating.recovery" : "rating.recovery_journey"), "copy");
+            AddButton(actions, GameText.Get("rating.continue"), ContinueAfterViolation, "big primary");
+            var retry = AddButton(actions, GameText.Get(journey.Activity != null ? "rating.restart_mission" : "example.retry"), Retry, "big quiet");
             if (journey.Stage > 0)
             {
                 bool available = ExampleProvider.TryGetExample(journey, out _);
@@ -830,10 +821,7 @@ namespace JalanKita
                 example.SetEnabled(available);
                 if (!available) AddLabel(body, GameText.Get("example.unavailable"), "copy");
             }
-            AddButton(actions, GameText.Get("text.main_menu_esc"), BackToMenu, "quiet menu-action");
-            AddLabel(sheet, journey.Stage > 0
-                ? GameText.Get("text.scroll_for_details_r_checkpoint_d_example_esc_menu")
-                : GameText.Get("text.r_retry_preparation_esc_menu"), "result-keys");
+            AddButton(actions, GameText.Get("text.main_menu"), BackToMenu, "quiet menu-action");
         }
 
         VisualElement Result(string stamp, string tone, string caption)
@@ -927,6 +915,11 @@ namespace JalanKita
         void Retry()
         {
             sound.RetryCue();
+            if (page == Page.Lesson && journey.Activity != null)
+            { StartMission(journey.Activity, journey.Save, restart: true); return; }
+            if (practiceStart >= 0 && page == Page.Checkpoint && completedPracticeStage >= 0)
+            { JumpToMission(completedPracticeStage); return; }
+            if (practiceStart >= 0) BeginPracticeScore();
             if (pitchDemo) { RestartDemoTutorial(); return; }
             journey.Retry();
             district.Snap();
@@ -1047,6 +1040,7 @@ namespace JalanKita
             }
             SetPage(Page.Checkpoint);
             int completed = journey.Stage - 1;
+            if (practiceStart >= 0) { ShowPracticeScore(completed); return; }
             var sheet = Result(GameText.Get("text.mission_complete_405e76"), "good",
                 GameText.Get("mission.completed_title", journey.Stage, All[completed].Title));
             string[] recaps =
@@ -1072,8 +1066,6 @@ namespace JalanKita
                 ContinueCheckpoint, "big primary");
             if (!journey.Finished) AddButton(actions, GameText.Get("text.retry_from_checkpoint"), Retry, "big quiet");
             AddButton(actions, GameText.Get("text.menu"), BackToMenu, "big quiet");
-            AddLabel(sheet, journey.Finished ? practiceStart >= 0 ? GameText.Get("text.enter_practice_results_esc_menu") : GameText.Get("text.enter_final_quiz_esc_menu")
-                : GameText.Get("text.enter_continue_r_retry_checkpoint_esc_menu"), "result-keys");
         }
 
         void ContinueCheckpoint()
@@ -1252,6 +1244,7 @@ namespace JalanKita
             RefreshHudControls();
             dialog.RemoveFromClassList("rule-card");
             dialog.RemoveFromClassList("result-layout");
+            dialog.RemoveFromClassList("selection-browser-card");
             dialog.Clear();
             ShowVehiclePreview(page == Page.PlayChooser || page == Page.Brief || page == Page.Preflight);
             if (value != Page.Drive && value != Page.Jaksa)

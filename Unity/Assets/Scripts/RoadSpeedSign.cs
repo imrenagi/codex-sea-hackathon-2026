@@ -18,6 +18,14 @@ namespace JalanKita
             part.GetComponent<MeshRenderer>().sharedMaterial=material;
             if(Application.isPlaying)Object.Destroy(part.GetComponent<Collider>());else Object.DestroyImmediate(part.GetComponent<Collider>());
         }
+        public static void Mark(Transform parent,Vector3 position,float roadHeading,int limit)
+        {
+            var label=new GameObject("Painted speed "+limit+" km/h");label.transform.SetParent(parent,false);
+            label.transform.SetPositionAndRotation(position,Quaternion.Euler(0,roadHeading,0)*Quaternion.Euler(90,0,0));
+            var text=label.AddComponent<TextMesh>();text.font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.text=limit.ToString();text.fontSize=96;text.characterSize=.4f;text.anchor=TextAnchor.MiddleCenter;text.alignment=TextAlignment.Center;text.color=new Color(.9f,.9f,.84f);
+            label.GetComponent<MeshRenderer>().sharedMaterial=text.font.material;
+        }
         public static GameObject Create(Transform parent,Vector3 position,float roadHeading,int limit)
         {
             red??=Surface("Posted speed red",new Color(.75f,.025f,.03f));

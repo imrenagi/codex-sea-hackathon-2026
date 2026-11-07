@@ -70,10 +70,14 @@ namespace JalanKita
             for(int i=1;i<=samples;i++)if(Blocks(Vector2.Lerp(from,to,i/(float)samples),fromHeading+turn*i/samples,halfWidth,halfLength))return true;
             return false;
         }
+        public void StepPedestrians(float dt)
+        {
+            float previous=elapsed;elapsed+=Mathf.Max(0,dt);
+            PedestrianPaths.FillHiAccess(network,Pedestrians,previous,elapsed);
+        }
         public void Step(float dt,Vector2 player,float playerHeading,VehicleMode mode,LandmarkDrive.Actor[] circulating)
         {
-            float previous=elapsed;elapsed+=dt;
-            PedestrianPaths.FillHiAccess(network,Pedestrians,previous,elapsed);
+            StepPedestrians(dt);
             foreach(var a in Actors)
             {
                 var def=a.Choice.Vehicle;float target=7;

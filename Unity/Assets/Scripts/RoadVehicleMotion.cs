@@ -31,7 +31,7 @@ namespace JalanKita
             }
             if (speed < 0) return Mathf.MoveTowards(speed, 0, 1.2f * dt);
             float resistance = .55f + speed * speed * .004f;
-            float acceleration = (mode == VehicleMode.Car ? 2.85f : 3.3f) / (1 + speed / 24f);
+            float acceleration = ((mode == VehicleMode.Car ? 3.3f : 3.8f) + .55f) / (1 + speed / 24f);
             // A finite limit is supplied only by an actual obstacle/following gap.
             // Releasing the accelerator uses rolling/air resistance, never an invented zero limit.
             if (speed > speedLimit) return Mathf.MoveTowards(speed, speedLimit, 6 * dt);

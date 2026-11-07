@@ -61,7 +61,19 @@ namespace JalanKita.EditorTools
                 using(var up=PointerUpEvent.GetPooled(new Event {type=EventType.MouseUp,button=0,mousePosition=new Vector2(200,100)}))
                 { up.target=image; image.SendEvent(up); }
                 Require(Mathf.Abs(Mathf.DeltaAngle(beforeDrag,preview.Angle)-60)<.1f,"Pointer drag rotates the vehicle and releases capture");
-                Click(root.Q<Button>("vehicleAutoRotate")); Require(preview.AutoRotate,"Auto rotation resumes");
+                float stoppedAngle=preview.Angle;
+                preview.Present(definition.Mode,.1f);
+                Require(!preview.AutoRotate && Mathf.Abs(Mathf.DeltaAngle(stoppedAngle,preview.Angle))<.01f,"Drag remains stopped on subsequent frames");
+                Click(root.Q<Button>("vehicle-"+definition.Id));
+                Require(!preview.AutoRotate,"Selecting the same model does not restart rotation");
+                Require(root.Q<Button>("vehicleAutoRotate")==null,"Automatic rotation button is removed");
+                var alternate=Array.Find(VehicleCatalogue.All,v=>v.Mode==definition.Mode && v!=definition);
+                if(alternate!=null)
+                {
+                    Click(root.Q<Button>("vehicle-"+alternate.Id));
+                    Require(preview.AutoRotate,"Selecting another model restarts rotation");
+                    Click(root.Q<Button>("vehicle-"+definition.Id));
+                }
                 Require(preview.Camera.targetTexture==image.image && preview.Texture.IsCreated(),"Live render texture is bound");
             }
             Call(game,"ShowMissionBrief",Mission.Scenarios[1]);

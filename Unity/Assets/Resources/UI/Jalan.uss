@@ -607,6 +607,183 @@
 .play-card .explore-actions > * { flex-shrink: 0; }
 .play-card .explore-actions .option { margin-top: 12px; }
 
-.posted-limit { font-size: 11px; color: #ffffff; -unity-text-align: middle-center; white-space: normal; flex-shrink: 0; }
 
+/* Compact driving HUD: roughly half the occupied area (~70% linear size).
+   Scoped to #hud so chooser, feedback, controls guide and tutorial remain readable.
+   Explicit geometry rather than root scaling keeps edge anchors and hit targets correct. */
+#hud { left: 12px; right: 12px; top: 12px; bottom: 12px; }
+#hud .mirror { border-width: 1px; border-radius: 5px; }
+#hud .mirror-left, #hud .mirror-right { width: 106px; height: 66px; top: 43%; }
+#hud .mirror-centre { width: 134px; height: 50px; }
+#hud .mirror-caption { font-size: 9px; padding: 1px; }
+#hud .objective { width: 250px; padding: 7px 10px; border-radius: 4px; }
+#hud .objective-copy { font-size: 14px; margin-top: 0; }
+#hud .objective-detail { font-size: 12px; margin-top: 4px; }
+#hud .route-panel { width: 38px; margin-left: 8px; padding: 0; }
+#hud .driving-controls { max-width: 310px; margin-right: 8px; }
+#hud .button.hud-icon-button {
+    width: 38px; height: 38px; min-width: 38px; min-height: 38px;
+    padding: 7px; margin: 0 4px 2px 0; border-radius: 4px;
+}
+#hud .driving-glyph { width: 20px; height: 20px; }
+#hud .cluster { width: 104px; padding: 6px 8px; border-radius: 4px; }
+#hud .speed { font-size: 34px; }
+#hud .unit { font-size: 11px; margin-top: -5px; }
+#hud .indicators { margin-top: 4px; }
+#hud .indicators .icon { width: 18px; height: 16px; margin: 0 3px; }
+#hud .hud-hint { bottom: 48px; max-width: 310px; padding: 6px 8px; font-size: 13px; border-radius: 4px; }
+#hud .progressive-cue { bottom: 52px; max-width: 330px; padding: 7px 9px; border-radius: 5px; }
+#hud .progressive-cue .keycap { width: 88px; min-width: 88px; max-width: 88px; min-height: 30px; font-size: 14px; margin-right: 8px; }
+#hud .cue-copy { font-size: 14px; }
+#hud .signal-panel { top: 54px; width: 164px; padding: 7px; }
+#hud .signal-views { height: 70px; margin-top: 4px; margin-bottom: 4px; }
+#hud .signal-state { font-size: 12px; padding: 3px 4px; margin-bottom: 2px; }
+#hud .signal-hint { font-size: 12px; margin-top: 3px; }
+#hud .signal-panel .kicker { font-size: 10px; letter-spacing: .5px; }
+#hud .toast { top: 62px; width: 330px; min-height: 32px; padding: 7px 10px; font-size: 14px; border-radius: 4px; }
+#hud.demo-feedback .toast { top: 0; }
+#hud .phone { bottom: 106px; width: 270px; padding: 10px 12px; }
+#hud .phone .kicker { font-size: 11px; }
+#hud .phone .subhead { font-size: 16px; }
+#hud .phone .copy { font-size: 13px; }
+#hud .phone .button { min-height: 34px; padding: 6px 8px; font-size: 13px; }
+
+
+/* Lighter controls and slim scroll rails. Preserve keyboard focus and generous
+   desktop click targets without thick frames or oversized vertical padding. */
+.screen .button {
+    min-height: 40px; padding: 6px 12px; margin: 3px 6px 3px 0;
+    border-width: 1px; border-radius: 6px; border-color: rgba(238,233,223,.18);
+    background-color: #282f33; color: var(--rs-text); font-size: 15px;
+    -unity-font-style: normal;
+}
+.screen .button:hover { background-color: #343e42; border-color: rgba(238,233,223,.4); }
+.screen .button:focus { border-color: var(--rs-brass-hover); background-color: #343e42; }
+.screen .button:active { background-color: #414b4e; }
+.screen .button.primary { background-color: var(--rs-brass); color: var(--rs-ink); border-color: transparent; }
+.screen .button.primary:hover { background-color: var(--rs-brass-hover); }
+.screen .button.primary:focus { background-color: var(--rs-brass-hover); border-color: #ffffff; }
+.screen .button.primary:active { background-color: #b69a6d; }
+.screen .button.quiet { background-color: rgba(25,30,34,.3); border-color: rgba(238,233,223,.12); }
+.screen .button.quiet:hover, .screen .button.quiet:focus { background-color: #303a3e; border-color: var(--rs-brass); }
+.screen .button.selected { background-color: #343d37; border-color: var(--rs-brass); }
+.screen .button.selected:focus { border-color: #ffffff; }
+.screen .button.big, .screen .button.demo-action, .screen .button.chooser-start,
+.screen .controls-footer .button { min-height: 44px; padding: 8px 14px; font-size: 16px; }
+.screen .button.chooser-start { margin-bottom: 16px; }
+.screen .button.home-action { min-height: 44px; font-size: 19px; margin-bottom: 7px; -unity-text-align: middle-left; padding-left: 14px; }
+.screen .button.fold-head { min-height: 40px; padding: 6px 10px; margin: 0; font-size: 15px; background-color: rgba(255,255,255,.025); }
+.screen .button.practice-action { min-height: 44px; }
+.screen .button.chooser-vehicle { min-height: 132px; padding: 14px; margin: 0 6px; }
+.screen .chooser-vehicle .driving-glyph { width: 48px; height: 48px; margin-bottom: 10px; }
+.screen .chooser-vehicle-title { font-size: 22px; margin-top: 6px; }
+.screen .chooser-vehicle-note { font-size: 13px; }
+.screen .button.vehicle-choice { min-height: 40px; padding: 6px 10px; font-size: 14px; }
+.screen .play-card .fold-body .option { padding: 6px 10px; margin-top: 8px; }
+.screen .button.city-selection-card { padding: 0 0 10px; margin: 0 9px 12px 0; }
+
+/* Scroller-only selectors do not affect the volume sliders. The rail retains
+   a 12px draggable lane; its visible thumb is only 6px, with no arrow buttons. */
+.screen .unity-scroller { background-color: transparent; border-width: 0; }
+.screen .unity-scroller--vertical { width: 12px; min-width: 12px; margin-left: 4px; }
+.screen .unity-scroller--horizontal { height: 12px; min-height: 12px; margin-top: 4px; }
+.screen .unity-scroller .unity-scroller__low-button,
+.screen .unity-scroller .unity-scroller__high-button { display: none; }
+.screen .unity-scroller .unity-scroller__slider { margin: 0; padding: 0; background-color: transparent; border-width: 0; }
+.screen .unity-scroller .unity-base-slider__tracker { background-color: rgba(238,233,223,.04); border-width: 0; border-radius: 3px; }
+.screen .unity-scroller .unity-base-slider__dragger { background-color: rgba(198,194,184,.42); border-width: 0; border-radius: 3px; }
+.screen .unity-scroller--vertical .unity-base-slider__dragger { width: 6px; min-width: 6px; margin-left: 3px; margin-right: 3px; }
+.screen .unity-scroller--horizontal .unity-base-slider__dragger { height: 6px; min-height: 6px; margin-top: 3px; margin-bottom: 3px; }
+.screen .unity-scroller .unity-base-slider__dragger:hover,
+.screen .unity-scroller .unity-base-slider__dragger:active { background-color: var(--rs-brass-hover); }
+.screen .unity-scroller:focus .unity-base-slider__dragger { background-color: var(--rs-brass-hover); }
+
+
+/* Side-profile vehicle picker: actual vehicle art, compact wrapping cards.
+   The button retains its semantic name/tooltip; no visible model-name label. */
+.screen .button.vehicle-thumbnail-choice {
+    width: 120px; min-width: 120px; max-width: 120px;
+    height: 72px; min-height: 72px; max-height: 72px;
+    flex-grow: 0; flex-shrink: 0; flex-basis: 120px;
+    padding: 4px; margin: 0 8px 8px 0;
+    align-items: center; justify-content: center;
+    border-width: 2px; border-radius: 6px;
+    border-color: rgba(238,233,223,.16); background-color: #20282d;
+    font-size: 0; overflow: hidden;
+}
+.screen .vehicle-thumbnail-choice .vehicle-choice-image {
+    width: 100%; height: 60px; flex-grow: 0; flex-shrink: 0;
+    margin: 0; padding: 0;
+}
+.screen .button.vehicle-thumbnail-choice:hover { border-color: #a59b89; background-color: #303b40; }
+.screen .button.vehicle-thumbnail-choice.selected { border-color: var(--rs-brass); background-color: #3b443b; }
+.screen .button.vehicle-thumbnail-choice:focus { border-color: #ffffff; background-color: #354148; }
+.screen .button.vehicle-thumbnail-choice:active { background-color: #46524c; }
+.screen .button.vehicle-thumbnail-choice:disabled { opacity: .45; }
+
+
+/* Keep vehicle-mode cards inside the scroll viewport. The old -8px row
+   margins outgrew the new 6px card margins and clipped the left Car edge. */
+.screen .chooser-vehicles { margin-left: 0; margin-right: 0; min-width: 0; }
+.screen .chooser-vehicles > .button.chooser-vehicle { margin-left: 0; margin-right: 8px; }
+.screen .chooser-vehicles > .button.chooser-vehicle:last-child { margin-right: 0; }
+
+
+/* Centered game home: transparent title over the live street, with a calm
+   vertical navigation stack. Only the home changes; dialogs stay unchanged. */
+.screen .landing {
+    align-items: center; justify-content: center; padding: 18px;
+    background-color: rgba(9,15,19,.38);
+}
+.screen .landing .dialog.landing-card {
+    width: 720px; max-width: 100%; height: auto; max-height: 96%;
+    padding: 12px 20px; align-items: center;
+    background-color: transparent; border-width: 0; border-radius: 0;
+}
+.screen .landing .home-logo {
+    width: 620px; max-width: 100%; height: 155px; min-height: 0;
+    flex-shrink: 1; margin: 0; padding: 0;
+}
+.screen .landing .home-wordmark {
+    -unity-text-align: middle-center; color: #ffffff; font-size: 72px;
+    -unity-text-outline-width: 2px; -unity-text-outline-color: rgba(7,13,17,.95);
+}
+.screen .landing .home-tagline {
+    max-width: 560px; margin-top: 8px; font-size: 17px;
+    -unity-text-align: middle-center; color: #ffffff;
+    -unity-text-outline-width: 1px; -unity-text-outline-color: rgba(7,13,17,.9);
+}
+.screen .landing .home-actions { width: 320px; max-width: 100%; margin-top: 24px; }
+.screen .landing .button.home-action {
+    width: 100%; min-height: 44px; margin: 0 0 7px; padding: 7px 16px;
+    -unity-text-align: middle-center; font-size: 17px; border-radius: 5px;
+    border-width: 1px; border-color: rgba(238,233,223,.22);
+    background-color: rgba(21,29,34,.86); color: #eee9df;
+}
+.screen .landing .button.home-action.primary { background-color: #c4aa7c; color: #191e22; border-color: #d4bd94; }
+.screen .landing .button.home-action:hover { background-color: #35434a; border-color: #d4bd94; color: #ffffff; }
+.screen .landing .button.home-action.primary:hover { background-color: #d4bd94; color: #191e22; }
+.screen .landing .button.home-action:focus { border-color: #ffffff; background-color: #35434a; color: #ffffff; }
+.screen .landing .button.home-action.primary:focus { background-color: #d4bd94; color: #191e22; }
+.screen .landing .button.home-action:active { background-color: #4a554f; }
+.screen .landing .button.home-action.primary:active { background-color: #b69a6d; color: #191e22; }
+.screen.compact .landing .dialog.landing-card { padding: 8px 12px; }
+.screen.compact .landing .home-logo { width: 480px; height: 120px; }
+.screen.compact .landing .home-wordmark { font-size: 56px; }
+.screen.compact .landing .home-tagline { font-size: 15px; margin-top: 4px; }
+.screen.compact .landing .home-actions { width: 300px; margin-top: 18px; }
+.screen.compact .landing .button.home-action { min-height: 40px; font-size: 16px; margin-bottom: 6px; }
+
+
+/* Keep the subtitle legible over bright roads and changing menu camera shots.
+   A small backing belongs to the subtitle only; the wordmark stays transparent. */
+.screen .landing .home-tagline {
+    padding: 7px 14px; border-radius: 5px; background-color: rgba(8,14,18,.88);
+    color: #ffffff; font-size: 18px; -unity-font-style: bold;
+    -unity-text-outline-width: 0; margin-top: 10px;
+    flex-shrink: 0; white-space: normal;
+}
+.screen.compact .landing .home-tagline { font-size: 16px; padding: 6px 12px; margin-top: 6px; }
+
+.posted-limit { font-size: 11px; color: #ffffff; -unity-text-align: middle-center; white-space: normal; flex-shrink: 0; }
 .posted-warning { color: #ffb45c; -unity-font-style: bold; }

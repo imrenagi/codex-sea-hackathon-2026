@@ -26,6 +26,11 @@ namespace JalanKita.EditorTools
                 Pose(wrong, new Vector2(-2, 304), 180, 4);
                 for (int i = 0; i < 45 && !wrong.Failure.HasValue; i++) wrong.Step(.02f, false, false, 0);
                 Require(wrong.Failure == Rule.KeepLeft, "Wrong heading on correct village lane fails " + mode);
+                int retainedMistakes = wrong.MistakeCount, retainedVariant = wrong.Save.variant;
+                wrong.ContinueAfterFailure();
+                Require(!wrong.Failure.HasValue && wrong.MistakeCount == retainedMistakes
+                    && wrong.Save.variant == retainedVariant && wrong.Speed == 0,
+                    "Safe continuation preserves counted violations and rating inputs " + mode);
                 wrong.Retry();
                 Require(!wrong.Safety.Failure.HasValue && wrong.Safety.WrongWayDuration == 0 && wrong.Speed == 0,
                     "Retry resets safety without changing seeded encounter " + mode);
@@ -45,7 +50,7 @@ namespace JalanKita.EditorTools
                 Require(road.Failure == Rule.KeepLeft, "Boulevard wrong heading fails " + mode);
 
                 var speedRun = New(mode, 4);
-                Pose(speedRun, new Vector2(-2, 306), 0, 11);
+                Pose(speedRun, new Vector2(-2, RouteStage.SchoolLimit + 1), 0, 11);
                 for (int i = 0; i < 25; i++) speedRun.Step(.02f, true, false, 0);
                 Require(speedRun.Safety.SpeedWarning && !speedRun.Failure.HasValue && speedRun.Kph > 30
                     && speedRun.Save.mistakes[(int)Rule.Speed] == 0, "Posted30 is warning only " + mode);
@@ -70,7 +75,9 @@ namespace JalanKita.EditorTools
                     "All seven market neighbours plus waiting passenger are physical " + mode);
                 var waitingContact = new Journey(mode, new JourneySave { next = 3, checkpoint = 1 }, false,
                     mission: Mission.Scenarios[2], trafficSeed: 1);
-                Pose(waitingContact, new Vector2(-7.44f, Mission.PickupPoint), 0, 0);
+                // The upright motorcycle has a real 3 cm clearance here; angle its body
+                // toward the passenger to test contact without enlarging either footprint.
+                Pose(waitingContact, new Vector2(-7.44f, Mission.PickupPoint), mode==VehicleMode.Motorcycle?45:0, 0);
                 waitingContact.Step(.02f, false, true, 0);
                 Require(waitingContact.Failure == Rule.Pedestrian,
                     "Actual market adapter catches waiting passenger body contact " + mode);

@@ -20,7 +20,7 @@ namespace JalanKita.EditorTools
         }
         static object Field(JalanGame g, string n) => typeof(JalanGame).GetField(n, Private).GetValue(g);
         static void Set(JalanGame g, string n, object v) => typeof(JalanGame).GetField(n, Private).SetValue(g,v);
-        static void Call(JalanGame g, string n, params object[] a) => typeof(JalanGame).GetMethod(n,Private).Invoke(g,a);
+        static void Call(JalanGame g, string n, params object[] a) => typeof(JalanGame).GetMethods(Private).Single(m=>m.Name==n && m.GetParameters().Length==a.Length).Invoke(g,a);
         static void Require(bool ok,string why) { if(!ok) throw new Exception("HI_FLOW: "+why); }
         static void Submit(Button b)
         {
@@ -52,8 +52,8 @@ namespace JalanKita.EditorTools
                     string fullKey=JourneySave.Key(mode), fullSave=PlayerPrefs.GetString(fullKey);
                     string[] missions=Mission.Scenarios.Select(m=>PlayerPrefs.GetString(JourneySave.Key(mode,m))).ToArray();
                     Call(game,"ShowCatalogue",MissionKind.Scenario);
-                    var card=root.Query<VisualElement>(className:"mission-card").ToList().Single(c=>c.Query<Label>().ToList().Any(l=>l.text==GameText.Get("hi.title")));
-                    Submit(Button(card,GameText.Get("text.select_2a7802"))); Require(Field(game,"page").ToString()=="Brief","Catalogue opens existing briefing");
+                    var card=root.Query<Button>(className:"selection-card").ToList().Single(c=>c.tooltip==GameText.Get("hi.title"));
+                    Submit(card);Submit(root.Q<Button>(className:"selection-start")); Require(Field(game,"page").ToString()=="Brief","Catalogue opens existing briefing");
                     Submit(Button(root,GameText.Get("text.start"))); Require(Field(game,"page").ToString()=="Jaksa"&&(bool)Field(game,"hiActive"),"Brief starts HI mission");
                     var drive=(LandmarkDrive)Field(game,"hi"); var objective=(HiRoundaboutObjective)Field(game,"hiObjective");
                     Require(UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Count(a=>a.isActiveAndEnabled)==1,"One active listener in HI");
@@ -88,18 +88,23 @@ namespace JalanKita.EditorTools
                 var live=(LandmarkDrive)Field(game,"hi"); var task=(HiRoundaboutObjective)Field(game,"hiObjective");
                 var route=live.Environment.Network.TrafficPaths[0]; var entry=live.Environment.Network.Branches[0].Route;
                 float gate=(float)typeof(HiRoundaboutObjective).GetField("entryGate",Private).GetValue(task);
-                int yieldingFrames=0;
+                int yieldingFrames=0,pedestrianYieldFrames=0;
                 for(int i=0;i<16000&&!task.Complete&&!task.Failed;i++)
                 {
                     float s=route.Nearest(live.Position,out _); var target=route.At(s+9)-live.Position;
                     float heading=Mathf.Atan2(target.x,target.y)*Mathf.Rad2Deg;
                     bool wait=task.Stage==HiRoundaboutObjective.Phase.Yield&&task.Conflict&&gate-entry.Nearest(live.Position,out _)<19;
+                    float stopping=live.Speed*live.Speed/(2*8.4f)+2;
+                    var preview=route.At(s+stopping);float previewHeading=route.Heading(s+stopping);
+                    bool people=DriveSafetyState.PedestrianContact(live.Position,preview,live.Heading,previewHeading,live.Mode,live.PedestrianSnapshots)
+                        ||DriveSafetyState.PedestrianContact(live.Position,preview,live.Heading,previewHeading,live.Mode,live.AccessTraffic.Pedestrians);
+                    if(people){wait=true;pedestrianYieldFrames++;}
                     if(wait)yieldingFrames++;
                     Call(game,"StepHi",.02f,!wait,wait,RoadVehicleMotion.TrackLane(VehicleMode.Car,live.Speed,live.Heading,0,0,heading),false);
                 }
                 if(!task.Complete)
                 {
-                    Debug.Log("HI_STALL player "+live.Position+" yaw="+live.Heading+" speed="+live.Speed+" curb="+live.CurbContact+" traffic="+live.TrafficContact);
+                    Debug.Log("HI_STALL player "+live.Position+" yaw="+live.Heading+" speed="+live.Speed+" curb="+live.CurbContact+" traffic="+live.TrafficContact+" safety="+live.Safety.Failure);
                     for(int i=0;i<live.Traffic.Length;i++)
                     {
                         var a=live.Traffic[i]; var next=live.Environment.Route.At(a.S+.1f,a.Lane); float yaw=live.Environment.Route.Heading(a.S+.1f);
@@ -113,8 +118,8 @@ namespace JalanKita.EditorTools
                         for(int j=0;j<live.Traffic.Length;j++) { var b=live.Traffic[j]; float limit=LandmarkAccessTraffic.AheadLimit(a.Position,a.Heading,a.Choice.Vehicle.HalfWidth,a.Choice.Vehicle.HalfLength,b.Position,b.Choice.Vehicle.HalfWidth,b.Choice.Vehicle.HalfLength,7); if(limit<.1f)Debug.Log("HI_LIMIT access"+i+" -> ring"+j); if(TrafficFootprint.Overlaps(next,yaw,a.Choice.Vehicle.HalfWidth,a.Choice.Vehicle.HalfLength,b.Position,b.Heading,b.Choice.Vehicle.HalfWidth,b.Choice.Vehicle.HalfLength,.16f))Debug.Log("HI_BLOCK access"+i+" -> ring"+j); }
                     }
                 }
-                Require(task.Complete,"Live traffic safe mission completes: "+task.Stage+" "+task.FailureReason+" at "+live.Position+" t="+live.Elapsed);
-                Debug.Log("HI_LIVE_TRAFFIC_PASS elapsed="+live.Elapsed+" yieldingFrames="+yieldingFrames);
+                Require(task.Complete,"Live traffic safe mission completes: "+task.Stage+" "+task.FailureReason+" safety="+live.Safety.Failure+" at "+live.Position+" t="+live.Elapsed);
+                Debug.Log("HI_LIVE_TRAFFIC_PASS elapsed="+live.Elapsed+" yieldingFrames="+yieldingFrames+" pedestrianYieldFrames="+pedestrianYieldFrames);
 
             }
             finally

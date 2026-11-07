@@ -28,3 +28,100 @@
 .chooser-levels .selection-preview-caption { display: none; }
 .chooser-levels .selection-mission-body .mission-title { font-size: 18px; }
 .chooser-levels .selection-mission-body .copy { font-size: 14px; }
+
+
+/* Tutorial thumbnail is a real button: the whole image is an accessible target.
+   Outlined play glyph is vector-drawn in code, independent of font coverage. */
+.selection-preview.thumbnail-play-button {
+    padding: 0; margin-top: 0; margin-bottom: 0; margin-left: 0;
+    min-width: 0; min-height: 64px; border-width: 2px;
+    border-color: rgba(238,233,223,.18); border-radius: 6px;
+    background-color: #192126; overflow: hidden;
+}
+.thumbnail-play-button .thumbnail-play-image { margin: 0; padding: 0; }
+.thumbnail-play-overlay {
+    position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+    align-items: center; justify-content: center;
+    background-color: rgba(12,18,22,.38);
+}
+.thumbnail-play-glyph { width: 44px; height: 44px; flex-shrink: 0; color: #ffffff; }
+.thumbnail-play-caption {
+    font-size: 11px; color: #ffffff; -unity-font-style: bold;
+    -unity-text-align: middle-center; white-space: normal;
+    margin-top: 2px; padding: 0 4px;
+}
+.thumbnail-play-button:hover { border-color: #c4aa7c; }
+.thumbnail-play-button:hover .thumbnail-play-overlay { background-color: rgba(12,18,22,.2); }
+.thumbnail-play-button:focus { border-color: #ffffff; }
+.thumbnail-play-button:focus .thumbnail-play-overlay { background-color: rgba(12,18,22,.28); }
+.thumbnail-play-button:active .thumbnail-play-overlay { background-color: rgba(12,18,22,.52); }
+.thumbnail-play-button:disabled { opacity: .5; }
+
+
+/* One selection pattern: whole cards select on the left, a persistent detail
+   panel explains the choice on the right; only its explicit action launches. */
+.screen .dialog.selection-browser-card {
+    width: 1120px; max-width: 100%; height: 94%; max-height: 860px;
+    min-height: 0; padding: 22px 24px; overflow: hidden;
+}
+.selection-browser-card > .label, .selection-browser-card > .chooser-vehicles,
+.selection-browser-card > .actions { flex-shrink: 0; }
+.selection-browser-card > .heading { font-size: 28px; margin-bottom: 4px; }
+.selection-browser-card > .copy { font-size: 14px; }
+.screen .selection-browser-card .chooser-vehicles { margin-top: 12px; margin-bottom: 14px; }
+.screen .selection-browser-card .button.chooser-vehicle { min-height: 80px; flex-direction: row; align-items: center; padding: 10px 14px; }
+.screen .selection-browser-card .chooser-vehicle .driving-glyph { width: 34px; height: 34px; margin: 0 12px 0 0; }
+.screen .selection-browser-card .chooser-vehicle-title { font-size: 18px; margin: 0; }
+.selection-browser { flex-direction: row; flex-grow: 1; flex-shrink: 1; min-height: 0; margin-top: 8px; align-items: stretch; }
+.selection-sidebar { width: 45%; min-width: 0; flex-shrink: 0; margin-right: 18px; }
+.selection-list { flex-grow: 1; flex-shrink: 1; min-height: 0; overflow: hidden; }
+.selection-list .unity-scroll-view__content-and-vertical-scroll-container,
+.selection-detail .unity-scroll-view__content-and-vertical-scroll-container { flex-grow: 1; flex-shrink: 1; min-height: 0; }
+.selection-list .unity-scroll-view__content-viewport,
+.selection-detail .unity-scroll-view__content-viewport { min-height: 0; overflow: hidden; }
+.selection-list .unity-scroll-view__content-container { flex-shrink: 0; padding: 2px 4px 4px 2px; }
+.selection-list .unity-scroll-view__content-container > * { flex-shrink: 0; }
+.selection-list .chooser-summary { margin: 12px 0 8px; font-size: 15px; }
+.screen .selection-card {
+    flex-direction: row; align-items: center; width: 100%; min-width: 0;
+    min-height: 88px; flex-shrink: 0; margin: 0 0 8px; padding: 8px;
+    background-color: #242d31; border-width: 1px; border-left-width: 3px;
+    border-color: rgba(238,233,223,.14); border-radius: 6px;
+    -unity-text-align: middle-left; white-space: normal; color: #eee9df;
+}
+.screen .selection-card:hover { background-color: #303b40; border-color: #8a918d; }
+.screen .selection-card.selected { background-color: #343e37; border-color: #c4aa7c; }
+.screen .selection-card:focus { border-color: #ffffff; }
+.screen .selection-card:active { background-color: #424e45; }
+.screen .selection-card:disabled { opacity: .5; }
+.selection-card-image { width: 104px; height: 64px; flex-shrink: 0; margin-right: 12px; border-radius: 4px; background-color: #182126; }
+.selection-card-body { flex-grow: 1; flex-shrink: 1; min-width: 0; }
+.selection-card-title { font-size: 16px; color: #eee9df; white-space: normal; -unity-font-style: bold; }
+.selection-card-meta { font-size: 12px; color: #c6c2b8; margin-top: 4px; white-space: normal; }
+.selection-detail-pane { flex-grow: 1; flex-shrink: 1; flex-basis: 0; min-width: 0; min-height: 0; padding: 14px; background-color: #20292d; border-width: 1px; border-color: #444e50; border-radius: 8px; }
+.selection-detail { flex-grow: 1; flex-shrink: 1; min-height: 0; overflow: hidden; }
+.selection-detail .unity-scroll-view__content-container { flex-shrink: 0; padding-right: 5px; }
+.selection-detail .unity-scroll-view__content-container > * { flex-shrink: 0; }
+.selection-detail-image { width: 100%; height: 184px; flex-shrink: 0; margin-bottom: 14px; border-radius: 5px; background-color: #162025; }
+.selection-detail-title { font-size: 25px; color: #ffffff; white-space: normal; -unity-font-style: bold; margin-bottom: 7px; }
+.selection-detail-meta { font-size: 12px; color: #d4bd94; white-space: normal; margin-bottom: 10px; letter-spacing: .4px; }
+.selection-detail-copy { font-size: 15px; color: #d7dad3; white-space: normal; margin-bottom: 12px; }
+.selection-detail-rules { padding: 10px 12px; margin: 4px 0 12px; background-color: #2b352e; border-left-width: 3px; border-left-color: #c4aa7c; border-radius: 4px; }
+.selection-detail-rule { color: #f0e5cc; font-size: 14px; white-space: normal; margin-top: 5px; margin-bottom: 5px; }
+.selection-detail-actions { flex-shrink: 0; flex-direction: row; align-items: stretch; margin-top: 12px; padding-top: 12px; border-top-width: 1px; border-top-color: #424e50; }
+.screen .selection-detail-actions .button { flex-grow: 1; min-height: 44px; margin: 0; padding: 8px 14px; }
+.screen.compact .dialog.selection-browser-card { height: 97%; padding: 14px 16px; }
+.screen.compact .selection-browser-card > .heading { font-size: 24px; }
+.screen.compact .selection-browser-card .chooser-vehicles { margin-top: 8px; margin-bottom: 8px; }
+.screen.compact .selection-browser-card .button.chooser-vehicle { min-height: 62px; padding: 8px 12px; }
+.screen.compact .selection-browser-card .chooser-vehicle .driving-glyph { width: 28px; height: 28px; }
+.screen.compact .selection-sidebar { width: 44%; margin-right: 12px; }
+.screen.compact .selection-card { min-height: 76px; padding: 6px; }
+.screen.compact .selection-card-image { width: 78px; height: 50px; margin-right: 8px; }
+.screen.compact .selection-card-title { font-size: 14px; }
+.screen.compact .selection-card-meta { font-size: 11px; }
+.screen.compact .selection-detail-pane { padding: 10px; }
+.screen.compact .selection-detail-image { height: 132px; margin-bottom: 10px; }
+.screen.compact .selection-detail-title { font-size: 21px; }
+.screen.compact .selection-detail-copy, .screen.compact .selection-detail-rule { font-size: 13px; }
+.screen.compact .selection-detail-actions { margin-top: 8px; padding-top: 8px; }
