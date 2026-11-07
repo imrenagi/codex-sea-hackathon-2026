@@ -272,8 +272,10 @@ namespace JalanKita
             if (page == Page.Jaksa)
             {
                 float turn = (Pressed(KeyCode.D, KeyCode.RightArrow) ? 1 : 0) - (Pressed(KeyCode.A, KeyCode.LeftArrow) ? 1 : 0);
+                float previousExploreSpeed = jaksa.Speed;
                 jaksa.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
                     Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), turn);
+                CompleteExploreControls(previousExploreSpeed);
                 return;
             }
             if (page != Page.Drive) return;
@@ -292,8 +294,10 @@ namespace JalanKita
             }
             float steer = (Pressed(KeyCode.D, KeyCode.RightArrow) ? 1 : 0)
                 - (Pressed(KeyCode.A, KeyCode.LeftArrow) ? 1 : 0);
+            float previousSpeed = journey.Speed;
             journey.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
                 Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), steer);
+            CompleteControlsPractice(previousSpeed);
             if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
             else if (journey.Activity != null && journey.Finished) ShowMissionProgress();
             else if (journey.Stage != priorStage || journey.Save.checkpoint != priorCheckpoint) AnnounceCheckpoint();
@@ -369,6 +373,7 @@ namespace JalanKita
             pitchDemo = false;
             practiceStart = -1;
             learner = null;
+            controlsOriginal = null;
             if (jaksa != null) jaksa.Street.Root.SetActive(false);
             trainingRoot.SetActive(true);
             district.RestoreAtmosphere();

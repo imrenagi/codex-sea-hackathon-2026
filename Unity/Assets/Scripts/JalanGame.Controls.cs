@@ -7,6 +7,11 @@ namespace JalanKita
     public sealed partial class JalanGame
     {
         readonly HashSet<string> controlsSeen = new();
+        readonly HashSet<string> controlsPracticeStarted = new();
+        readonly HashSet<string> exploreBraking = new(), exploreStopped = new();
+        Journey controlsOriginal;
+        string controlsPracticeContext;
+        bool controlsMoved, controlsBraked;
         readonly HashSet<string> cueActionsSeen = new();
         Page controlsOrigin, controlsDrivingPage;
         bool inputReleaseRequired;
@@ -21,8 +26,52 @@ namespace JalanKita
 
         void EnterHumanDrive(Page drivingPage)
         {
+            string context = (drivingPage == Page.Jaksa ? "explore:" : "training:") + mode;
+            if (drivingPage == Page.Drive && !journey.LearningControls && controlsPracticeStarted.Add(context))
+            {
+                controlsOriginal = journey;
+                controlsPracticeContext = context;
+                controlsMoved = controlsBraked = false;
+                journey = NewControlsPractice();
+                district.Snap();
+            }
             SetPage(drivingPage);
             inputReleaseRequired = true;
+        }
+
+        Journey NewControlsPractice()
+        {
+            var save = JsonUtility.FromJson<JourneySave>(JsonUtility.ToJson(controlsOriginal.Save));
+            return new Journey(mode, save, persistent: false, mission: controlsOriginal.Activity)
+            { LearningControls = true };
+        }
+
+        void CompleteControlsPractice(float previousSpeed)
+        {
+            if (!journey.LearningControls || controlsOriginal == null) return;
+            if (journey.Speed > .2f && Pressed(KeyCode.W, KeyCode.UpArrow)) controlsMoved = true;
+            if (controlsMoved && Input.GetKey(KeyCode.S) && previousSpeed > .28f && journey.Speed < previousSpeed)
+                controlsBraked = true;
+            if (!controlsBraked || journey.Speed > .28f) return;
+            journey = controlsOriginal;
+            controlsOriginal = null;
+            controlsSeen.Add(controlsPracticeContext);
+            district.Snap();
+            inputReleaseRequired = true;
+            toast.text = "Latihan selesai. Kembali ke awal; aturan normal aktif.";
+            toastUntil = Time.unscaledTime + 6;
+        }
+
+        void CompleteExploreControls(float previousSpeed)
+        {
+            string context = "explore:" + mode;
+            if (exploreStopped.Contains(context) || !controlsSeen.Contains(context)) return;
+            if (Input.GetKey(KeyCode.S) && previousSpeed > .28f && jaksa.Speed < previousSpeed)
+                exploreBraking.Add(context);
+            if (!exploreBraking.Contains(context) || jaksa.Speed > .28f) return;
+            exploreStopped.Add(context);
+            toast.text = "Latihan selesai. Berkendara seperti biasa.";
+            toastUntil = Time.unscaledTime + 5;
         }
 
         void ShowControls(Page origin, Page drivingPage, bool firstEntry)
@@ -115,6 +164,11 @@ namespace JalanKita
             if ((page != Page.Drive && page != Page.Jaksa) || learner != null
                 || inputReleaseRequired || !Application.isFocused) return;
             if (!root.Q("hudHint").ClassListContains("hidden")) return;
+            if (page == Page.Drive && journey.LearningControls)
+            {
+                PresentCue(controlsMoved ? "S" : "W A S D", controlsMoved ? "Tekan S untuk rem" : "Coba gas dan kemudi. Tanpa penalti.");
+                return;
+            }
             string context = (page == Page.Jaksa ? "explore:" : "training:") + mode;
             float drivingSpeed = page == Page.Jaksa ? jaksa.Speed : journey.Speed;
             if (!controlsSeen.Contains(context))
@@ -122,7 +176,12 @@ namespace JalanKita
                 if (drivingSpeed > .2f && Pressed(KeyCode.W, KeyCode.UpArrow)) controlsSeen.Add(context);
                 else { PresentCue("W A S D", "Coba gas dan kemudi."); return; }
             }
-            if (page == Page.Jaksa || journey.Finished || journey.Failure.HasValue) return;
+            if (page == Page.Jaksa)
+            {
+                if (!exploreStopped.Contains(context)) PresentCue("S", "Tekan S untuk rem");
+                return;
+            }
+            if (journey.Finished || journey.Failure.HasValue) return;
             float front = journey.Front, z = journey.Position.y;
             int stage = journey.Stage;
             string brake = null;

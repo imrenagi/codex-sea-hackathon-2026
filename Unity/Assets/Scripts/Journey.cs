@@ -187,6 +187,7 @@ namespace JalanKita
     public sealed partial class Journey
     {
         readonly VehicleSteering steering = new();
+        public bool LearningControls { get; set; }
         public bool UsesRouteSteering => Activity == null;
         public float SteerAngle => UsesRouteSteering ? steering.Angle : motion.SteeringAngle * Mathf.Deg2Rad;
         public float Throttle { get; private set; }
@@ -560,7 +561,7 @@ namespace JalanKita
 
         void Fail(Rule rule)
         {
-            if (Failure.HasValue) return;
+            if (LearningControls || Failure.HasValue) return;
             Failure = rule;
             Save.retryPending = true;
             Save.mistakes[(int)rule]++;
@@ -570,6 +571,7 @@ namespace JalanKita
 
         void Advance()
         {
+            if (LearningControls) return;
             Save.next++;
             ResetBoulevard();
             if (Stage == 5) ResetCityTraffic();
@@ -585,7 +587,7 @@ namespace JalanKita
 
         void Checkpoint(int index)
         {
-            if (Failure.HasValue || index <= Save.checkpoint) return;
+            if (LearningControls || Failure.HasValue || index <= Save.checkpoint) return;
             Save.checkpoint = index;
             Persist();
         }
