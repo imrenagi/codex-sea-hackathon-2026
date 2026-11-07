@@ -102,12 +102,14 @@ namespace JalanKita
             Ambulance = BoulevardPedestrian = null;
         }
 
-        void StepBoulevard(float dt, bool throttle, bool brake, float steer)
+        void StepBoulevard(float dt, bool throttle, bool brake, float steer, bool reverse = false)
         {
             var oldNose = Nose;
-            Speed = Mathf.MoveTowards(Speed, brake ? 0 : throttle ? 16.1f : 0, dt * (brake ? 10.5f : throttle ? 2.85f : 1.7f));
+            Speed = reverse || Speed < 0 ? RoadVehicleMotion.AdvanceSpeed(dt, Mode, throttle, brake, reverse, 16.1f, Speed)
+                : Mathf.MoveTowards(Speed, brake ? 0 : throttle ? 16.1f : 0, dt * (brake ? 10.5f : throttle ? 2.85f : 1.7f));
             Heading = steering.Step(Mode, Speed, Heading, steer, dt);
             Position += new Vector2(Mathf.Sin(Heading*Mathf.Deg2Rad), Mathf.Cos(Heading*Mathf.Deg2Rad)) * Speed * dt;
+            if (RejectReverseOffRoad()) return;
             rightSignalAge = Indicator == 1 ? rightSignalAge + dt : 0;
             leftSignalAge = Indicator == -1 ? leftSignalAge + dt : 0;
             if (Mode == VehicleMode.Motorcycle && !Headlight && Kph >= 3) Fail(Rule.Headlight);
@@ -136,7 +138,7 @@ namespace JalanKita
             bool approach = p.y < -11 && p.x >= -10.4f && p.x <= 10.4f;
             bool leaving = exit > 11 && outgoingLane >= -10.4f && outgoingLane <= 10.4f;
             if (!inside && !approach && !leaving) Fail(Rule.OffRoad);
-            if ((approach && p.x > .2f || leaving && outgoingLane > .2f) && Speed > 1)
+            if ((approach && p.x > .2f || leaving && outgoingLane > .2f) && Mathf.Abs(Speed) > 1)
             { wrongWay += dt; if (wrongWay > .6f) Fail(Rule.KeepLeft); }
             else wrongWay = 0;
 
@@ -163,7 +165,7 @@ namespace JalanKita
             {
                 bool crossing = stage == 5 ? n.y >= -16 && p.y <= -11
                     : Vector2.Dot(Nose - Boulevard.Center(stage), Boulevard.Exit(stage)) >= 11 && exit <= 17;
-                if (crossing && BoulevardPedestrianBlocksPath || PedestrianClearance.Touches(BoulevardPedestrian.Value,Position,Heading,Mode)) Fail(Rule.Pedestrian);
+                if (crossing && BoulevardPedestrianBlocksPath || TouchesPedestrian(BoulevardPedestrian.Value)) Fail(Rule.Pedestrian);
             }
             if (exit > 20 && Mathf.Abs(outgoingLane - Boulevard.Lane(stage)) > 1.8f) Fail(Rule.MovementLane);
             if (exit >= Vector2.Dot(RouteStage.All[stage].Checkpoint - Boulevard.Center(stage), Boulevard.Exit(stage)) && enteredJunction && !Failure.HasValue) Advance();
@@ -173,7 +175,7 @@ namespace JalanKita
         {
             float x = Position.x + 180;
             if (Mathf.Abs(x) > 10.4f || Position.y < 700 || Position.y > 1160) Fail(Rule.OffRoad);
-            if (x > .2f && Speed > 1) { wrongWay += dt; if (wrongWay > .6f) Fail(Rule.KeepLeft); }
+            if (x > .2f && Mathf.Abs(Speed) > 1) { wrongWay += dt; if (wrongWay > .6f) Fail(Rule.KeepLeft); }
             else wrongWay = 0;
             int current = Mathf.Clamp(Mathf.FloorToInt((x + 10.8f) / 3.6f), 0, 2);
             if (approachLane >= 0 && current != approachLane && (current > approachLane ? rightSignalAge : leftSignalAge) < .28f)

@@ -208,13 +208,13 @@ namespace JalanKita
         public float ElapsedTime { get; private set; }
         public float BoardingProgress => PassengerPickedUp ? Mathf.Clamp01(1 - boardingTime / 2.2f) : 0;
         public bool IsBoarding => boardingTime > 0;
-        public bool CanPickup => IsMarket && !PassengerPickedUp && Speed < .28f
+        public bool CanPickup => IsMarket && !PassengerPickedUp && Mathf.Abs(Speed) < .28f
             && Position.x < -5 && Position.y >= Mission.PickupPoint - 5 && Position.y <= Mission.PickupPoint + 4;
         public int MistakeCount { get { int count = 0; foreach (int n in Save.mistakes) count += n; return count; } }
         public float StageEnd => Stage == Activity?.LastStage ? Activity.Finish : RouteStage.All[Mathf.Min(Stage, RouteStage.All.Length - 1)].End;
         public float CrossingZebra => IsSchool ? Mission.SchoolZebra : RouteStage.Zebra;
         public Vector2? PickupTraffic { get; private set; }
-        public float Kph => Speed * 3.6f;
+        public float Kph => Mathf.Abs(Speed) * 3.6f;
         public float Front => Position.y + Mathf.Cos(Heading * Mathf.Deg2Rad) * (Mode == VehicleMode.Car ? 1.95f : 1f);
 
         public Vector2? CrossTraffic { get; private set; }
@@ -236,6 +236,9 @@ namespace JalanKita
         bool phoneResolved;
         readonly bool persistent;
         readonly RoadVehicleMotion motion = new();
+        Vector2 motionFrom;
+        float motionHeading;
+        bool reverseSweep;
         readonly int trafficSeed;
         public TrafficRoster Traffic { get; private set; }
 
@@ -282,6 +285,7 @@ namespace JalanKita
                 Position = Save.checkpoint == 1 ? new Vector2(RouteStage.LeftLane, 246) : new Vector2(-5.8f, Mission.PickupPoint);
             Speed = wrongWay = overSpeed = Throttle = 0;
             motion.Reset();
+            motionFrom = Position; motionHeading = Heading; reverseSweep = false;
             steering.Reset();
             ResetCityTraffic();
             ResetBoulevard();
@@ -342,7 +346,7 @@ namespace JalanKita
             if (Stage != 4 || !PhoneRinging || Failure.HasValue) return;
             if (answer)
             {
-                if (Speed > .28f || Position.x > -4.25f || Position.y < RouteStage.PhoneStart + 4)
+                if (Mathf.Abs(Speed) > .28f || Position.x > -4.25f || Position.y < RouteStage.PhoneStart + 4)
                 {
                     Fail(Rule.Phone);
                     return;
@@ -352,11 +356,12 @@ namespace JalanKita
             phoneResolved = true;
         }
 
-        public void Step(float dt, bool throttle, bool brake, float steer)
+        public void Step(float dt, bool throttle, bool brake, float steer, bool reverse = false)
         {
             if (Stage == 0 || Finished || Failure.HasValue) return;
+            motionFrom = Position; motionHeading = Heading; reverseSweep = reverse || Speed < 0;
             ElapsedTime += dt;
-            Throttle = throttle && !brake ? 1 : 0;
+            Throttle = (throttle || reverse) && !brake ? 1 : 0;
             // Boarding is a simulation state: the vehicle stays stopped while the passenger approaches.
             if (boardingTime > 0)
             {
@@ -366,7 +371,7 @@ namespace JalanKita
                 return;
             }
 
-            if (Stage >= 5) { StepBoulevard(dt, throttle, brake, steer); return; }
+            if (Stage >= 5) { StepBoulevard(dt, throttle, brake, steer, reverse); return; }
 
             float oldFront = Front;
             float oldX = Position.x;
@@ -374,13 +379,15 @@ namespace JalanKita
             float speed = Speed, heading = Heading;
             if (UsesRouteSteering)
             {
-                speed = brake ? Mathf.MoveTowards(speed, 0, 10.5f * dt)
+                speed = reverse || speed < 0 ? RoadVehicleMotion.AdvanceSpeed(dt, Mode, throttle, brake, reverse, targetSpeed, speed)
+                    : brake ? Mathf.MoveTowards(speed, 0, 10.5f * dt)
                     : Mathf.MoveTowards(speed, throttle ? targetSpeed : 0, dt * (throttle ? (Mode == VehicleMode.Car ? 2.85f : 3.3f) : 1.7f));
                 heading = steering.Step(Mode, speed, heading, steer, dt);
             }
-            else motion.Step(dt, Mode, throttle, brake, steer, targetSpeed, ref speed, ref heading);
+            else motion.Step(dt, Mode, throttle, brake, steer, targetSpeed, ref speed, ref heading, reverse);
             Speed = speed; Heading = heading;
             Position += new Vector2(Mathf.Sin(Heading * Mathf.Deg2Rad), Mathf.Cos(Heading * Mathf.Deg2Rad)) * (Speed * dt);
+            if (RejectReverseOffRoad()) return;
             rightSignalAge = Indicator == 1 ? rightSignalAge + dt : 0;
             leftSignalAge = Indicator == -1 ? leftSignalAge + dt : 0;
             UpdateActors(dt);
@@ -394,7 +401,7 @@ namespace JalanKita
             bay |= IsMarket && z >= Mission.PickupStart && z <= Mission.PickupEnd;
             if (x < (bay ? -7.45f : -4.45f) || x > (spur ? 9.1f : 4.45f)) Fail(Rule.OffRoad);
             if (Mode == VehicleMode.Motorcycle && !Headlight && Kph >= 3) Fail(Rule.Headlight);
-            if (!oneWay && x > .42f && Speed > 1)
+            if (!oneWay && x > .42f && Mathf.Abs(Speed) > 1)
             {
                 wrongWay += dt;
                 if (wrongWay > .6f) Fail(Rule.KeepLeft);
@@ -446,7 +453,7 @@ namespace JalanKita
                     // A rotated nose can leave the bay before its center crosses the boundary.
                     // Preserve the unsafe-rejoin lesson when that nose meets passing traffic.
                     Fail(PassengerPickedUp && x < -4.25f && Heading > 0 ? Rule.Gap : Rule.Collision);
-                if (z >= Mission.NoStopStart && z <= Mission.NoStopEnd && Speed < .28f)
+                if (z >= Mission.NoStopStart && z <= Mission.NoStopEnd && Mathf.Abs(Speed) < .28f)
                 {
                     stoppedInRestriction += dt;
                     if (stoppedInRestriction > 2) Fail(Rule.NoStopping);
@@ -474,7 +481,7 @@ namespace JalanKita
                 if (z >= RouteStage.PhoneEnd && PhoneRinging) ResolvePhone(false);
             }
 
-            if(Pedestrian.HasValue && PedestrianClearance.Touches(Pedestrian.Value,Position,Heading,Mode))
+            if(Pedestrian.HasValue && TouchesPedestrian(Pedestrian.Value))
                 Fail(Rule.Pedestrian);
             if (!Failure.HasValue && z >= StageEnd) Advance();
         }
@@ -494,7 +501,54 @@ namespace JalanKita
 
         public bool TrafficCollision(TrafficChoice choice, Vector2 position, float yaw) =>
             TrafficFootprint.Overlaps(Position, Heading, TrafficFootprint.PlayerHalfWidth(Mode), TrafficFootprint.PlayerHalfLength(Mode),
-                position, yaw, choice.Vehicle.HalfWidth, choice.Vehicle.HalfLength);
+                position, yaw, choice.Vehicle.HalfWidth, choice.Vehicle.HalfLength)
+            || reverseSweep && TrafficFootprint.SweptOverlaps(motionFrom,motionHeading,Position,Heading,
+                TrafficFootprint.PlayerHalfWidth(Mode),TrafficFootprint.PlayerHalfLength(Mode),
+                position,yaw,choice.Vehicle.HalfWidth,choice.Vehicle.HalfLength);
+
+        bool TouchesPedestrian(Vector2 pedestrian)
+        {
+            if(PedestrianClearance.Touches(pedestrian,Position,Heading,Mode))return true;
+            if(!reverseSweep)return false;
+            float turn=Mathf.DeltaAngle(motionHeading,Heading);
+            int samples=Mathf.Max(1,Mathf.CeilToInt((Vector2.Distance(motionFrom,Position)+Mathf.Abs(turn)*Mathf.Deg2Rad*
+                new Vector2(TrafficFootprint.PlayerHalfWidth(Mode),TrafficFootprint.PlayerHalfLength(Mode)).magnitude)/.1f));
+            for(int i=0;i<=samples;i++)
+                if(PedestrianClearance.Touches(pedestrian,Vector2.Lerp(motionFrom,Position,(float)i/samples),motionHeading+turn*i/samples,Mode))return true;
+            return false;
+        }
+
+        bool RejectReverseOffRoad()
+        {
+            if (!reverseSweep) return false;
+            float angle=Heading*Mathf.Deg2Rad;
+            Vector2 forward=new(Mathf.Sin(angle),Mathf.Cos(angle)),right=new(forward.y,-forward.x);
+            for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)
+            {
+                var point=Position+right*(x*RoadBoundary.HalfWidth(Mode))+forward*(z*RoadBoundary.HalfLength(Mode));
+                if(TrainingRoadContains(point))continue;
+                Position=motionFrom;Heading=motionHeading;Fail(Rule.OffRoad);return true;
+            }
+            return false;
+        }
+
+        // Bounds match the finite asphalt rectangles in District.BuildRoad and
+        // BuildBoulevard. Reversing cannot escape an otherwise infinite approach
+        // test; the existing off-road lesson keeps the last valid vehicle pose.
+        bool TrainingRoadContains(Vector2 p)
+        {
+            bool Rect(float left,float right,float start,float end)=>p.x>=left&&p.x<=right&&p.y>=start&&p.y<=end;
+            if(Rect(-4.75f,4.75f,-28,382)||Rect(4.675f,9.025f,RouteStage.SpurStart,RouteStage.SpurEnd+1)
+                ||Rect(-7.85f,-4.45f,RouteStage.PhoneStart+4,RouteStage.PhoneEnd)
+                ||IsMarket&&Rect(-7.85f,-4.45f,Mission.PickupStart,Mission.PickupEnd))return true;
+            if(Mathf.Abs(p.x)<=45&&(Mathf.Abs(p.y-RouteStage.StopJunction)<=4.55f
+                ||Mathf.Abs(p.y-RouteStage.LightJunction)<=4.55f||Mathf.Abs(p.y-RouteStage.MainJunction)<=4.55f))return true;
+            if(Rect(-10.8f,10.8f,382,710)||Rect(-85,85,469.2f,490.8f)
+                ||Rect(-260,85,629.2f,650.8f)||Rect(-190.8f,-169.2f,565,1165))return true;
+            for(int stage=5;stage<=7;stage++)
+            {var d=p-Boulevard.Center(stage);if(Mathf.Abs(d.x)<=17&&Mathf.Abs(d.y)<=17)return true;}
+            return false;
+        }
 
         void UpdateActors(float dt)
         {

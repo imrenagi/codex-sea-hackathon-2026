@@ -162,7 +162,12 @@ namespace JalanKita
         {
             CityTraffic ??= new BoulevardTraffic(trafficSeed+trafficAttempt++,Position);
             CityTraffic.Step(dt,this);
-            if(CityTraffic.Collides(this)) Fail(Rule.Collision);
+            bool collision=CityTraffic.Collides(this);
+            if(reverseSweep)foreach(var actor in CityTraffic.Vehicles)
+                if(actor.Active&&TrafficFootprint.SweptOverlaps(motionFrom,motionHeading,Position,Heading,
+                    TrafficFootprint.PlayerHalfWidth(Mode),TrafficFootprint.PlayerHalfLength(Mode),
+                    actor.Position,actor.Heading,actor.Motorcycle?.35f:.82f,actor.HalfLength))collision=true;
+            if(collision) Fail(Rule.Collision);
         }
         public int CitySignal(int stage,int arm)
         {

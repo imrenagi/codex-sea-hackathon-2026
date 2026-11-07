@@ -33,7 +33,7 @@
                         <ui:Button name="lookLeft" text="Z · Lihat kiri" class="button quiet look-button" />
                         <ui:Button name="lookRight" text="X · Lihat kanan" class="button quiet look-button" />
                     </ui:VisualElement>
-                    <ui:Label text="W / ↑ Gas   S / Spasi Rem   A / D Setir   Q / E Sein   C Kamera   R Ulang   M Suara" class="label controls" />
+                    <ui:Label text="W / ↑ Gas   S / ↓ Rem–mundur   Spasi Rem   A / D Setir   Q / E Sein   C Kamera   R Ulang" class="label controls" />
                 </ui:VisualElement>
                 <ui:VisualElement class="panel cluster" picking-mode="Ignore">
                     <ui:Label name="speed" text="0" class="label speed" />

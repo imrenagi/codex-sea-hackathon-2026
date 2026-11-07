@@ -66,21 +66,23 @@ namespace JalanKita
         {
             float angle = heading * Mathf.Deg2Rad;
             Vector2 forward = new(Mathf.Sin(angle), Mathf.Cos(angle));
-            float distance = Mathf.Max(0, speed * dt);
-            var next = from + forward * distance;
+            float direction = speed < 0 ? -1 : 1;
+            var travelForward = forward * direction;
+            float distance = Mathf.Abs(speed) * Mathf.Max(0, dt);
+            var next = from + travelForward * distance;
             contact = !Contains(road, mode, next, heading);
             if (!contact) return next;
             if (distance <= .000001f) return Fit(road, mode, next, heading);
 
             var frame = road(from);
-            float alignment = Vector2.Dot(forward, frame.Forward);
+            float alignment = Vector2.Dot(travelForward, frame.Forward);
             var tangent = frame.Forward * (alignment < 0 ? -1 : 1);
-            float tangentHeading = Mathf.Atan2(tangent.x, tangent.y) * Mathf.Rad2Deg;
+            float tangentHeading = Mathf.Atan2(tangent.x, tangent.y) * Mathf.Rad2Deg + (direction < 0 ? 180 : 0);
             // A glancing contact retains forward travel. Even a nose-on approach
             // gets a small tangent crawl so steering can recover without reverse.
             // Yaw correction is distance-based: a stopped car never spins in place.
-            speed = Mathf.Min(speed, 4.5f);
-            distance = Mathf.Max(0, speed * dt);
+            speed = Mathf.Min(Mathf.Abs(speed), 4.5f) * direction;
+            distance = Mathf.Abs(speed) * Mathf.Max(0, dt);
             heading = Mathf.MoveTowardsAngle(heading, tangentHeading, distance * 65);
             next = from + tangent * (distance * Mathf.Max(.25f, Mathf.Abs(alignment)));
             return Fit(road, mode, next, heading);

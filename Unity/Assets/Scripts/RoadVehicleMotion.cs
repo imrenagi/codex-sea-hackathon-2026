@@ -9,19 +9,38 @@ namespace JalanKita
         public float SteeringAngle { get; private set; }
         public void Reset() => SteeringAngle = 0;
         public static float Wheelbase(VehicleMode mode) => mode == VehicleMode.Car ? 2.5f : 1.28f;
+        public static float ReverseLimit(VehicleMode mode) => mode == VehicleMode.Car ? 2.2f : 1.5f;
         public static float SteeringLimit(float speed, VehicleMode mode) =>
-            Mathf.Lerp(mode == VehicleMode.Car ? 32 : 24, mode == VehicleMode.Car ? 11 : 8, Mathf.Clamp01(speed / 17));
+            Mathf.Lerp(mode == VehicleMode.Car ? 32 : 24, mode == VehicleMode.Car ? 11 : 8, Mathf.Clamp01(Mathf.Abs(speed) / 17));
 
-        public void Step(float dt, VehicleMode mode, bool throttle, bool brake, float input,
-            float speedLimit, ref float speed, ref float heading)
+        // Reverse is an explicit request. Existing brake-only coach callers never
+        // enter reverse, and a direction change always reaches zero first.
+        public static float AdvanceSpeed(float dt, VehicleMode mode, bool throttle, bool brake, bool reverse,
+            float speedLimit, float speed)
         {
-            if (dt <= 0) return;
+            if (dt <= 0) return speed;
             dt = Mathf.Min(dt, .05f);
+            if (brake || throttle && reverse || reverse && speed > 0 || throttle && speed < 0)
+                return Mathf.MoveTowards(speed, 0, 8.4f * dt);
+            if (reverse)
+            {
+                float target = -Mathf.Min(ReverseLimit(mode), Mathf.Max(0, speedLimit));
+                return Mathf.MoveTowards(speed, target, (speed < target ? 8.4f : 1.6f) * dt);
+            }
+            if (speed < 0) return Mathf.MoveTowards(speed, 0, 1.2f * dt);
             float acceleration = mode == VehicleMode.Car ? 2.85f : 3.3f;
             acceleration *= Mathf.Lerp(1, .58f, Mathf.Clamp01(speed / Mathf.Max(1, speedLimit)));
             float resistance = .55f + speed * speed * .004f;
-            speed = Mathf.MoveTowards(speed, throttle && !brake ? speedLimit : 0,
-                (brake ? 8.4f : speed > speedLimit ? 6 : throttle ? acceleration : resistance) * dt);
+            return Mathf.MoveTowards(speed, throttle ? speedLimit : 0,
+                (speed > speedLimit ? 6 : throttle ? acceleration : resistance) * dt);
+        }
+
+        public void Step(float dt, VehicleMode mode, bool throttle, bool brake, float input,
+            float speedLimit, ref float speed, ref float heading, bool reverse = false)
+        {
+            if (dt <= 0) return;
+            dt = Mathf.Min(dt, .05f);
+            speed = AdvanceSpeed(dt, mode, throttle, brake, reverse, speedLimit, speed);
             float limit = SteeringLimit(speed, mode);
             SteeringAngle = Mathf.MoveTowards(SteeringAngle, Mathf.Clamp(input, -1, 1) * limit,
                 (Mathf.Abs(input) < .01f ? 115 : 90) * dt);

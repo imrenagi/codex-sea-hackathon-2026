@@ -249,7 +249,7 @@ namespace JalanKita
             {
                 float turn = (Pressed(KeyCode.D, KeyCode.RightArrow) ? 1 : 0) - (Pressed(KeyCode.A, KeyCode.LeftArrow) ? 1 : 0);
                 jaksa.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
-                    Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), turn);
+                    Input.GetKey(KeyCode.Space), turn, Pressed(KeyCode.S, KeyCode.DownArrow));
                 return;
             }
             if (page != Page.Drive) return;
@@ -269,7 +269,7 @@ namespace JalanKita
             float steer = (Pressed(KeyCode.D, KeyCode.RightArrow) ? 1 : 0)
                 - (Pressed(KeyCode.A, KeyCode.LeftArrow) ? 1 : 0);
             journey.Step(Time.fixedDeltaTime, Pressed(KeyCode.W, KeyCode.UpArrow),
-                Pressed(KeyCode.S, KeyCode.DownArrow) || Input.GetKey(KeyCode.Space), steer);
+                Input.GetKey(KeyCode.Space), steer, Pressed(KeyCode.S, KeyCode.DownArrow));
             if (journey.Failure.HasValue) ShowLesson(journey.Failure.Value);
             else if (journey.Activity != null && journey.Finished) ShowMissionProgress();
             else if (journey.Stage != priorStage || journey.Save.checkpoint != priorCheckpoint) AnnounceCheckpoint();
@@ -297,7 +297,7 @@ namespace JalanKita
             var frame = new SoundFrame { SirenDist = float.PositiveInfinity, BellDist = float.PositiveInfinity };
             if (driving)
             {
-                frame.Speed = journey.Speed;
+                frame.Speed = Mathf.Abs(journey.Speed);
                 frame.Throttle = journey.Throttle;
                 frame.Motorcycle = journey.Mode == VehicleMode.Motorcycle;
                 frame.Ringing = journey.PhoneRinging;
@@ -307,8 +307,8 @@ namespace JalanKita
             }
             if (page == Page.Jaksa)
             {
-                frame.Speed = jaksa.Speed;
-                frame.Throttle = Pressed(KeyCode.W, KeyCode.UpArrow) ? 1 : 0;
+                frame.Speed = Mathf.Abs(jaksa.Speed);
+                frame.Throttle = Pressed(KeyCode.W, KeyCode.UpArrow) || Pressed(KeyCode.S, KeyCode.DownArrow) ? 1 : 0;
                 frame.Motorcycle = mode == VehicleMode.Motorcycle;
                 frame.Horn = Input.GetKey(KeyCode.H);
             }
@@ -347,7 +347,7 @@ namespace JalanKita
             trainingRoot.SetActive(true);
             district.RestoreAtmosphere();
             progress.text = "Kemajuan  [Tab]";
-            root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    C Kamera    Z / X Lihat    R Ulang";
+            root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / ↓ Rem–mundur    Spasi Rem    A / D Setir    Q / E Sein    C Kamera    R Ulang";
             Show(root.Q("steps"), true);
             stored = JourneySave.Load(mode);
             journey = new Journey(mode, new JourneySave(), persistent: false);
@@ -425,7 +425,7 @@ namespace JalanKita
             jaksa ??= new JaksaDrive(transform);
             jaksa.Reset(mode);
             progress.text = "Jeda / menu  [Esc]";
-            root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / Spasi Rem    A / D Setir    Q / E Sein    L Lampu motor    C Kamera    Z / X Lihat    Esc Jeda";
+            root.Q<Label>(className: "controls").text = "W / ↑ Gas    S / ↓ Rem–mundur    Spasi Rem    A / D Setir    Q / E Sein    C Kamera    Esc Jeda";
             SetPage(Page.Jaksa);
             Show(root.Q("steps"), false);
             Show(phone, false); Show(toast, false);
@@ -439,10 +439,10 @@ namespace JalanKita
             instruction.text = jaksa.AtEnd ? "Tekan R untuk mengulang, atau Esc untuk kembali ke menu."
                 : jaksa.CurbContact ? "Tepi trotoar. Arahkan kendaraan kembali ke jalan."
                 : jaksa.TrafficContact ? "Jaga jarak. Tunggu ruang aman di depan kendaraan."
-                : "W / ↑ gas · S / ↓ / Spasi rem · A / D kemudi · C kamera";
+                : "W / ↑ gas · S / ↓ rem lalu mundur · Spasi rem · A / D kemudi · C kamera";
             detail.text = "MEGA KUNINGAN BARAT III · " + Mathf.RoundToInt(Mathf.Max(0,246-jaksa.Position.y)) + " M RUAS TERSISA";
             routeCount.text = "SOPO DEL · SEKITAR 250 M";
-            speed.text = Mathf.RoundToInt(jaksa.Speed*3.6f).ToString("00");
+            speed.text = (jaksa.Speed < -.05f ? "R " : "") + Mathf.RoundToInt(Mathf.Abs(jaksa.Speed)*3.6f).ToString("00");
             speed.EnableInClassList("speed-alert", false);
             bool blink = Time.unscaledTime % .7f < .42f;
             signalLeft.On = jaksa.Indicator < 0 && blink;
@@ -837,7 +837,8 @@ namespace JalanKita
         {
             Fold(parent, "Kontrol berkendara", help =>
             {
-                AddLabel(help, "W / ↑: gas · S / ↓ / Space: rem · A / D / ← / →: setir", "copy");
+                AddLabel(help, "W / ↑: maju · S / ↓: rem lalu mundur perlahan · Space: rem saja · A / D / ← / →: setir", "copy");
+                AddLabel(help, "Tahan S / ↓ setelah berhenti untuk mundur. W menghentikan gerak mundur sebelum maju. Periksa spion dan ruang di belakang.", "copy");
                 AddLabel(help, "Q / E: sein kiri / kanan · L: lampu motor · C: kamera · Z / X: lihat kiri / kanan", "copy");
                 AddLabel(help, "F / G: abaikan / jawab telepon · H: klakson · M: suara", "copy");
                 AddLabel(help, "Tab / Esc: jeda · R: ulang dari checkpoint", "copy");
@@ -1053,7 +1054,7 @@ namespace JalanKita
             picker.text=journey.Activity?.Title ?? (stage+1).ToString("00")+" · "+All[stage].Title;
             picker.SetEnabled(journey.Activity==null && !pitchDemo);
             Show(root.Q("practiceHint"), journey.Activity == null && !pitchDemo);
-            speed.text = Mathf.RoundToInt(journey.Kph).ToString();
+            speed.text = (journey.Speed < -.05f ? "R " : "") + Mathf.RoundToInt(journey.Kph).ToString();
             speed.EnableInClassList("speed-alert", stage == 4 && journey.Front >= SchoolLimit && journey.Kph > 30.75f || stage >= 5 && journey.Kph > 50.75f);
             bool blink = Time.unscaledTime % .7f < .42f;
             signalLeft.On = journey.Indicator == -1 && blink;

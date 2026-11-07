@@ -54,6 +54,17 @@ namespace JalanKita
     {
         public static float PlayerHalfWidth(VehicleMode mode)=>mode==VehicleMode.Car?.95f:.37f;
         public static float PlayerHalfLength(VehicleMode mode)=>mode==VehicleMode.Car?1.95f:1.02f;
+        public static bool SweptOverlaps(Vector2 from,float fromYaw,Vector2 to,float toYaw,float width,float length,
+            Vector2 obstacle,float obstacleYaw,float obstacleWidth,float obstacleLength,float margin=.03f)
+        {
+            float turn=Mathf.DeltaAngle(fromYaw,toYaw);
+            int samples=Mathf.Max(1,Mathf.CeilToInt((Vector2.Distance(from,to)+Mathf.Abs(turn)*Mathf.Deg2Rad*
+                new Vector2(width,length).magnitude)/.1f));
+            for(int i=0;i<=samples;i++)
+                if(Overlaps(Vector2.Lerp(from,to,(float)i/samples),fromYaw+turn*i/samples,width,length,
+                    obstacle,obstacleYaw,obstacleWidth,obstacleLength,margin))return true;
+            return false;
+        }
         public static bool Overlaps(Vector2 a,float yawA,float widthA,float lengthA,Vector2 b,float yawB,float widthB,float lengthB,float margin=.03f)
         {
             float aa=yawA*Mathf.Deg2Rad,bb=yawB*Mathf.Deg2Rad;

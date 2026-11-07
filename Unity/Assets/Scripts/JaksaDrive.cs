@@ -84,23 +84,31 @@ namespace JalanKita
                 JaksaStreet.RoadHalfWidth*forward.y);
         }
 
-        public void Step(float dt,bool throttle,bool brake,float steer)
+        public void Step(float dt,bool throttle,bool brake,float steer,bool reverse=false)
         {
             if(dt<=0)return;
             dt=Mathf.Min(dt,.05f);
             Traffic.Step(dt,Position,Heading,Mode);
-            float safeSpeed=Traffic.SafePlayerSpeed(Position,Heading,Mode);
-            TrafficContact=throttle&&!brake&&safeSpeed<2;
+            float safeSpeed=Traffic.SafePlayerSpeed(Position,Heading+(Speed<0||reverse&&Speed<=0?180:0),Mode);
+            TrafficContact=(throttle||reverse)&&!brake&&safeSpeed<2;
             float previousHeading=Heading;
             float speed=Speed,heading=Heading;
-            motion.Step(dt,Mode,throttle&&!AtEnd,brake||AtEnd,steer,safeSpeed,ref speed,ref heading);
+            motion.Step(dt,Mode,throttle&&!AtEnd,brake||AtEnd&&!reverse&&Speed>=0,steer,safeSpeed,ref speed,ref heading,reverse);
             Vector2 next=RoadBoundary.Move(roadFrame,Mode,Position,dt,ref speed,ref heading,out bool curb);
             Speed=speed;Heading=heading;CurbContact=curb;
-            next.y=Mathf.Clamp(next.y,8,246);
+            // The rendered street begins at -24; leave room to reverse from the
+            // initial pose at 8, while keeping the whole car inside this slice.
+            bool terminal=next.y < -20 || next.y > 246;
+            if(terminal)
+            {
+                float end=Mathf.Clamp(next.y,-20,246);
+                float fraction=Mathf.Clamp01((end-Position.y)/(next.y-Position.y));
+                next=Vector2.Lerp(Position,next,fraction);next.y=end;
+                Heading=Mathf.LerpAngle(previousHeading,Heading,fraction);Speed=0;CurbContact=true;
+            }
             next=RoadBoundary.Fit(roadFrame,Mode,next,Heading);
             if(!RoadBoundary.Contains(roadFrame,Mode,next,Heading)||Traffic.BlocksPlayer(Position,next,Heading,Mode,previousHeading))
             {next=Position;Heading=previousHeading;Speed=0;TrafficContact=true;}
-            if(next.y>=246)Speed=0;
             Position=next;
         }
 
