@@ -765,3 +765,7 @@
     flex-shrink: 0; white-space: normal;
 }
 .screen.compact .landing .home-tagline { font-size: 16px; padding: 6px 12px; margin-top: 6px; }
+
+
+/* Soften moving home scenery without flattening the transparent wordmark. */
+.screen .landing { background-color: rgba(18,25,30,.54); }
