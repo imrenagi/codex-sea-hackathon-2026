@@ -558,7 +558,7 @@ namespace JalanKita
             district.Snap();
             progress.tooltip = "Jeda demo  [Tab]";
             EnterHumanDrive(Page.Drive);
-            toast.text = "DEMO · W: GAS · SPACE: REM · R: ULANG";
+            toast.text = "DEMO";
             toastUntil = Time.unscaledTime + 6;
         }
 
