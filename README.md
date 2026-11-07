@@ -71,3 +71,11 @@ Audio reuses Ujian SIM’s synthesized `SoundEngine` and WebGL audio bridge: sep
 The driving HUD includes live left, centre and right rear views for both vehicles. Mirror images are horizontally flipped; cameras take turns rendering to limit GPU work. Hold Z/X or the on-screen look buttons to check either side without steering. The ambulance siren is audible as it approaches from 70 m, ducks the engine mix, and still respects M/mute. The siren begins after passing the parked angkot in mission 10.
 
 Run `JalanKita.EditorTools.TrafficChecks.Run` for the traffic seed sweep and `JalanKita.EditorTools.DrivingViewChecks.Run` in a graphical Editor for live mirror/audio validation.
+
+## Jakarta map previews
+
+From the main menu choose **Jelajahi peta Jakarta**, then Morrissey, Bundaran HI, Sea Labs, Semanggi, Monas, or Bundaran Senayan. Each area covers approximately 1.7 × 1.5 km, three times the original linear extent. Use WASD/arrows to pan, +/- to zoom, R to reset, and Esc to return to the selector. The existing Kampung Kenanga lessons and saved progress remain separate.
+
+These are OSM-based city previews, not playable lesson routes. Building heights and road widths may be estimated; facade colors and windows are illustrative. Source ways are clipped to the preview area. Tunnels are omitted; positive road layers receive approximate elevation. OSM coverage is incomplete and does not guarantee surveyed geometry. © OpenStreetMap contributors, ODbL: https://www.openstreetmap.org/copyright
+
+Only the selected area is generated. Geometry is batched into meshes under the 16-bit vertex limit rather than creating thousands of building objects. **Jalan Kita → Verify City Maps** checks the six datasets and geometry helpers. Runtime/editor verification must be run once Unity 6000.3.27f1 is available.
