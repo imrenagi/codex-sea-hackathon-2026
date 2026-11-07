@@ -1,0 +1,48 @@
+Jalan Kita — Bundaran HI and Monas exploration areas
+Prepared 7 November 2026
+
+MAP DATA
+© OpenStreetMap contributors — https://www.openstreetmap.org/copyright
+Open Database License 1.0 — https://opendatacommons.org/licenses/odbl/1-0/
+Offline adapted extracts in local east/north metres. Original footprint/road IDs retained.
+Bundaran HI origin: -6.19498,106.823045
+https://api.openstreetmap.org/api/0.6/map?bbox=106.8188,-6.1992,106.8276,-6.1908
+Monas origin: -6.1753924,106.8271528
+https://api.openstreetmap.org/api/0.6/map?bbox=106.8205,-6.1822,106.8337,-6.1695
+Retrieved 7 November 2026. JSON extracts are distributed under ODbL 1.0.
+HI route follows mapped roundabout nodes, smoothed for driving; 14 m playable width
+is an authored four-lane approximation. Monas route follows a connected directed
+public-road chain through Medan Merdeka Barat, Selatan, Timur and Utara, using
+mapped one-way direction. Its 8 m corridor follows the common source width tag;
+the two rendered traffic lanes are a gameplay approximation. Cross streets are scenery.
+
+LANDMARK REFERENCES — viewed only, no photographs bundled
+Monumen Selamat Datang, Galeri Nasional Indonesia:
+https://gni.kemenbud.go.id/pameran-virtual/poros/karya/monumen-selamat-datang
+Reference attributes: bronze pair, raised welcoming hands, flowers, 7 m figures
+on a 10 m pedestal. Original monument: Edhi Sunarso and team, sketch Henk Ngantung.
+The game sculpture is a simplified original geometric interpretation.
+Monumen Nasional, Jakarta Tourism:
+https://enjoy.jakarta.go.id/article/monumen-nasional-monas
+https://www.jakarta.go.id/wisata-bersejarah
+https://dpp.jakarta.go.id/berita/monumen-nasional-monas-simbol-perjuangan-bangsa-yang-terus-menginspirasi-generasi
+Reference attributes: 132 m total height, 14 m golden flame, 45 x 45 m cawan at 17 m.
+The model uses these proportions, with authored details for the relief panels,
+observation platform, bowl, flame, terraces and gardens.
+
+ACCURACY
+Footprints are mapped; known heights are retained and remaining heights estimated.
+Monas building:part outlines at the monument are replaced by the authored landmark,
+avoiding duplicate structures. Facades, vegetation, benches, lamps, the HI transit
+entrance, pool details, pedestrians and smaller dimensions are approximations.
+These are separate exploration areas, not one continuous road to Sopo Del.
+The playable road loops have visible curbs; background streets and gardens are scenery.
+The Monas park intentionally contains open lawns and landscaped space.
+No Google imagery or extracted Google geometry is included. The game is offline.
+
+MATERIALS
+Reuses CC0 Poly Haven surface maps from Resources/Jaksa and Resources/SopoDel.
+See their NOTICE.txt files for authors/source links. Foliage is from Resources/StreetLook
+(with Jaksa foliage fallback); its notice is retained. Vehicle and person assets reuse
+the existing project assets and their separate notices. New procedural geometry is
+original project work. No third-party architectural photograph is used as a texture.

@@ -10,7 +10,7 @@ namespace JalanKita
     [RequireComponent(typeof(UIDocument))]
     public sealed partial class JalanGame : MonoBehaviour
     {
-        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview }
+        enum Page { Menu, Before, Preflight, Drive, Lesson, Checkpoint, Progress, After, Jaksa, JaksaPause, Catalogue, Brief, CityMaps, CityPreview, Locations, Landmark, LandmarkPause }
 
         District district;
         GameObject trainingRoot;
@@ -105,7 +105,7 @@ namespace JalanKita
             };
             root.Q<Button>("closeMissionPicker").clicked += CloseMissionPicker;
             progress = root.Q<Button>("progress");
-            progress.clicked += () => { if (page == Page.Jaksa) ShowJaksaPause(); else if (learner != null) EndDemonstration(); else ShowProgress(); };
+            progress.clicked += () => { if (page == Page.Landmark) ShowLandmarkPause(); else if (page == Page.Jaksa) ShowJaksaPause(); else if (learner != null) EndDemonstration(); else ShowProgress(); };
             root.Q<Button>("ignorePhone").clicked += () => ResolvePhone(false);
             root.Q<Button>("answerPhone").clicked += () => ResolvePhone(true);
             root.Q<Button>("pickupPassenger").clicked += PickupPassenger;
@@ -114,7 +114,7 @@ namespace JalanKita
             ShowMenu();
         }
 
-        bool DrivingKeyboardActive => page == Page.Drive || page == Page.Jaksa;
+        bool DrivingKeyboardActive => page == Page.Drive || page == Page.Jaksa || page == Page.Landmark;
 
         void BindDrivingKeyboard()
         {
@@ -166,6 +166,8 @@ namespace JalanKita
             { CloseMissionPicker(); return; }
             if (page == Page.Menu && Input.GetKeyDown(KeyCode.F2)) { StartPitchDemo(); return; }
             if (Input.GetKeyDown(KeyCode.M)) ToggleSound();
+            if (LandmarkInput()) return;
+            if(page==Page.Locations&&Input.GetKeyDown(KeyCode.Escape)){ShowMenu();return;}
             if (page == Page.Jaksa)
             {
                 if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Tab)) { ShowJaksaPause(); return; }
@@ -224,6 +226,7 @@ namespace JalanKita
 
         void FixedUpdate()
         {
+            if(page==Page.Landmark){LandmarkFixedUpdate();return;}
             if (page == Page.Jaksa)
             {
                 float turn = (Pressed(KeyCode.D, KeyCode.RightArrow) ? 1 : 0) - (Pressed(KeyCode.A, KeyCode.LeftArrow) ? 1 : 0);
@@ -260,6 +263,12 @@ namespace JalanKita
             float look = Mathf.Clamp(heldLook + (Input.GetKey(KeyCode.X) ? 1 : 0) - (Input.GetKey(KeyCode.Z) ? 1 : 0), -1, 1);
             UpdateSound(Time.unscaledDeltaTime);
             if (page == Page.CityPreview) return;
+            if(page==Page.Landmark||page==Page.LandmarkPause)
+            {
+                landmark.Environment.Water.SetAudio(sound.Muted||!sound.AmbienceEnabled?0:sound.Volume,page==Page.Landmark);
+                landmark.Present(page==Page.Landmark?Time.unscaledDeltaTime:0,page==Page.Landmark,look);
+                if(page==Page.Landmark)RefreshLandmarkHud();return;
+            }
             if (page == Page.Jaksa || page == Page.JaksaPause)
             {
                 jaksa.Present(Time.unscaledDeltaTime, page == Page.Jaksa, look);
@@ -291,9 +300,14 @@ namespace JalanKita
                 frame.Motorcycle = mode == VehicleMode.Motorcycle;
                 frame.Horn = Input.GetKey(KeyCode.H);
             }
+            if(page==Page.Landmark)
+            {
+                frame.Speed=landmark.Speed;frame.Throttle=Pressed(KeyCode.W,KeyCode.UpArrow)?1:0;
+                frame.Motorcycle=mode==VehicleMode.Motorcycle;frame.Horn=Input.GetKey(KeyCode.H);
+            }
             sound.UpdateFrame(dt, frame);
             bool blink = Time.unscaledTime % .7f < .42f;
-            if (blink != blinkWas && (driving && journey.Indicator != 0 || page == Page.Jaksa && jaksa.Indicator != 0)) sound.Tick(blink);
+            if (blink != blinkWas && (driving && journey.Indicator != 0 || page == Page.Jaksa && jaksa.Indicator != 0 || page==Page.Landmark && landmark.Indicator!=0)) sound.Tick(blink);
             blinkWas = blink;
         }
 
@@ -303,7 +317,8 @@ namespace JalanKita
             if (focus) return;
             heldLook = 0;
             if (root == null || journey == null) return;
-            if (page == Page.Jaksa) ShowJaksaPause();
+            if (page == Page.Landmark) ShowLandmarkPause();
+            else if (page == Page.Jaksa) ShowJaksaPause();
             else if (page == Page.Drive)
             {
                 if (learner != null) EndDemonstration();
@@ -336,7 +351,7 @@ namespace JalanKita
             var content = MenuBody();
             AddLabel(content, "SIMULASI KESELAMATAN JALAN  /  INDONESIA", "kicker");
             AddLabel(content, "Jalan Kita", "hero");
-            AddLabel(content, "Uji keterampilan, selesaikan misi sehari-hari di Kampung Kenanga, atau jelajahi area kantor Sea di Mega Kuningan.", "copy");
+            AddLabel(content, "Uji keterampilan, selesaikan misi sehari-hari di Kampung Kenanga, atau jelajahi Sopo Del, Bundaran HI, dan Monas dengan kendaraan pilihanmu.", "copy");
 
             var modes = Element(content, "row section");
             AddButton(modes, "Mobil", () => SelectMode(VehicleMode.Car), mode == VehicleMode.Car ? "selected" : "quiet");
@@ -350,7 +365,7 @@ namespace JalanKita
 
             AddLabel(content, "JELAJAH & PERJALANAN LENGKAP", "kicker section");
             var actions = Element(content, "row actions");
-            AddButton(actions, "Jelajahi kantor Sea · Sopo Del", StartJaksa, "primary");
+            AddButton(actions, "Jelajahi Jakarta · Sopo Del / HI / Monas", ShowLandmarks, "primary");
             if (stored == null)
                 AddButton(actions, "Perjalanan lengkap · 10 tahap", StartNew, "primary");
             else
@@ -366,7 +381,7 @@ namespace JalanKita
                 if (confirmNew) AddLabel(content, "Ini mengganti progres yang tersimpan untuk kendaraan ini.", "copy");
             }
             AddButton(actions, "Pratinjau peta – belum bisa dimainkan", ShowCityMaps, "quiet");
-            AddLabel(content, "Lihat 6 area Jakarta dengan geser/zoom kamera. Untuk berkendara, pilih jelajah Sopo Del.", "copy");
+            AddLabel(content, "Lihat 6 area Jakarta dengan geser/zoom kamera. Untuk berkendara, pilih Jelajahi Jakarta: Sopo Del, Bundaran HI, atau Monas.", "copy");
             AddControlsHelp(content);
             AddSoundControls(content);
             if (Application.platform != RuntimePlatform.WebGLPlayer)
@@ -386,6 +401,7 @@ namespace JalanKita
 
         void StartJaksa()
         {
+            CloseCityPreview();
             trainingRoot.SetActive(false);
             jaksa ??= new JaksaDrive(transform);
             jaksa.Reset(mode);
@@ -426,6 +442,7 @@ namespace JalanKita
             var actions=Element(dialog,"row actions");
             AddButton(actions,"Lanjutkan",()=>SetPage(Page.Jaksa),"primary");
             AddButton(actions,"Ulangi ruas",()=>{jaksa.Reset(mode);SetPage(Page.Jaksa);},"quiet");
+            AddButton(actions,"Pindah lokasi",ShowLandmarks,"quiet");
             AddButton(actions,"Menu utama",ShowMenu,"quiet");
             AddLabel(dialog,"Data peta © OpenStreetMap contributors · ODbL. Material permukaan: Poly Haven · CC0.","rule-source");
         }
@@ -433,6 +450,7 @@ namespace JalanKita
 
         void CloseCityPreview()
         {
+            if(landmark!=null)landmark.Environment.Root.SetActive(false);
             cityPreview?.Dispose();
             cityPreview = null;
             trainingRoot.SetActive(true);
@@ -530,7 +548,10 @@ namespace JalanKita
         }
 
         void OnDestroy()
-        { cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose(); }
+        {
+            cityPreview?.Dispose(); district?.Mirrors.Dispose(); district?.Signals.Dispose(); jaksa?.Mirrors.Dispose();
+            foreach(var scene in landmarkScenes)scene?.Mirrors.Dispose();
+        }
 
         void SelectMode(VehicleMode value)
         {
@@ -569,7 +590,7 @@ namespace JalanKita
         {
             // Scenario counters describe substeps; they must never launch unrelated route practice.
             if (journey?.Activity != null || pitchDemo || page == Page.Jaksa || page == Page.JaksaPause
-                || page == Page.CityPreview || page == Page.CityMaps) return;
+                || page == Page.CityPreview || page == Page.CityMaps || page==Page.Landmark || page==Page.LandmarkPause || page==Page.Locations) return;
             if (stage < 0 || stage >= All.Length) return;
             root.focusController?.focusedElement?.Blur();
             learner = null;
@@ -1044,20 +1065,20 @@ namespace JalanKita
         {
             CloseMissionPicker();
             Show(root.Q("missionPicker"),value==Page.Drive);
-            if (value == Page.Drive || value == Page.Jaksa)
+            if (value == Page.Drive || value == Page.Jaksa || value == Page.Landmark)
                 root.focusController?.focusedElement?.Blur();
             heldLook=0;
             page = value;
             if (page != Page.Drive) Show(root.Q("signalPanel"), false);
             var mirrorImages = root.Q("mirrors").Query<Image>().ToList();
-            var textures = page == Page.Jaksa && jaksa != null ? jaksa.Mirrors.Textures : district.Mirrors.Textures;
+            var textures = page==Page.Landmark&&landmark!=null?landmark.Mirrors.Textures:page == Page.Jaksa && jaksa != null ? jaksa.Mirrors.Textures : district.Mirrors.Textures;
             for (int i = 0; i < mirrorImages.Count; i++) mirrorImages[i].image = textures[i];
-            Show(hud, page == Page.Drive || page == Page.Jaksa);
-            Show(overlay, page != Page.Drive && page != Page.Jaksa);
+            Show(hud, page == Page.Drive || page == Page.Jaksa || page==Page.Landmark);
+            Show(overlay, page != Page.Drive && page != Page.Jaksa && page!=Page.Landmark);
             overlay.EnableInClassList("landing", page == Page.Menu);
             dialog.EnableInClassList("landing-card", page == Page.Menu);
             overlay.EnableInClassList("city-preview", page == Page.CityPreview);
-            dialog.EnableInClassList("catalogue-card", page == Page.Catalogue);
+            dialog.EnableInClassList("catalogue-card", page == Page.Catalogue || page==Page.Locations);
             dialog.RemoveFromClassList("rule-card");
             dialog.RemoveFromClassList("result-layout");
             dialog.Clear();
