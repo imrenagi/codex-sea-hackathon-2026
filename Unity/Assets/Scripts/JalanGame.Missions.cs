@@ -53,13 +53,13 @@ namespace JalanKita
                 if (!Resources.Load<Texture2D>("UI/Thumbnails/" + asset))
                     asset = "mission_" + fallback[i];
                 var card = Element(parent, "mission-card selection-mission-card");
-                AddSelectionThumbnail(card, asset, GameText.Get("missions.thumbnail_caption"));
+                AddPlayableThumbnail(card, asset, GameText.Get("level.checkpoint.start"),
+                    () => JumpToMission(checkpoint));
                 var body = Element(card, "selection-mission-body");
                 AddLabel(body, GameText.Get("level.checkpoint.title", i + 1, stage.Title), "subhead mission-title");
                 AddLabel(body, stage.Location, "kicker");
                 AddLabel(body, stage.Instruction, "copy");
                 AddLabel(body, GameText.Get("level.checkpoint.detail"), "objective-detail");
-                AddButton(body, GameText.Get("level.checkpoint.start"), () => JumpToMission(checkpoint), "primary");
             }
         }
 
@@ -67,11 +67,10 @@ namespace JalanKita
             string actionText, System.Action action)
         {
             var card = Element(parent, "mission-card selection-mission-card");
-            AddSelectionThumbnail(card, asset, titleText);
+            AddPlayableThumbnail(card, asset, actionText, action);
             var body = Element(card, "selection-mission-body");
             AddLabel(body, titleText, "subhead mission-title");
             AddLabel(body, description, "copy");
-            AddButton(body, actionText, action, "primary");
         }
 
         void AddActivityChoices(VisualElement parent, MissionKind kind)
@@ -89,7 +88,9 @@ namespace JalanKita
             {
                 var saved = JourneySave.Load(mode, activity);
                 var card = Element(parent, "mission-card selection-mission-card");
-                AddSelectionThumbnail(card, "mission_" + activity.Id, GameText.Get("missions.thumbnail_caption"));
+                string actionText = saved != null && saved.next <= activity.LastStage
+                    ? GameText.Get("text.continue") : GameText.Get("text.select_2a7802");
+                AddPlayableThumbnail(card, "mission_" + activity.Id, actionText, () => ShowMissionBrief(activity));
                 var body = Element(card, "selection-mission-body");
                 var row = Element(body, "row split");
                 AddLabel(row, activity.Title, "subhead mission-title");
@@ -99,7 +100,6 @@ namespace JalanKita
                     : saved.next <= activity.LastStage ? GameText.Get("missions.in_progress", saved.attempts)
                     : GameText.Get("missions.completed", saved.completions, saved.bestMistakes);
                 AddLabel(body, status, "objective-detail");
-                AddButton(body, saved != null && saved.next <= activity.LastStage ? GameText.Get("text.continue") : GameText.Get("text.select_2a7802"), () => ShowMissionBrief(activity), "primary");
             }
             if (kind == MissionKind.Scenario) AddHiMissionCard(parent);
         }

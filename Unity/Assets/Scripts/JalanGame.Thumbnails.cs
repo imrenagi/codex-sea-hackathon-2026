@@ -30,21 +30,28 @@ namespace JalanKita
 
         void AddTutorialThumbnail(VisualElement parent)
         {
+            AddPlayableThumbnail(parent, "mission_tutorial", GameText.Get("level.tutorial.start"),
+                StartPitchDemo).name = "tutorialThumbnail";
+        }
+
+        Button AddPlayableThumbnail(VisualElement parent, string asset, string caption, System.Action action)
+        {
             EnsureThumbnailStyles();
-            string caption = GameText.Get("level.tutorial.start");
             // A real Button retains tab focus and keyboard submit, with one click target.
-            var button = new Button(StartPitchDemo)
+            var button = new Button(action)
             {
-                name = "tutorialThumbnail",
+                name = "play-" + asset,
+                text = caption,
                 tooltip = caption,
                 focusable = true
             };
+            button.style.fontSize = 0;
             button.AddToClassList("selection-preview");
             button.AddToClassList("thumbnail-play-button");
             parent.Add(button);
             var image = new Image
             {
-                image = Resources.Load<Texture2D>("UI/Thumbnails/mission_tutorial"),
+                image = Resources.Load<Texture2D>("UI/Thumbnails/" + asset),
                 scaleMode = ScaleMode.ScaleAndCrop,
                 pickingMode = PickingMode.Ignore
             };
@@ -55,6 +62,7 @@ namespace JalanKita
             overlay.pickingMode = PickingMode.Ignore;
             overlay.Add(new ThumbnailPlayGlyph());
             AddLabel(overlay, caption, "thumbnail-play-caption").pickingMode = PickingMode.Ignore;
+            return button;
         }
 
         // Draw the icon instead of relying on Unicode glyph availability in the live preview font.
