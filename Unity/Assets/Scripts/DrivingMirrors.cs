@@ -39,9 +39,12 @@ namespace JalanKita
             }
         }
         public void Present(Journey run,bool visible,bool snap)
+            => Present(run.Mode, run.Position, run.Heading, visible, snap);
+
+        public void Present(VehicleMode mode, Vector2 position, float heading, bool visible, bool snap)
         {
-            root.SetPositionAndRotation(new Vector3(run.Position.x,0,run.Position.y),Quaternion.Euler(0,run.Heading,0));
-            bool motorcycle=run.Mode==VehicleMode.Motorcycle;
+            root.SetPositionAndRotation(new Vector3(position.x,0,position.y),Quaternion.Euler(0,heading,0));
+            bool motorcycle=mode==VehicleMode.Motorcycle;
             for(int i=0;i<3;i++)
             {
                 float side=i-1;

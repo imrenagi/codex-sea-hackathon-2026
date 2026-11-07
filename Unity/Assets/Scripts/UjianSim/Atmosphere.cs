@@ -98,6 +98,16 @@ namespace UjianSim.Game
             Apply(TimeOfDay.Sore, false);
         }
 
+        public void Activate()
+        {
+            RenderSettings.sun = sun;
+            RenderSettings.skybox = sky;
+            RenderSettings.ambientMode = AmbientMode.Skybox;
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.Exponential;
+            Apply(Time, Rain);
+        }
+
         public void Apply(TimeOfDay time, bool rainOn)
         {
             Time = time;

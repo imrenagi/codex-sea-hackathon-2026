@@ -80,9 +80,13 @@ namespace JalanKita.EditorTools
                 drive = new Journey(mode, new JourneySave { next = 3 }, persistent: false);
                 DriveUntilFailure(drive, Rule.ReturnLeft);
                 drive.Retry();
-                for (int i = 0; i < 500 && !drive.Failure.HasValue; i++)
-                    drive.Step(.02f, true, false, drive.Position.y >= RouteStage.OneWayStart + 1 ? 1 : 0);
-                Require(drive.Failure == Rule.Indicator, "Detect lane change without indicator");
+                // Wait for the randomized lane vehicle to clear before isolating the signal rule.
+                // Otherwise a valid earlier collision can mask the violation this fixture is testing.
+                for (int i = 0; i < 500 && drive.Position.y < RouteStage.OneWayStart + 2; i++)
+                    drive.Step(.02f, drive.Speed < 4.8f, drive.Speed > 5, 0);
+                for (int i = 0; i < 1200; i++) drive.Step(.02f, false, true, 0);
+                for (int i = 0; i < 500 && !drive.Failure.HasValue; i++) drive.Step(.02f, true, false, .35f);
+                Require(drive.Failure == Rule.Indicator, $"Detect lane change without indicator: {mode}, {drive.Failure}, {drive.Position}");
 
                 drive = new Journey(mode, new JourneySave { next = 4 }, persistent: false);
                 DriveUntilFailure(drive, Rule.Speed);

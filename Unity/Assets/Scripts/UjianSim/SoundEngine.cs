@@ -76,12 +76,12 @@ namespace UjianSim.Game
         float ringTimer, sirenPhase, bellTimer, ambienceTimer = 2f;
 
         public bool Muted { get; private set; }
+        public float Volume { get; private set; } = 1f;
+        public bool AmbienceEnabled { get; private set; } = true;
         long renderedFrames;
         public long RenderedFrames => System.Threading.Interlocked.Read(ref renderedFrames);
         volatile float outputPeak;
         public float OutputPeak => outputPeak;
-        public float Volume { get; private set; } = 1f;
-        public bool AmbienceEnabled { get; private set; } = true;
 
         public static SoundEngine Create(Transform parent)
         {

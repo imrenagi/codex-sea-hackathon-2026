@@ -1,0 +1,55 @@
+Sopo Del / Sea Labs Indonesia environment — prepared 7 November 2026
+
+LOCATION
+Sea Labs Indonesia publishes its address as Sopo Del Building, The Sky, L30,
+Jl. Mega Kuningan Barat III, Mega Kuningan, Jakarta Selatan.
+https://sealabsindonesia.sea.com/about
+This environment replaces the fictional Sea-branded office in the earlier Jaksa preview.
+
+MAP DATA
+© OpenStreetMap contributors — https://www.openstreetmap.org/copyright
+Open Database License 1.0 — https://opendatacommons.org/licenses/odbl/1-0/
+Source retrieved 7 November 2026:
+https://api.openstreetmap.org/api/0.6/map?bbox=106.8215,-6.2330,106.8260,-6.2280
+layout.json is an adapted ODbL extract in local metres; original way IDs are retained.
+Origin -6.229000, 106.823910; bearing 157 degrees. Driving covers 250 local z metres
+(roughly 260 metres along the curved road). The whole mapped frontage is retained as scenery.
+Road source ways: 1467161547, 28190488, 1408773795, 1281427724.
+Sopo Del: Tower A 483610514; Tower B 483602802; podium 483602812.
+Menara Pertiwi and surrounding building footprints come from the same extract.
+
+ARCHITECTURAL REFERENCES — images viewed only, not bundled as game textures
+Developer: https://www.sopodel.com/index.php?mid=4
+Tower A: https://www.sopodel.com/index.php?mid=6
+Tower B: https://www.sopodel.com/index.php?mid=5
+Architect: https://www.airmasasri.com/project-details/sopo-del-tower
+Built facade and entrance photos: https://alucobond.com.sg/sopo-del-tower/
+The modeled glass grids, ulos-inspired spine, flared crown fins, dark podium and
+wide braced entrance canopy are authored interpretations of these public references.
+Photo rights remain with the respective owners. No Google imagery/geometry is bundled.
+
+ACCURACY
+The address, main road centerline, 7 m road-width tag, two-way designation and mapped
+footprints are sourced. Tower A's 167 m height comes from OSM. Tower B uses an estimated
+116 m height and the developer's 28-floor layout instead of OSM's conflicting level tag.
+Other heights are mapped when present, otherwise estimates. Trees, markings, lighting,
+plants, paving, canopy dimensions, plaza rings and smaller facade details are approximate.
+The scene does not reproduce interiors or every current tenant. Sea is identified as
+the destination in the game UI; giant Sea logos have not been invented on the real facade.
+The playable vehicle corridor remains deliberately constrained to the main street.
+
+ENVIRONMENT DRESSING — added for the game at the user's request
+Unmapped gaps are filled with authored low- and mid-rise buildings, plain shop signs,
+ground vegetation, shrubs, extra trees, benches, bins and service fixtures. These are
+deliberate visual approximations, not newly surveyed buildings or businesses. Placement
+reserves mapped footprints, streets and the Sopo Del forecourt. No source footprints move.
+
+MATERIALS
+Reuses the CC0 Poly Haven surface maps and original foliage from Resources/Jaksa.
+See Resources/Jaksa/NOTICE.txt for their authors and links. New geometry and materials
+are authored for this project. The older Sea logo asset retains Sea Limited's rights;
+it is not used as fabricated exterior signage in this real-location scene.
+grass_ground — Charlotte Baglioni — https://polyhaven.com/a/grass_ground
+withered_grass — Charlotte Baglioni — https://polyhaven.com/a/withered_grass
+Both added surface pairs are 1k CC0 assets from the official Poly Haven API.
+https://polyhaven.com/license

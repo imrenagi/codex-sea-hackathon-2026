@@ -1,0 +1,54 @@
+{
+  "lod0_triangles": 8138,
+  "lod1_triangles": 3482,
+  "export_meshes": 7,
+  "id": "sport_scooter",
+  "name": "Sport 160",
+  "kind": "scooter",
+  "colors": [
+    [
+      "cobalt",
+      "245DA5"
+    ],
+    [
+      "crimson",
+      "A92936"
+    ]
+  ],
+  "materials": 2,
+  "atlas_size": 128,
+  "bounds_m": {
+    "min": [
+      -0.36000001430511475,
+      -0.9662584662437439,
+      -0.0017999999690800905
+    ],
+    "max": [
+      0.36000001430511475,
+      0.8996237516403198,
+      1.2280000448226929
+    ]
+  },
+  "wheels": [
+    {
+      "node": "Wheel_Front",
+      "position": [
+        0,
+        0.6385,
+        0.258
+      ],
+      "radius": 0.258
+    },
+    {
+      "node": "Wheel_Rear",
+      "position": [
+        0,
+        -0.6385,
+        0.258
+      ],
+      "radius": 0.258
+    }
+  ],
+  "blender_forward": "+Y",
+  "glb_forward": "-Z"
+}

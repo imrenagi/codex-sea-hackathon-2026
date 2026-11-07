@@ -17,43 +17,56 @@ namespace JalanKita
         readonly Dictionary<string, Material> surfaces = new();
         readonly GameObject scenery;
         readonly Transform actors;
-        readonly GameObject car, motorcycle, crossCar, laneCar, spurCar, pedestrian;
+        readonly TrafficVehicleView crossCar, laneCar, spurCar, pickupCar;
+        readonly PlayerVehicleView playerVehicle;
+        readonly StreetPerson pedestrian;
+        readonly ScenarioAtmosphere atmosphere;
+        readonly GameObject schoolScenery, marketScenery, marketCurb, finishMarker;
         readonly Renderer[] signal = new Renderer[3];
-        readonly Renderer[] indicators = new Renderer[2];
         readonly Color[] signalColors = { new(.96f, .13f, .15f), new(1, .69f, .18f), new(.12f, 1, .53f) };
         readonly MaterialPropertyBlock paint = new();
         readonly Camera camera;
         readonly Light headlamp;
+        readonly StreetLook streetLook;
+        readonly DrivingCamera followCamera = new();
         public readonly DrivingMirrors Mirrors;
-        float headYaw;
+        readonly GameObject routeLighting;
+        readonly Atmosphere routeAtmosphere;
+        bool routeLook;
         bool snapCamera = true;
 
         public District(Transform parent)
         {
             scenery = new GameObject("Kampung Kenanga");
             scenery.transform.SetParent(parent);
+            streetLook = new StreetLook(scenery.transform);
             actors = new GameObject("Traffic and player").transform;
             actors.SetParent(parent);
+            schoolScenery = new GameObject("Penyeberangan sekolah");
+            marketScenery = new GameObject("Teluk jemput pasar");
+            marketCurb = new GameObject("Trotoar pasar pada rute biasa");
+            finishMarker = new GameObject("Tujuan misi");
+            foreach (var group in new[] { schoolScenery, marketScenery, marketCurb, finishMarker })
+                group.transform.SetParent(actors, false);
+            SetupLight();
             BuildRoad();
             BuildBuildings();
             BuildFlowerMarket();
             BuildSigns();
+            BuildMissionScenery();
+            streetLook.StreetDetails();
             BuildStreetProps();
             BuildBoulevard();
             BuildCheckpointMarkers();
             StaticBatchingUtility.Combine(scenery);
 
-            car = Model("Car_City", Vector3.zero, 0, actors);
-            motorcycle = Model("Motorcycle", Vector3.zero, 0, actors);
-            crossCar = TrafficCar("Lalu lintas persimpangan", "698db4");
-            laneCar = TrafficCar("Mobil di lajur kanan", "d57e67");
-            spurCar = TrafficCar("Lalu lintas satu arah", "74aa8c");
-            pedestrian = Model("Person", Vector3.zero, 0, actors);
-            var markerParent = new GameObject("Sein").transform;
-            markerParent.SetParent(actors);
-            for (int i = 0; i < 2; i++)
-                indicators[i] = Box("Lampu sein", new Vector3(0, .67f, 0), new Vector3(.22f, .13f, .095f),
-                    "ef6b23", markerParent, true);
+            playerVehicle = new PlayerVehicleView(actors);
+            crossCar = new TrafficVehicleView(actors, "Lalu lintas persimpangan");
+            laneCar = new TrafficVehicleView(actors, "Kendaraan di lajur kanan");
+            spurCar = new TrafficVehicleView(actors, "Lalu lintas satu arah");
+            pedestrian = new StreetPerson(actors, "Pejalan kaki pada penyeberangan", "c9ad71", 1, false, 7);
+            atmosphere = new ScenarioAtmosphere(actors);
+            pickupCar = new TrafficVehicleView(actors, "Arus di belakang teluk jemput");
             headlamp = new GameObject("Lampu utama motor").AddComponent<Light>();
             headlamp.transform.SetParent(actors, false);
             headlamp.type = LightType.Spot;
@@ -65,20 +78,39 @@ namespace JalanKita
             camera = new GameObject("Kamera pengemudi").AddComponent<Camera>();
             camera.transform.SetParent(parent);
             camera.tag = "MainCamera";
-            camera.gameObject.AddComponent<AudioListener>();
+
             camera.clearFlags = CameraClearFlags.Skybox;
             camera.backgroundColor = new Color(.65f, .81f, .79f);
             camera.fieldOfView = 55;
             camera.nearClipPlane = .08f;
+            camera.farClipPlane = 285;
+            DrivingCamera.Configure(camera);
             camera.farClipPlane = 500;
-            _ = new Atmosphere(parent, camera);
+            camera.gameObject.AddComponent<AudioListener>();
+            routeLighting = new GameObject("Full journey lighting");
+            routeLighting.transform.SetParent(parent, false);
+            routeAtmosphere = new Atmosphere(routeLighting.transform, camera);
             Mirrors = new DrivingMirrors(parent);
+            RestoreAtmosphere();
+        }
+
+        void SetupLight()
+        {
+            RestoreAtmosphere();
+        }
+
+        public void RestoreAtmosphere()
+        {
+            if (routeLighting) routeLighting.SetActive(false);
+            routeLook = false;
+            streetLook.SetLighting(true);
+            streetLook.Activate();
         }
 
         void BuildRoad()
         {
             SurfaceBox("Tanah", new Vector3(0, -.3f, 184), new Vector3(245, .45f, 475), "Grass");
-            Road("Koridor Kenanga", 0, -28, 415, 9.5f);
+            Road("Koridor Kenanga", 0, -28, 382, 9.5f);
             Road("Akses Mawar", 6.85f, SpurStart, SpurEnd + 1, 4.35f);
             Road("Teluk berhenti", -6.15f, PhoneStart + 4, PhoneEnd, 3.4f);
             foreach (float center in Junctions)
@@ -91,7 +123,7 @@ namespace JalanKita
                 }
             }
 
-            for (int z = -25; z < 390; z += 4)
+            for (int z = -25; z < 382; z += 4)
             {
                 if (NearJunction(z, 5.3f) || Mathf.Abs(z - Zebra) < 3.5f) continue;
                 if (z >= OneWayStart && z <= Merge) Mark("Marka pindah lajur", 0, z, .14f, 1.95f);
@@ -99,27 +131,20 @@ namespace JalanKita
             }
             foreach (int side in Side)
             {
-                for (int z = -24; z < 390; z += 4)
+                for (int z = -24; z < 382; z += 4)
                 {
                     if (NearJunction(z, 6.1f)) continue;
                     bool opening = side == 1 ? z > SpurStart - 3 && z < SpurEnd + 3
                         : z > PhoneStart + 1 && z < PhoneEnd + 3;
                     if (!opening)
                     {
-                        Mark("Garis tepi", side * 4.39f, z, .12f, 4.02f);
+                        Transform curbParent = side == -1 && z >= Mission.PickupStart && z <= Mission.PickupEnd
+                            ? marketCurb.transform : null;
+                        Mark("Garis tepi", side * 4.39f, z, .12f, 4.02f, parent: curbParent);
                         bool landing = Mathf.Abs(z - Zebra) < 4;
                         float pavingZ = landing ? z + (z < Zebra ? -1 : 1) : z;
-                        SurfaceBox("Trotoar", new Vector3(side * 6.1f, .035f, pavingZ),
-                            new Vector3(2.7f, .18f, landing ? 2 : 4.02f), "Paving");
-                        for (int k = 0; k < 4; k++)
-                        {
-                            float curbZ = z - 1.5f + k;
-                            if (Mathf.Abs(curbZ - Zebra) < 2) continue;
-                            Box("Kanstin hitam putih", new Vector3(side * 4.78f, .06f, z - 1.5f + k),
-                                new Vector3(.22f, .22f, 1), k % 2 == 0 ? "eeeeea" : "25272b");
-                        }
-                        if (z % 12 == 0)
-                            Box("Drainase", new Vector3(side * 4.56f, .016f, z), new Vector3(.3f, .025f, .65f), "2b2d2f");
+                        Box("Trotoar", new Vector3(side * 5.5f, .035f, pavingZ), new Vector3(1.5f, .18f, landing ? 2 : 4.02f),
+                            (z / 4) % 2 == 0 ? "c4b499" : "cdbea4", curbParent);
                     }
                     else if (side == 1)
                         Mark("Pemisah cabang", 5.02f, z, .13f, 2.25f, "e9e9e2");
@@ -155,6 +180,18 @@ namespace JalanKita
                     Box("Puncak checkpoint", new Vector3(x, 1.46f, z), new Vector3(.29f, .21f, .29f), color);
                 }
             }
+            for (int i = 0; i < 12; i++)
+            {
+                float x = (i % 2 == 0 ? -1 : 1) * (145 + i * 8);
+                float z = 429 + (i % 3) * 11;
+                var hill = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                hill.name = "Bukit";
+                hill.transform.SetParent(scenery.transform);
+                hill.transform.position = new Vector3(x, -4, z);
+                hill.transform.localScale = new Vector3(35 + i % 3 * 12, 18 + i % 4 * 5, 27);
+                Models.Kill(hill.GetComponent<SphereCollider>());
+                hill.GetComponent<Renderer>().sharedMaterial = Material(i % 2 == 0 ? "5d8b71" : "76a17c");
+            }
         }
 
         void BuildCrossingLandings()
@@ -175,9 +212,9 @@ namespace JalanKita
                 var ramp = new GameObject("Landasan penyeberangan");
                 ramp.transform.SetParent(scenery.transform, false);
                 ramp.AddComponent<MeshFilter>().sharedMesh = mesh;
-                ramp.AddComponent<MeshRenderer>().sharedMaterial = surfaces["Paving"];
-                SurfaceBox("Trotoar penyeberangan", new Vector3(side * 6.475f, .035f, Zebra),
-                    new Vector3(1.95f, .18f, 4), "Paving");
+                ramp.AddComponent<MeshRenderer>().sharedMaterial = streetLook.BoxMaterial("Trotoar penyeberangan");
+                Box("Trotoar penyeberangan", new Vector3(side * 5.875f, .035f, Zebra),
+                    new Vector3(.75f, .18f, 4), "c4b499");
             }
             var paving = new MeshBuilder();
             foreach (int side in Side)
@@ -234,10 +271,17 @@ namespace JalanKita
                 float rotation = side < 0 ? -90 : 90;
                 for (int z = -20; z < 388; z += 7)
                 {
-                    if (NearJunction(z, 10) || (side < 0 && z > 320 && z < 375)) continue;
-                    // Reserve the market frontage beside the pedestrian lesson.
+                    if (NearJunction(z, 10) || (side < 0 && (z > 300 && z < 375 || z > 244 && z < 283 || z > 43 && z < 61))) continue;
                     if (side < 0 && z > Zebra + 2 && z < Zebra + 23) continue;
-                    float edge = side == 1 && z > SpurStart - 4 && z < SpurEnd + 5 ? 12 : 7.6f;
+                    float edge = side == 1 && z > SpurStart - 4 && z < SpurEnd + 5 ? 12 : 8.9f;
+                    if ((z + 20) % 28 == 14)
+                    {
+                        if (Mathf.Abs(z - Zebra) < 22) continue;
+                        Model("Tree_Shade_0", new Vector3(side * (edge + 1.2f), 0, z), z * 31);
+                        continue;
+                    }
+                    // Residential frontages are authored separately, outside the walkable verge.
+                    if (z < 24) continue;
                     string shop = Shops[rng.Next(Shops.Length)];
                     GameObject building = Model(shop, new Vector3(side * edge, .06f, z), rotation);
                     building.transform.localScale = new Vector3(6.85f / 4.5f, 1, .85f);
@@ -384,72 +428,68 @@ namespace JalanKita
 
         public void Snap() => snapCamera = true;
 
-        public void Present(Journey run, bool hood, float dt, bool driving = true, float lookInput = 0)
+        void BuildMissionScenery()
         {
-            PresentBoulevard(run, driving);
-            bool onMotorcycle = run.Mode == VehicleMode.Motorcycle;
-            var player = onMotorcycle ? motorcycle : car;
-            car.SetActive(!onMotorcycle && !hood);
-            motorcycle.SetActive(onMotorcycle && !hood);
-            var point = World(run.Position);
-            var rotation = Quaternion.Euler(0, run.Heading, 0);
-            player.transform.SetPositionAndRotation(point, ModelRotation(run.Heading + 180));
-            headlamp.transform.SetPositionAndRotation(point + rotation * new Vector3(0, .87f, .85f), rotation);
-            headlamp.enabled = onMotorcycle && run.Headlight;
-            Pose(crossCar, run.CrossTraffic, run.CrossDirection * 90);
-            Pose(pedestrian, run.Pedestrian, run.PedestrianDirection * 90);
-            Pose(laneCar, run.LaneTraffic, 0);
-            Pose(spurCar, run.SpurTraffic, 180);
-            for (int i = 0; i < signal.Length; i++)
-                Tint(signal[i], i == run.LightPhase ? signalColors[i] : signalColors[i] * .24f, i == run.LightPhase);
-            for (int i = 0; i < indicators.Length; i++)
+            for (int i = -5; i <= 5; i++)
+                Mark("Zebra sekolah", i * .8f, Mission.SchoolZebra, .43f, 3.35f, parent: schoolScenery.transform);
+            Model("Sign_Crossing", new Vector3(-5.45f, .12f, Mission.SchoolZebra - 8), parent: schoolScenery.transform);
+            Box("Jalan teluk jemput", new Vector3(-6.15f, -.042f, (Mission.PickupStart + Mission.PickupEnd) / 2),
+                new Vector3(3.4f, .08f, Mission.PickupEnd - Mission.PickupStart), "535d63", marketScenery.transform);
+            for (float z = Mission.PickupStart + 1; z < Mission.PickupEnd; z += 3)
             {
-                var light = indicators[i];
-                light.transform.SetPositionAndRotation(point + rotation * new Vector3((i == 0 ? -1 : 1) *
-                    (onMotorcycle ? .35f : .73f), onMotorcycle ? .75f : .69f, onMotorcycle ? -.92f : -2.03f), rotation);
-                light.enabled = !hood && run.Indicator == (i == 0 ? -1 : 1) && Time.unscaledTime % .7f < .42f;
-                if (light.enabled) Tint(light, signalColors[1], true);
+                Mark("Marka masuk teluk", -4.45f, z, .12f, 1.4f, parent: marketScenery.transform);
+                Mark("Batas kiri teluk", -7.55f, z, .12f, 3, parent: marketScenery.transform);
             }
-
-            Vector3 eye = hood ? point + rotation * new Vector3(0, onMotorcycle ? 1.39f : 1.28f, .62f)
-                : point + rotation * new Vector3(0, 4.25f, -7.85f);
-            Vector3 look = point + rotation * new Vector3(0, hood ? 1.33f : 1.12f, hood ? 24 : 12);
-            headYaw = Mathf.MoveTowards(snapCamera ? 0 : headYaw, (driving ? lookInput : 0) * 80, dt * 320);
-            var view = Quaternion.LookRotation(look - eye);
-            if (Mathf.Abs(headYaw) > .1f)
-            {
-                float turn = headYaw / 80;
-                if (hood)
-                {
-                    eye += rotation * new Vector3(turn*.08f,0,Mathf.Abs(turn)*.06f);
-                    view = rotation * Quaternion.Euler(4,headYaw,0);
-                }
-                else
-                {
-                    var head = point + Vector3.up*(onMotorcycle?2:2.3f) - rotation*Vector3.forward*(onMotorcycle?.6f:1.2f);
-                    eye = Vector3.Lerp(eye,head,Mathf.Abs(turn));
-                    view = rotation*Quaternion.Euler(Mathf.Lerp(12,6,Mathf.Abs(turn)),headYaw,0);
-                }
-            }
-            camera.fieldOfView = Mathf.Lerp(camera.fieldOfView, Mathf.Abs(headYaw)>.1f?70:55, Mathf.Min(1,dt*6));
-            float blend = snapCamera ? 1 : 1 - Mathf.Exp(-6.5f * dt);
-            camera.transform.SetPositionAndRotation(Vector3.Lerp(camera.transform.position, eye, blend),
-                Quaternion.Slerp(camera.transform.rotation, view, blend));
-            Mirrors.Present(run,driving,snapCamera);
-            snapCamera = false;
+            Model("Sign_NoStopping", new Vector3(-5.45f, .12f, Mission.NoStopStart), parent: marketScenery.transform);
+            Model("Sign_Parking", new Vector3(-7.7f, .12f, Mission.PickupStart + 2), parent: marketScenery.transform);
+            Mark("Tempat jemput", -5.9f, Mission.PickupPoint - 4, 2.5f, .2f, "65dfbf", marketScenery.transform);
+            Mark("Tempat jemput", -5.9f, Mission.PickupPoint + 4, 2.5f, .2f, "65dfbf", marketScenery.transform);
+            for (int i = 0; i < 8; i++)
+                Mark("Garis tujuan", -4.32f + i * .55f, 0, .27f, .5f, "fac86a", finishMarker.transform);
+            foreach (float x in new[] { -5.1f, .7f })
+                Box("Penanda tujuan", new Vector3(x, 1.1f, 0), new Vector3(.3f, 2.2f, .3f), "fac86a", finishMarker.transform);
         }
 
-        GameObject TrafficCar(string name, string color)
+        public void Present(Journey run, bool hood, float dt, bool driving = true, float lookInput = 0)
         {
-            var obj = Model("Car_City", Vector3.zero, 0, actors);
-            obj.name = name;
-            foreach (var renderer in obj.GetComponentsInChildren<Renderer>())
+            bool useRouteLook = run.UsesRouteSteering;
+            if (useRouteLook != routeLook)
             {
-                foreach (var material in renderer.sharedMaterials)
-                    if (material && MaterialLibrary.BaseName(material.name) == "M_CarPaint")
-                        material.SetColor("_BaseColor", ColorOf(color));
+                routeLook = useRouteLook;
+                routeLighting.SetActive(routeLook);
+                streetLook.SetLighting(!routeLook);
+                if (routeLook) routeAtmosphere.Activate(); else streetLook.Activate();
             }
-            return obj;
+            PresentBoulevard(run, driving);
+            bool onMotorcycle = run.Mode == VehicleMode.Motorcycle;
+            var point = World(run.Position);
+            var rotation = Quaternion.Euler(0, run.Heading, 0);
+            playerVehicle.Present(run.Mode, point, run.Heading, run.Speed, dt, run.Headlight, run.Indicator,
+                !run.IsMarket || run.PassengerPickedUp && run.BoardingProgress >= 1, !hood, run.DriverGear, run.PassengerGear);
+            headlamp.transform.SetPositionAndRotation(point + rotation * new Vector3(0, .87f, .85f), rotation);
+            headlamp.enabled = false; // The selected scooter supplies its own correctly positioned lamps.
+            Pose(crossCar, run.Traffic.Cross, run.CrossTraffic, run.CrossDirection * 90, dt);
+            pedestrian.Root.SetActive(run.Pedestrian.HasValue);
+            if (run.Pedestrian.HasValue)
+            {
+                pedestrian.SchoolAppearance(run.IsSchool);
+                pedestrian.Draw(World(run.Pedestrian.Value), run.PedestrianDirection * 90, run.ElapsedTime, 1, false);
+            }
+            Pose(laneCar, run.Traffic.Lane, run.LaneTraffic, 0, dt);
+            Pose(spurCar, run.Traffic.Spur, run.SpurTraffic, 180, dt);
+            Pose(pickupCar, run.Traffic.Pickup, run.PickupTraffic, 0, dt);
+            schoolScenery.SetActive(run.IsSchool);
+            marketScenery.SetActive(run.IsMarket);
+            marketCurb.SetActive(!run.IsMarket);
+            atmosphere.Present(run);
+            finishMarker.SetActive(run.Activity != null && run.Stage > 0 && !run.Finished);
+            finishMarker.transform.position = new Vector3(0, 0, run.StageEnd);
+            for (int i = 0; i < signal.Length; i++)
+                Tint(signal[i], i == run.LightPhase ? signalColors[i] : signalColors[i] * .24f, i == run.LightPhase);
+
+            followCamera.Present(camera, point, run.Heading, run.Speed, onMotorcycle, hood, dt, snapCamera, driving ? lookInput : 0);
+            Mirrors.Present(run, driving, snapCamera);
+            snapCamera = false;
         }
 
         void Tint(Renderer renderer, Color color, bool lit)
@@ -461,6 +501,13 @@ namespace JalanKita
         }
 
         static Vector3 World(Vector2 p) => new(p.x, 0, p.y);
+
+        static void Pose(TrafficVehicleView view, TrafficChoice choice, Vector2? p, float yaw, float dt)
+        {
+            view.Select(choice);
+            if (p.HasValue) view.Present(World(p.Value), yaw, -1, dt);
+            else view.Hide();
+        }
 
         static void Pose(GameObject obj, Vector2? p, float yaw)
         {
@@ -477,6 +524,7 @@ namespace JalanKita
 
         GameObject Model(string asset, Vector3 pos, float yaw = 0, Transform parent = null)
         {
+            if (asset == "Tree_Shade_0") return streetLook.Tree(pos, yaw, parent ? parent : scenery.transform);
             var wrapper = new GameObject(asset);
             wrapper.transform.SetParent(parent ? parent : scenery.transform, false);
             wrapper.transform.SetPositionAndRotation(pos, ModelRotation(yaw));
@@ -503,8 +551,8 @@ namespace JalanKita
                 sign.transform.localPosition = new Vector3(0, 4.35f, .1f);
                 sign.transform.localRotation = Quaternion.identity;
                 sign.transform.localScale = new Vector3(4.5f / 6.85f, 1, 1 / .85f);
-                Models.Spawn(random.NextDouble() < .62 ? "Shutter_Half" : "Shutter_Closed", model.transform)
-                    .transform.localRotation = Quaternion.identity;
+                Models.Spawn(random.NextDouble() < .62 ? "Shutter_Half" : "Shutter_Closed", model.transform).transform.localRotation = Quaternion.identity;
+                streetLook.DressBuilding(model, pos.z);
             }
             return wrapper;
         }
@@ -514,8 +562,8 @@ namespace JalanKita
         void Road(string name, float x, float a, float b, float width) =>
             SurfaceBox(name, new Vector3(x, -.042f, (a+b)/2), new Vector3(width, .08f, b-a), "Asphalt");
 
-        void Mark(string name, float x, float z, float w, float l, string color = "e9e9e2") =>
-            Box(name, new Vector3(x, .012f, z), new Vector3(w, .019f, l), color);
+        void Mark(string name, float x, float z, float w, float l, string color = "f4edda", Transform parent = null) =>
+            Box(name, new Vector3(x, .012f, z), new Vector3(w, .019f, l), color, parent);
 
         void Arrow(float x, float z, int direction) =>
             Model("LaneArrow_Straight", new Vector3(x, .025f, z), direction > 0 ? 0 : 180);
@@ -548,11 +596,7 @@ namespace JalanKita
                     bool opening = side < 0 && z > PhoneStart && z < PhoneEnd
                         || side > 0 && z > SpurStart - 3 && z < SpurEnd + 3;
                     if (Mathf.Abs(z - Zebra) < 22)
-                    {
-                        // Keep foliage, poles, and their cables out of the crossing sightline.
-                        lastPole = null;
-                        continue;
-                    }
+                    { lastPole = null; continue; }
                     if (NearJunction(z, 9) || opening) continue;
                     Model(z % 3 == 0 ? "Tree_Palm" : "Tree_Shade_1", new Vector3(side * 6.1f, .13f, z), z * 13);
                     Vector3 pole = new(side * 7.1f, .13f, z + 5);
@@ -598,9 +642,11 @@ namespace JalanKita
             obj.transform.SetParent(parent ? parent : scenery.transform);
             obj.transform.position = pos;
             obj.transform.localScale = size;
-            Object.Destroy(obj.GetComponent<BoxCollider>());
+            Models.Kill(obj.GetComponent<BoxCollider>());
             var renderer = obj.GetComponent<Renderer>();
-            renderer.sharedMaterial = Material(color);
+            var surface = streetLook.BoxMaterial(name);
+            renderer.sharedMaterial = surface ? surface : Material(color);
+            if (surface) StreetLook.ProjectSurface(obj.GetComponent<MeshFilter>(), name == "Tanah" ? 5 : 3);
             if (emissive) renderer.sharedMaterial.EnableKeyword("_EMISSION");
             return renderer;
         }

@@ -20,7 +20,7 @@ namespace JalanKita
         void BuildBoulevard()
         {
             SurfaceBox("Tanah distrik besar", new Vector3(-90, -.55f, 760), new Vector3(570, .6f, 820), "Grass");
-            BigRoad(new Vector2(0, 390), new Vector2(0, 710), new[] { 480f, 640f });
+            BigRoad(new Vector2(0, 382), new Vector2(0, 710), new[] { 480f, 640f });
             BigRoad(new Vector2(-85, 480), new Vector2(85, 480), new[] { 0f });
             BigRoad(new Vector2(-260, 640), new Vector2(85, 640), new[] { -180f, 0f });
             BigRoad(new Vector2(-180, 565), new Vector2(-180, 1165), new[] { 640f, 800f });

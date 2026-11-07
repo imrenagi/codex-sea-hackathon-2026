@@ -1,0 +1,72 @@
+{
+  "lod0_triangles": 10480,
+  "lod1_triangles": 4527,
+  "export_meshes": 8,
+  "id": "utility_pickup",
+  "name": "Niaga Pickup",
+  "kind": "car",
+  "colors": [
+    [
+      "silver",
+      "A3B1B4"
+    ],
+    [
+      "forest",
+      "42685A"
+    ]
+  ],
+  "materials": 2,
+  "atlas_size": 128,
+  "bounds_m": {
+    "min": [
+      -1.0475000143051147,
+      -2.1559998989105225,
+      0.0
+    ],
+    "max": [
+      1.0475000143051147,
+      2.1410000324249268,
+      1.8460708856582642
+    ]
+  },
+  "wheels": [
+    {
+      "node": "Wheel_FL",
+      "position": [
+        -0.7825,
+        1.1025,
+        0.288
+      ],
+      "radius": 0.288
+    },
+    {
+      "node": "Wheel_FR",
+      "position": [
+        0.7825,
+        1.1025,
+        0.288
+      ],
+      "radius": 0.288
+    },
+    {
+      "node": "Wheel_RL",
+      "position": [
+        -0.7825,
+        -1.1025,
+        0.288
+      ],
+      "radius": 0.288
+    },
+    {
+      "node": "Wheel_RR",
+      "position": [
+        0.7825,
+        -1.1025,
+        0.288
+      ],
+      "radius": 0.288
+    }
+  ],
+  "blender_forward": "+Y",
+  "glb_forward": "-Z"
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "resource": "Unity/Assets/Resources/Vehicles/BeatRed/Body.fbx",
+    "before_sha256": "6d6cb49280db9ef7757df4ff0f1bc66c2d4b102b1fdce5ada5759ee393bf83c2",
+    "after_sha256": "666a6b6accae4b29173100f1a91025ebc5d431d8d8f1bc002034e1e09da25027",
+    "removed_glyph_faces": 326,
+    "added_glyph_faces": 954,
+    "retained_body_faces": 14368,
+    "all_other_objects_unchanged": true,
+    "wording": "motor bebek"
+  },
+  {
+    "resource": "Unity/Assets/Resources/Vehicles/BeatRed/Body_LOD1.fbx",
+    "before_sha256": "4405b40c96b84e7669043fedbef734b8fbb56e0261d18addd43d38eb1fd806b3",
+    "after_sha256": "c1bd4154447ccacd5748f7880dbacdd28de1023b9f24e23802d6c646a46b5e37",
+    "removed_glyph_faces": 316,
+    "added_glyph_faces": 954,
+    "retained_body_faces": 8772,
+    "all_other_objects_unchanged": true,
+    "wording": "motor bebek"
+  },
+  {
+    "resource": "Unity/Assets/Resources/Vehicles/BeatBlue/Body.fbx",
+    "before_sha256": "34f8c12c3908d8940a59c84fed8bdd7cb18f327a025dde5a184218b0eb014b89",
+    "after_sha256": "0e84111a00b3ed759fde10a5778a8c423bbb7a0bf5506e36669fc57519e4f3d4",
+    "removed_glyph_faces": 128,
+    "added_glyph_faces": 468,
+    "retained_body_faces": 1740,
+    "all_other_objects_unchanged": true,
+    "wording": "motor bebek"
+  },
+  {
+    "resource": "Unity/Assets/Resources/Vehicles/BeatBlue/Body_LOD1.fbx",
+    "before_sha256": "7b40c16a72c90e0aaf1f862948a9496918a65ed307822a6dcc36644464279119",
+    "after_sha256": "9b175354448dabdd458d33cca2e531c05bd33e584ceba2b4695c394aa5b3cfe8",
+    "removed_glyph_faces": 114,
+    "added_glyph_faces": 468,
+    "retained_body_faces": 1548,
+    "all_other_objects_unchanged": true,
+    "wording": "motor bebek"
+  }
+]
