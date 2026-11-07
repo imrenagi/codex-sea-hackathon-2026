@@ -34,7 +34,7 @@ namespace JalanKita.EditorTools
                     return new RoadBoundary.Frame(new Vector2(x, p.y), forward, 3.25f * forward.y);
                 }, new Vector2(Mathf.Sin(2.1f) * 3, 30));
             }
-            Debug.Log("ROAD_BOUNDARY_PASSED seven selections, straight/sloped/curved/bending roads, both edges, nose-on/glancing contact, containment, steering recovery and no stationary spin.");
+            Debug.Log("ROAD_BOUNDARY_PASSED seven selections, straight/sloped/curved/bending roads, both edges, nose-on/glancing contact, forward-only contour following, containment, steering recovery and no stationary spin.");
         }
 
         static void Check(string id, VehicleMode mode, Func<Vector2, RoadBoundary.Frame> road, Vector2 start)
@@ -70,6 +70,25 @@ namespace JalanKita.EditorTools
                 }
                 Require(Vector2.Distance(before, position) < .003f && Mathf.Abs(Mathf.DeltaAngle(yaw, heading)) < .001f,
                     id + " stationary curb contact changed pose");
+            }
+            foreach (int side in new[] { -1, 1 })
+            {
+                var frame = road(start);
+                float heading = frame.Heading + side * 35;
+                var position = RoadBoundary.Fit(road, mode, start + frame.Right * side * 3, heading);
+                var original = position;
+                var motion = new RoadVehicleMotion();
+                float speed = 0;
+                for (int i = 0; i < 500; i++)
+                {
+                    motion.Step(.02f, mode, true, false, 0, 8.33f, ref speed, ref heading);
+                    position = RoadBoundary.Move(road, mode, position, .02f, ref speed, ref heading, out _);
+                    Require(RoadBoundary.Contains(road, mode, position, heading), id + " forward-only footprint left road");
+                }
+                Require(Vector2.Distance(original, position) > 12 && speed > 1,
+                    id + " forward-only throttle stuck at curb");
+                Require(Mathf.Abs(Mathf.DeltaAngle(road(position).Heading, heading)) < 65,
+                    id + " body did not follow road direction");
             }
         }
     }
