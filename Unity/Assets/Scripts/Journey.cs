@@ -308,6 +308,7 @@ namespace JalanKita
             if (PassengerPickedUp) pickupTime = 0;
             CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = PickupTraffic = null;
             ClearCrossingPedestrians();
+            ResetMainRoadTraffic();
         }
 
         public bool Depart()
@@ -500,6 +501,19 @@ namespace JalanKita
 
         void CheckJunction(float oldFront, float center, bool signalled = false)
         {
+            if (Stage == 2 && center == RouteStage.MainJunction)
+            {
+                if (Front < center - 4.3f || Position.y > center + 5.5f) return;
+                for (int i = 0; i < MainRoadTrafficCount; i++)
+                {
+                    if (!mainRoadTraffic[i].HasValue) continue;
+                    var carPosition = mainRoadTraffic[i].Value;
+                    float carDistance = (Position.x - carPosition.x) * CrossDirection;
+                    if (Crosses(oldFront, center - 4.3f) && carDistance >= -4 && carDistance < 18) Fail(Rule.Junction);
+                    if (TrafficCollision(MainRoadTrafficChoice(i), carPosition, CrossDirection * 90)) Fail(Rule.Junction);
+                }
+                return;
+            }
             if (!CrossTraffic.HasValue || Front < center - 4.3f || Position.y > center + 5.5f) return;
             Vector2 traffic = CrossTraffic.Value;
             if (traffic.y != center) return;
@@ -540,7 +554,7 @@ namespace JalanKita
                 PedestrianDirection = Save.mistakes[(int)Rule.Pedestrian] % 2 == 0 ? 1 : -1;
                 UpdateCrossingPedestrians(RouteStage.Zebra, 2.45f);
                 CrossDirection = Save.mistakes[(int)Rule.Junction] % 2 == 0 ? -1 : 1;
-                CrossTraffic = CrossingCar(priorityTime, RouteStage.MainJunction, CrossDirection);
+                UpdateMainRoadTraffic(dt);
             }
             else if (Stage == 3)
             {
@@ -562,7 +576,8 @@ namespace JalanKita
                 UpdateCrossingPedestrians(CrossingZebra, 1.5f);
             }
             else if (IsSchool) ClearCrossingPedestrians();
-            CrossTraffic = FollowEncounter(previousCross, CrossTraffic, Traffic.Cross, Vector2.right * CrossDirection, 6.2f, dt);
+            if (Stage != 2)
+                CrossTraffic = FollowEncounter(previousCross, CrossTraffic, Traffic.Cross, Vector2.right * CrossDirection, 6.2f, dt);
             LaneTraffic = FollowEncounter(previousLane, LaneTraffic, Traffic.Lane, Vector2.up, 5.1f, dt);
             SpurTraffic = FollowEncounter(previousSpur, SpurTraffic, Traffic.Spur, Vector2.down, 5, dt);
             PickupTraffic = FollowEncounter(previousPickup, PickupTraffic, Traffic.Pickup, Vector2.up, Save.variant % 2 == 0 ? 5.1f : 4.6f, dt);
@@ -605,6 +620,7 @@ namespace JalanKita
             Persist();
             CrossTraffic = Pedestrian = LaneTraffic = SpurTraffic = PickupTraffic = null;
             ClearCrossingPedestrians();
+            ResetMainRoadTraffic();
         }
 
         void Checkpoint(int index)

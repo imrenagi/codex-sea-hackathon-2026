@@ -19,6 +19,7 @@ namespace JalanKita
         readonly GameObject scenery;
         readonly Transform actors;
         readonly TrafficVehicleView crossCar, laneCar, spurCar, pickupCar;
+        readonly TrafficVehicleView[] mainRoadCars = new TrafficVehicleView[Journey.MainRoadTrafficCount];
         readonly PlayerVehicleView playerVehicle;
         readonly StreetPerson[] pedestrians = new StreetPerson[Journey.CrossingPedestrianCount];
         readonly ScenarioAtmosphere atmosphere;
@@ -65,6 +66,8 @@ namespace JalanKita
 
             playerVehicle = new PlayerVehicleView(actors);
             crossCar = new TrafficVehicleView(actors, "Lalu lintas persimpangan");
+            for (int i = 0; i < mainRoadCars.Length; i++)
+                mainRoadCars[i] = new TrafficVehicleView(actors, "Main-road traffic " + (i + 1));
             laneCar = new TrafficVehicleView(actors, "Kendaraan di lajur kanan");
             spurCar = new TrafficVehicleView(actors, "Lalu lintas satu arah");
             string[] crossingShirts = { "b7bdad", "bd9c8e", "c8bda6" };
@@ -477,7 +480,17 @@ namespace JalanKita
                 !run.IsMarket || run.PassengerPickedUp && run.BoardingProgress >= 1, !hood, run.DriverGear, run.PassengerGear);
             headlamp.transform.SetPositionAndRotation(point + rotation * new Vector3(0, .87f, .85f), rotation);
             headlamp.enabled = false; // The selected scooter supplies its own correctly positioned lamps.
-            Pose(crossCar, run.Traffic.Cross, run.CrossTraffic, run.CrossDirection * 90, dt);
+            if (run.Stage == 2)
+            {
+                crossCar.Hide();
+                for (int i = 0; i < mainRoadCars.Length; i++)
+                    Pose(mainRoadCars[i], run.MainRoadTrafficChoice(i), run.MainRoadTraffic(i), run.CrossDirection * 90, dt);
+            }
+            else
+            {
+                Pose(crossCar, run.Traffic.Cross, run.CrossTraffic, run.CrossDirection * 90, dt);
+                foreach (var car in mainRoadCars) car.Hide();
+            }
             for (int i = 0; i < pedestrians.Length; i++)
             {
                 var position = run.CrossingPedestrian(i);
